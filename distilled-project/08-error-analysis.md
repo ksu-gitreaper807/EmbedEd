@@ -74,7 +74,7 @@ The mirror image: pairs that a human calls duplicates but that share almost no w
 * How many of them would *you* call duplicates? That count, over ≥100 sampled candidates, **is your reported false-negative rate**.
 * Do the removed candidates cluster by subforum? If `tex` produces far more false negatives than `gaming`, that is a domain-property finding.
 
-**Why this is the most valuable analysis you will do:** it directly substantiates or refutes [Robinson et al. (2021)](https://openreview.net/forum?id=S4nZh4WBHxq)'s Principle 1 in your setting, and it is the mechanism behind whichever result pattern you observed. Nobody reports this number for duplicate-question retrieval.
+**Why this is the most valuable analysis you will do:** it directly substantiates or refutes [Robinson et al. (2021)](https://openreview.net/forum?id=CR1XOQ0UTh-)'s Principle 1 in your setting, and it is the mechanism behind whichever result pattern you observed. Nobody reports this number for duplicate-question retrieval.
 
 ---
 

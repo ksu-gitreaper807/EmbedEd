@@ -41,7 +41,7 @@ Assumes ~25–30 hours/week. Each week has **exit criteria** — do not start th
 
 | Paper | Sections | Why now |
 |---|---|---|
-| [Robinson et al., ICLR 2021](https://openreview.net/forum?id=S4nZh4WBHxq) | all | The two principles; why "hardest" is wrong |
+| [Robinson et al., ICLR 2021](https://openreview.net/forum?id=CR1XOQ0UTh-) | all | The two principles; why "hardest" is wrong |
 | [RocketQA (Qu et al., 2021)](https://aclanthology.org/2021.naacl-main.466/) | §3–§4 | Denoised hard negatives — your N5 |
 | [AugSBERT (Thakur et al., 2021)](https://aclanthology.org/2021.naacl-main.28/) | §3–§4 | Pair-sampling strategies: Random / BM25 / Semantic Search / KDE |
 

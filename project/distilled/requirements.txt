@@ -1,15 +1,18 @@
-# Minimal dependency set for the distilled project.
-# Five packages. Nothing here needs a GPU-specific build.
+# Dependency set for Version B (the middle version).
+# Five packages. Nothing needs a GPU-specific build.
 
-sentence-transformers>=3.0   # encoder, MultipleNegativesRankingLoss, trainer, model.encode()
+sentence-transformers>=3.0   # encoder, MultipleNegativesRankingLoss, model.encode()
 datasets                     # one-line loading of sentence-transformers/askubuntu
-numpy                        # the retrieval matmul (corpus @ query) and the two metrics
-rank_bm25                    # the BM25 lexical baseline (~15 lines to use)
-matplotlib                   # two figures: bar chart + line chart
+numpy                        # retrieval matmul, neighbourhood matmul, 3 metrics, bootstrap
+rank_bm25                    # BM25 baseline AND the N2 lexical neighbourhoods
+matplotlib                   # three figures
 
-# Not needed: faiss, transformers (comes with sentence-transformers), torch (ditto),
-# beir, ir_datasets, pytorch-lightning, wandb, hydra, docker.
+# Not needed: faiss (the corpus is ~15K docs — mining and retrieval are both single
+# matmuls), transformers (ships with sentence-transformers), beir, ir_datasets,
+# pytorch-lightning, wandb, hydra, docker.
 #
 # If rank_bm25 will not install, replace the BM25 baseline with:
 #   from sklearn.feature_extraction.text import TfidfVectorizer
 # and cosine similarity via a sparse matmul. Say so in the report.
+# (You would then need another way to build N2's lexical neighbourhoods —
+# TfidfVectorizer + the same sparse matmul works.)

@@ -35,7 +35,7 @@ With ~1.4 labelled duplicates per query, many true duplicates are unlabelled. Tr
 **✅ Do instead:** *measure* the false-negative rate for each strategy and report it. This is your most original contribution — do not skip it.
 
 ### ❌ 7. Mine the "hardest possible" negatives without a filter
-[Robinson et al. (2021)](https://openreview.net/forum?id=S4nZh4WBHxq) show that hard sampling **without** debiasing is worse than with it; [FaceNet](https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Schroff_FaceNet_A_Unified_2015_CVPR_paper.pdf) found the hardest negatives can collapse training.
+[Robinson et al. (2021)](https://openreview.net/forum?id=CR1XOQ0UTh-) show that hard sampling **without** debiasing is worse than with it; [FaceNet](https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Schroff_FaceNet_A_Unified_2015_CVPR_paper.pdf) found the hardest negatives can collapse training.
 **✅ Do instead:** N5 — filter with a margin rule or cross-encoder score; use `range_min` to skip the top few nearest candidates.
 
 ### ❌ 8. Generate all positives synthetically

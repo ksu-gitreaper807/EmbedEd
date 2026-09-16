@@ -97,7 +97,7 @@ ICLR 2021 · <https://openreview.net/forum?id=zeFrfgyZln> · code: <https://gith
 * **Read full paper?** **Yes, §1–§3.** ~30 minutes.
 
 ### 4.2 Robinson, Chuang, Sra & Jegelka (2021) — *Contrastive Learning with Hard Negative Samples*
-ICLR 2021 · <https://openreview.net/forum?id=S4nZh4WBHxq>
+ICLR 2021 · <https://openreview.net/forum?id=CR1XOQ0UTh->
 * **What you need:** the **two principles** — a useful negative must (1) genuinely be a negative and (2) currently be believed similar — and the empirical result that **hard sampling with debiasing beats hard sampling without it**.
 * **Informs:** the design of N5 and the theoretical grounding for your false-negative measurement. This is the paper that explains your result either way.
 * **Read full paper?** **Yes, all of it.** ~35 minutes.
@@ -152,7 +152,7 @@ After these four you can explain, to another student, what your model is and wha
 | # | Paper | Time |
 |---|---|---|
 | 5 | [ANCE](https://openreview.net/forum?id=zeFrfgyZln) §1–§3 | 30 min |
-| 6 | [Robinson et al.](https://openreview.net/forum?id=S4nZh4WBHxq) (all) | 35 min |
+| 6 | [Robinson et al.](https://openreview.net/forum?id=CR1XOQ0UTh-) (all) | 35 min |
 | 7 | [Musgrave et al.](https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123700681.pdf) §3–§4 | 30 min |
 | 8 | [SPECTER](https://aclanthology.org/2020.acl-main.207/) §3–§4 | 25 min |
 | 9 | [Zhang et al., TOSEM](https://doi.org/10.1145/3576042) §1, §3, §5, §6.3 | 40 min |

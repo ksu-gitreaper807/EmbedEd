@@ -8,18 +8,23 @@ embedding model).
 
 ## Contents
 
-- [`project/distilled/`](project/distilled/) — **start here.** The smallest version of the
-  project that is still worth doing: one dataset (AskUbuntu duplicate questions), one model
-  (`all-MiniLM-L6-v2`), one loss (`MultipleNegativesRankingLoss`), two metrics
-  (Recall@10, MRR@10), three systems (BM25 / zero-shot / fine-tuned). Four source files,
-  ~500 lines, four weeks. Contains the aggressive critique of the larger plan, the final
-  project specification, 7 essential papers, the implementation plan with debugging
-  checkpoints, and the scope document with Versions A/B/C and a stop condition.
+- [`project/distilled/`](project/distilled/) — **start here.** The plan of record: a 4-week
+  project with one real independent variable. AskUbuntu duplicate questions (~15K corpus),
+  one model (`all-MiniLM-L6-v2`), one loss (`MultipleNegativesRankingLoss`), and **three
+  negative-hardness conditions** (random / lexical / model-mined) — because "does
+  fine-tuning help?" is a reproduction question, while "does negative hardness decide
+  whether it helps?" is an experiment. Three metrics (Recall@10, MRR@10, nDCG@10), paired
+  bootstrap on three contrasts, a manual false-negative measurement, 8 essential papers,
+  six source files (~650 lines), 12 debugging checkpoints, and a scope document with
+  Versions A/B/C and a stop condition.
 - [`distilled-project/`](distilled-project/) — the **larger** specification this was distilled
-  *from*: conceptual primer + maths, feasibility matrix, five candidate paths, the project
-  specification, experiment design, implementation architecture, four-week plan, error
-  analysis, a 16-paper reading order (~4.5 hours), and a "do not do this" list. Kept for
-  reference; `project/distilled/` supersedes it as the plan of record.
+  *from*: CQADupStack, five negative strategies, two encoders, cross-domain evaluation.
+  Kept as Version C (8–12 weeks). Also contains the conceptual primer + maths, feasibility
+  matrix, five candidate paths, experiment design, error analysis, a 16-paper reading order
+  (~4.5 hours), and a "do not do this" list.
+- Version A (the smallest complete version: in-batch negatives only, 2 metrics, 4 files) is
+  described in [`project/distilled/SCOPE.md`](project/distilled/SCOPE.md) and preserved in git
+  history at commit `633db02`.
   The literature distilled into one executable 1-month undergraduate project:
   conceptual primer + maths, feasibility matrix, five candidate paths, the full
   project specification, experiment design and scope, implementation

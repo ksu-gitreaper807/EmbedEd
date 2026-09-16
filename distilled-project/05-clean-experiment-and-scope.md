@@ -24,7 +24,7 @@
 2. **Filter it (strategy N5).** Drop candidates with `sim(a,c) > sim(a,p) − δ`, or use `mine_hard_negatives`' `absolute_margin` / `relative_margin` / `max_score` / `range_min`.
 3. **Do not train on the top-1 most similar candidate at all** (`range_min=5`) — the very nearest neighbours are the most likely unlabelled duplicates.
 
-**Theory:** [Robinson et al. (2021)](https://openreview.net/forum?id=S4nZh4WBHxq) prove (empirically) that hard sampling *without* debiasing is worse than with it; [RocketQA (2021)](https://aclanthology.org/2021.naacl-main.466/) shows the same in retrieval.
+**Theory:** [Robinson et al. (2021)](https://openreview.net/forum?id=CR1XOQ0UTh-) prove (empirically) that hard sampling *without* debiasing is worse than with it; [RocketQA (2021)](https://aclanthology.org/2021.naacl-main.466/) shows the same in retrieval.
 
 ### 3. Train / validation / test separation
 

@@ -97,7 +97,7 @@ Five strategies — all built from the same anchor/positive pool, differing only
 | **N2** | In-batch only | No explicit negatives; the other `B−1` positives in the mini-batch act as negatives | [Henderson 2017](https://arxiv.org/abs/1705.00652), [DPR](https://arxiv.org/abs/2004.04906) |
 | **N3** | Lexical-hard | Top-`k` BM25 matches for `a`, excluding the group | [DPR](https://arxiv.org/abs/2004.04906) ("BM25 negatives"), [AugSBERT](https://aclanthology.org/2021.naacl-main.28/) |
 | **N4** | Model-hard | Top-`k` by the **current model's** embedding similarity, re-mined once per epoch with FAISS | [ANCE](https://openreview.net/forum?id=zeFrfgyZln) (lite version: static refresh instead of asynchronous) |
-| **N5** | Denoised-hard | N4 candidates filtered: drop any `c` with `sim(a,c) > sim(a,p) − δ` (or use a cross-encoder score threshold) | [RocketQA](https://aclanthology.org/2021.naacl-main.466/), [Robinson et al.](https://openreview.net/forum?id=S4nZh4WBHxq) |
+| **N5** | Denoised-hard | N4 candidates filtered: drop any `c` with `sim(a,c) > sim(a,p) − δ` (or use a cross-encoder score threshold) | [RocketQA](https://aclanthology.org/2021.naacl-main.466/), [Robinson et al.](https://openreview.net/forum?id=CR1XOQ0UTh-) |
 
 **Practical note:** `sentence-transformers` ships `mine_hard_negatives(...)` with exactly the knobs for N3–N5 (`range_min`, `range_max`, `max_score`, `absolute_margin`, `relative_margin`, `use_faiss`). Use it. Do not re-implement mining.
 
