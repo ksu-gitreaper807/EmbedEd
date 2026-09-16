@@ -8,7 +8,18 @@ embedding model).
 
 ## Contents
 
-- [`distilled-project/`](distilled-project/) — **start here if you want to build the project.**
+- [`project/distilled/`](project/distilled/) — **start here.** The smallest version of the
+  project that is still worth doing: one dataset (AskUbuntu duplicate questions), one model
+  (`all-MiniLM-L6-v2`), one loss (`MultipleNegativesRankingLoss`), two metrics
+  (Recall@10, MRR@10), three systems (BM25 / zero-shot / fine-tuned). Four source files,
+  ~500 lines, four weeks. Contains the aggressive critique of the larger plan, the final
+  project specification, 7 essential papers, the implementation plan with debugging
+  checkpoints, and the scope document with Versions A/B/C and a stop condition.
+- [`distilled-project/`](distilled-project/) — the **larger** specification this was distilled
+  *from*: conceptual primer + maths, feasibility matrix, five candidate paths, the project
+  specification, experiment design, implementation architecture, four-week plan, error
+  analysis, a 16-paper reading order (~4.5 hours), and a "do not do this" list. Kept for
+  reference; `project/distilled/` supersedes it as the plan of record.
   The literature distilled into one executable 1-month undergraduate project:
   conceptual primer + maths, feasibility matrix, five candidate paths, the full
   project specification, experiment design and scope, implementation
