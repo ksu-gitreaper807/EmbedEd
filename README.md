@@ -8,8 +8,14 @@ embedding model).
 
 ## Contents
 
+- [`distilled-project/`](distilled-project/) — **start here if you want to build the project.**
+  The literature distilled into one executable 1-month undergraduate project:
+  conceptual primer + maths, feasibility matrix, five candidate paths, the full
+  project specification, experiment design and scope, implementation
+  architecture, a four-week plan, error analysis, a 16-paper reading order
+  (~4.5 hours), and a "do not do this" list.
 - [`research/literature-review-contrastive-domain-embeddings.md`](research/literature-review-contrastive-domain-embeddings.md)
-  — the main deliverable. A research-grade literature review covering:
+  — the full survey behind it. A research-grade literature review covering:
   - executive summary and research landscape
   - a table of the 24 most relevant papers, plus supporting references
   - full per-paper extraction tables for the 12 papers that matter most
