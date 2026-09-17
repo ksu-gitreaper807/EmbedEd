@@ -15,6 +15,21 @@ feature is that it carries the *research metadata* (domain, negative-pair strate
 config, measured evaluation) alongside the weights, and can load the generic baseline model
 through the identical interface so the before/after comparison is honest by construction.
 
+### Two domains
+
+`domembed` now serves **two parallel research tracks**, and is specified to be neutral between
+them:
+
+| | AskUbuntu track | Code track |
+|---|---|---|
+| Domain | Ubuntu duplicate questions | Java code clone detection |
+| Model | `all-MiniLM-L6-v2` (384-d) | `microsoft/graphcodebert-base` (768-d) |
+| Decision rule | rank of the gold duplicate | cosine similarity against a threshold |
+| Specification | [`project/distilled/`](../../project/distilled/) | [`project/code-clone/`](../../project/code-clone/) |
+
+The contract below is written for both. Where they differ, the difference is noted inline and
+collected in **[`CODE_TRACK.md`](CODE_TRACK.md)**.
+
 ### Priority doctrine
 
 > **The library is the engineering deliverable. The demo is the presentation centerpiece.**

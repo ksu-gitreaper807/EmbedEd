@@ -109,6 +109,25 @@ not a new algorithm.
 
 ---
 
+## The code track (parallel, second domain)
+
+A second research track runs alongside the AskUbuntu work: **BigCloneBench / GraphCodeBERT / Java
+clone detection**.
+
+→ **[`project/code-clone/`](../../project/code-clone/)** for the research specification
+→ **[`CODE_TRACK.md`](CODE_TRACK.md)** for what it changes in `domembed`
+
+The short version: **nothing in the contract changes.** Same five calls, same `model_info.json`,
+same export seam. What differs is three configuration values (768-d, cased, cosine threshold
+instead of a rank), five extra metadata fields, and a re-designed demo centrepiece — pairwise
+scores against a drawn threshold, rather than a rank jump.
+
+If both tracks finish, `domembed` ships **two** domain models through one interface. That is a
+better demonstration of the design than a single model would be, and it costs nothing beyond a
+second `model_info.json`.
+
+---
+
 ## Publishing to PyPI (documented, not scheduled)
 
 Not a deliverable. Written down so it is a 30-minute task later rather than an unknown.

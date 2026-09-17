@@ -30,6 +30,7 @@
 | 15 | Implementation milestones |
 | 16 | Risks and mitigations |
 | 17 | Recommended architecture — the summary |
+| 18 | **Appendix — mapping this plan onto the code track** (BigCloneBench / GraphCodeBERT) |
 
 ---
 
@@ -1376,3 +1377,97 @@ for this setting: *do short runs tell you which negatives to use?*
 And the bridge:
 
 > **Run small controlled pilots and select the strategy that performs best on validation.**
+
+---
+
+## 18. Appendix — mapping this plan onto the code track
+
+Added because a second research track now runs in parallel:
+**BigCloneBench / GraphCodeBERT / Java clone detection**
+([`project/code-clone/`](../../project/code-clone/)). Everything above was written for AskUbuntu;
+this section states what carries over and what does not, without rewriting §§1–17.
+
+### 18.1 "Domain" means something different, and that matters
+
+On the AskUbuntu track, "a new domain" meant a new pile of English text. On the code track it can
+mean three different things, and the system has to know which one it is being asked about:
+
+| Sense of "domain" | Example | Is adaptive selection the right tool? |
+|---|---|---|
+| **Functionality category** | "detect clones of *Sort Array* having trained on other functionalities" | No — this is the *generalisation test*, an evaluation, not a training-time choice |
+| **Programming language** | Java → Python | **Yes.** Closest analogue to the NLP case, and the honest target |
+| **Codebase / repository** | one company's Java | Yes, but the interesting variable is size, not semantics |
+
+Consequence: do not promise "adaptive selection across functionalities". That conflates a
+training-time decision with an evaluation protocol, and it would be claiming to solve the thing
+Kitsios et al. (ASE 2025) measured as an open problem. The right framing is: **given a new
+corpus of code, which negative strategy should we train with?**
+
+### 18.2 The selection metric changes
+
+| | AskUbuntu track | Code track |
+|---|---|---|
+| Selection metric | `argmax Recall@10_dev` | `argmax F1_dev`, threshold selected on dev per strategy |
+| Tie-break | margin 0.02, then cheapest | same, unchanged |
+| Costs | random 0 / bm25 1 / semantic 2 | **unchanged** |
+
+One honest complication: on the code track the metric people actually care about is
+**generalisation** (`Δ = F1_seen − F1_unseen`), and `Δ` cannot be estimated from a plain dev split
+— it needs held-out *functionalities*. A cheap pilot therefore cannot directly optimise the thing
+the project is about. Options, in order of honesty:
+
+1. Select on `F1_dev` and state plainly that the pilot optimises benchmark fit, not
+   generalisation.
+2. Add one held-out functionality to the pilot. Costs almost nothing at pilot scale (25% of pairs,
+   1 epoch) and buys a noisy but real `Δ` estimate. **Recommended if the generalisation split
+   exists.**
+
+### 18.3 The profile statistics need rewriting for code
+
+The eight statistics in §5 are English-text statistics. For code, the informative ones are
+different:
+
+| Statistic | Why it matters for code |
+|---|---|
+| Token-length distribution | Java methods are long; drives max_seq_length and cost |
+| Lexical near-duplicate rate | Code corpora are full of copy-paste; determines how much BM25 mining degenerates into finding T1/T2 clones |
+| Function concentration | BigCloneBench is dominated by ~8 functionalities; a few methods dominate the pairs |
+| **Estimated label completeness** | **The dominant variable.** Everything in [`GROUND_TRUTH.md`](../../project/code-clone/GROUND_TRUTH.md) says the false-negative burden is what decides BM25 vs semantic |
+| Comment-to-code ratio | Comments make BM25 behave like natural-language retrieval |
+| Identifier tokenisation quality | Whether `camelCase` splits cleanly affects BM25 far more than it affects dense retrieval |
+
+Note the fourth one: **label completeness is the variable the literature says decides the answer**
+(§5 of [`STRATEGY_EVIDENCE.md`](../negative-pair-research/STRATEGY_EVIDENCE.md)), and it is also
+the one that is expensive to estimate without human labelling. That is the honest weak point of
+the adaptive idea on this track, and it should be stated as such.
+
+### 18.4 What carries over unchanged
+
+* The pipeline stages (§2), the pilot design (§6: 25% of pairs, 1 epoch, 1 seed, k=64), the
+  "shrink the training, never the evaluation" rule, and the five hard rules.
+* The five modules (`profile.py`, `strategies.py`, `pilot.py`, `selector.py`, `pipeline.py`) and
+  the ~450-line budget. None of the architecture is language-specific.
+* The rejection of ensembling, weight averaging, and model soups (§3.3).
+* The `argmax` + margin tie-break + `confident=False` logic (§4).
+* The novelty audit (§12): pilot-based selection is standard model selection. **Nothing about
+  code changes that.**
+
+### 18.5 What gets worse
+
+| Risk | Why it is worse on the code track |
+|---|---|
+| **Risk 7 — "if BM25 always wins, adaptive selection is a complicated constant function"** | More acute. If lexical near-duplicates dominate, BM25 and semantic mining may be nearly the same operation, and all three strategies collapse to one answer |
+| **Low-fidelity bias** (§12.4, search 2) | Untested at any scale, on either track. Still the gate, still must be run first |
+| **False-negative contamination** | Larger on code (copy-paste is pervasive), and it is *the* mechanism under study — so a pilot that mis-estimates it will mis-select |
+| **Metric instability** | F1 with a threshold is noisier at small scale than Recall@10, so pilots need a wider margin before declaring a winner |
+
+### 18.6 Recommendation
+
+Do not build anything for the code track until the code track's own C0/C1/C2/C3 results exist.
+The adaptive layer's only real validation is "do cheap pilots predict full runs?", and that
+question cannot be answered once, let alone twice.
+
+If both tracks eventually produce results, the **cross-track check** becomes the most interesting
+experiment in the whole plan, and it is free: run the pilot on both domains and ask whether the
+strategy ranking transfers. Two domains is the minimum for claiming anything about adaptivity at
+all — with one domain, "adaptive" is unfalsifiable.

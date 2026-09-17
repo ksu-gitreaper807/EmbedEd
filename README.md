@@ -26,6 +26,16 @@ embedding model).
   Streamlit demo. Built around the research, not alongside it: ~430 lines, one 40-line export
   script as the only seam between the two halves.
 
+- [`project/code-clone/`](project/code-clone/) — the **second track, running in parallel**:
+  BigCloneBench (9,134 Java fragments) + GraphCodeBERT + four conditions (off-the-shelf / random /
+  BM25 / semantic negatives), with the same independent variable as the AskUbuntu track — but
+  adding a **generalisation test on held-out functionality categories**, which is what makes it the
+  stronger of the two. Includes eight corrections to the draft specification: the CodeXGLUE file
+  has no functionality column, GraphCodeBERT's data-flow signal does not survive a default
+  `sentence-transformers` load, and BigCloneBench's ground truth is contested (93% of a sample of
+  406 WT3/T4 clone pairs were found mislabelled). Start with
+  [`FINAL_SPEC.md`](project/code-clone/FINAL_SPEC.md) and
+  [`GROUND_TRUTH.md`](project/code-clone/GROUND_TRUTH.md).
 - [`project/distilled/`](project/distilled/) — **start here.** The plan of record: a 4-week
   project with one real independent variable. AskUbuntu duplicate questions (~15K corpus),
   one model (`all-MiniLM-L6-v2`), one loss (`MultipleNegativesRankingLoss`), and **three
