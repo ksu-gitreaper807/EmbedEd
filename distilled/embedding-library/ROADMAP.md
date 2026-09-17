@@ -65,6 +65,7 @@ Recorded so they stop being re-proposed in every meeting.
 | Cross-lingual domain embeddings | Needs multilingual data and a different evaluation |
 | An evaluation harness (MTEB-style) inside the library | The research repo already has `evaluate.py` |
 | Automatic domain detection | A solution looking for a problem |
+| **Automatic negative-strategy selection** | **Promoted out of this list — it is a full v2, specified separately in [`distilled/adaptive-embedding/`](../adaptive-embedding/)** |
 
 ---
 
@@ -87,7 +88,24 @@ spare time:
 [ ] PyPI publication
 [ ] Anything with "agent" in it
 [ ] Anything that needs a hyperparameter search
+[ ] Adaptive / automatic negative-strategy selection  ← v2, see ../adaptive-embedding/
 ```
+
+---
+
+## v2 — the adaptive extension (planned, not scheduled)
+
+A separate document, because it is a different question from everything above. Where v0.1 asks
+*"how do we package one model?"*, v2 asks *"given a new dataset, which negative strategy should
+the model be trained with?"*
+
+→ **[`distilled/adaptive-embedding/`](../adaptive-embedding/)**
+
+Start it only after the current experiment is written up. Two reasons it is genuinely separate
+work rather than a late feature: it depends on having the finished N1/N2/N3 results to validate
+against (its central check is "do cheap pilots predict full runs?"), and its honest novelty
+assessment is that pilot-based selection is standard model selection — a systems contribution,
+not a new algorithm.
 
 ---
 

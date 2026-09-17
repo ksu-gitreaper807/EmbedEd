@@ -14,6 +14,12 @@ embedding model).
   matrix, five shortlisted experiments, an honest novelty audit, and a recommended direction.
   Read this before you change `negatives.py`.
 
+- [`distilled/adaptive-embedding/`](distilled/adaptive-embedding/) — a **Version 2 plan** for
+  making `domembed` domain-flexible: given a new dataset, run cheap pilots with the same three
+  negative strategies and let validation pick one, instead of asking the user to choose. ~450
+  new lines over existing code. Explicitly future work, with an honest novelty audit —
+  pilot-based selection is standard model selection, not a new algorithm.
+
 - [`distilled/embedding-library/`](distilled/embedding-library/) — the **product layer**.
   A specification for `domembed`, a small Python package that wraps the trained domain model
   and exposes `encode` / `similarity` / `search` / `info`, plus a CLI and an optional
