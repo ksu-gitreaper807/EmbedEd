@@ -8,6 +8,12 @@ embedding model).
 
 ## Contents
 
+- [`distilled/negative-pair-research/`](distilled/negative-pair-research/) — a literature
+  investigation into **how negatives are constructed**, which is the only real independent
+  variable in the project. Nine-category taxonomy, 12 candidate strategies with a feasibility
+  matrix, five shortlisted experiments, an honest novelty audit, and a recommended direction.
+  Read this before you change `negatives.py`.
+
 - [`project/distilled/`](project/distilled/) — **start here.** The plan of record: a 4-week
   project with one real independent variable. AskUbuntu duplicate questions (~15K corpus),
   one model (`all-MiniLM-L6-v2`), one loss (`MultipleNegativesRankingLoss`), and **three
