@@ -9,11 +9,23 @@ does not do.
 
 `domembed` is a Python package that loads a domain-specific sentence embedding model and exposes
 it through three operations — `encode`, `similarity`, `search` — plus model provenance
-(`info()`), a command-line interface, and an optional Streamlit demo. It wraps
-`sentence-transformers` rather than replacing it, and its distinguishing feature is that it
-carries the *research metadata* (domain, negative-pair strategy, training config, measured
-evaluation) alongside the weights, and can load the generic baseline model through the identical
-interface so the before/after comparison is honest by construction.
+(`info()`), a command-line interface, and **a Streamlit demo that is the presentation
+centerpiece**. It wraps `sentence-transformers` rather than replacing it, and its distinguishing
+feature is that it carries the *research metadata* (domain, negative-pair strategy, training
+config, measured evaluation) alongside the weights, and can load the generic baseline model
+through the identical interface so the before/after comparison is honest by construction.
+
+### Priority doctrine
+
+> **The library is the engineering deliverable. The demo is the presentation centerpiece.**
+>
+> They are not in competition, but when they conflict, the demo wins the tie. The library's
+> purpose in this project is to make the demo *honest* — to prove the comparison runs through
+> one code path and the numbers are generated rather than typed. The demo's purpose is to make
+> the research land in ten seconds.
+>
+> Practical consequence: the demo is designed first, around the research result, and the library
+> is the minimum that makes the demo defensible. See [`DEMO.md`](DEMO.md).
 
 ---
 
@@ -108,13 +120,25 @@ print(model.info())
 
 Used in the demo, in the report's reproducibility section, and by future-you.
 
-### UC6 — Script it
+### UC6 — **See the research result, live** *(the centerpiece)*
+
+```python
+results = {name: m.search(query, corpus, top_k=10) for name, m in models.items()}
+gold_rank(results["generic"], qid)   # 5
+gold_rank(results["n3_hard"], qid)   # 1
+```
+
+Where the duplicate that the AskUbuntu community marked sits, under each model, on the real
+evaluation corpus. This is the use case every design decision serves. Full spec in
+[`DEMO.md`](DEMO.md).
+
+### UC7 — Script it
 
 ```bash
 domembed search "how do I configure ssh keys?" questions.txt --top-k 5 --json > out.json
 ```
 
-### UC7 — Show that it is fast enough to use
+### UC8 — Show that it is fast enough to use
 
 ```bash
 domembed bench
@@ -132,10 +156,14 @@ domembed bench
 | F4 | **Search** | Query + document list + `top_k` → results sorted by descending score. |
 | F5 | **Index** | Encode a corpus once; query it repeatedly with only the query being encoded. |
 | F6 | **Info** | Print/return the model's domain, base, dimension, training config and measured evaluation. |
-| F7 | **CLI** | `encode`, `similarity`, `search`, `info`, `bench`. |
-| F8 | **Benchmark** | Load time, encode latency, throughput, peak memory. |
+| F7 | **Demo** | A Streamlit page: query → ranked columns per model, with the gold duplicate starred and its rank shown per column. **The presentation centerpiece — designed first, and result-agnostic.** |
+| F8 | **CLI** | `encode`, `similarity`, `search`, `info`, `bench`. *Cuttable.* |
+| F9 | **Benchmark** | Load time, encode latency, throughput, peak memory. *Cuttable.* |
 
 Anything not in this table is not in the product.
+
+**F1–F6 plus F7 are the product.** F8 and F9 are polish and are the first things cut — see
+[`DEMO.md`](DEMO.md) §8.
 
 ---
 
@@ -157,7 +185,8 @@ Stated so they can be pointed at when scope pressure arrives.
 | ONNX / quantised inference | Needs a toolchain and a correctness check | v0.2 (`fastembed` or `optimum`) |
 | A general NLP toolkit | — | Use `spaCy`, `gensim`, `scikit-learn` |
 | PyPI publication | Not required, adds a release process | `pip install -e .` |
-| A web frontend | The Streamlit app is enough | — |
+| A web frontend | The Streamlit app is the frontend | — |
+| A demo that only shows our model winning | The result is not known yet, and may be a tie or a loss | The four result modes in [`DEMO.md`](DEMO.md) §1.2 |
 
 ---
 
@@ -209,21 +238,23 @@ it is what people will look for).
 | M6 | `model_info.json` schema + `scripts/export_model.py` | **The seam between research and product** |
 | M7 | Error handling for the five documented edge cases | Empty input, missing model, bad `top_k`, wrong types, overlong text |
 | M8 | `pyproject.toml` such that `pip install -e .` works | hatchling backend, extras for `demo` and `dev` |
-| M9 | README with quick-start and honest results section | Numbers generated, never typed |
-| M10 | `examples/quickstart.py` — the demo script, runnable end to end | |
-| M11 | Test suite: the five named tests plus the property tests | See [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) §5 |
+| M9 | README with the demo screenshot above the fold and an honest results section | Numbers generated, never typed |
+| M10 | **The Streamlit demo: query → ranked columns per model, gold duplicate starred, rank shown per column** | **The presentation centerpiece. ~120 lines. Designed first; result-agnostic.** |
+| M11 | **All four result-mode captions written** (WIN / INVERTED-U / TIE / LOSS) | So a flat or negative result still has a demo |
+| M12 | `model.index()` / `DocumentIndex` | Required for a responsive demo on the full corpus — cut only if the corpus is trimmed |
+| M13 | Test suite: the five named tests | See [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) §5 |
 
 ### SHOULD HAVE — do these if the research stays on schedule
 
 | # | Item | Notes |
 |---|---|---|
-| S1 | CLI with five subcommands | argparse, stdlib only |
-| S2 | `benchmark()` + `domembed bench` | Feeds the performance slide |
-| S3 | Streamlit demo with the two-column comparison | ~60 lines, separate extra |
-| S4 | `model.index()` / `DocumentIndex` | Required for a responsive demo on the full corpus |
+| S1 | The aggregate panel (Tab 2: metrics table + `info()` + benchmark) | The evidence that licenses the anecdote, and the fallback if the live query misbehaves |
+| S2 | CLI — `info` and `search` at minimum | `info` is the one command that looks good on a slide |
+| S3 | `benchmark()` + `domembed bench` | Feeds the performance panel |
+| S4 | Property tests (symmetry, self-similarity, batch invariance) | ~15 lines, catches real bugs |
 | S5 | Both loading paths demonstrated in the README | |
-| S6 | Property tests (symmetry, self-similarity, batch invariance) | ~15 lines, catches real bugs |
-| S7 | `logger` warnings rather than silent truncation | |
+| S6 | `logger` warnings rather than silent truncation | |
+| S7 | `examples/quickstart.py` | Largely superseded by the demo |
 
 ### OPTIONAL — only after everything above works
 
@@ -238,6 +269,12 @@ it is what people will look for).
 | O7 | A second domain model, to prove the pipeline generalises |
 | O8 | Hybrid BM25 + dense search |
 
+### The cut order, when time runs short
+
+Cut from the bottom of this list: O-items → S7 → S3 → S2 → S4 → M12 (only with a trimmed
+corpus). **Stop there.** Everything above that line is what makes the demo work. Full reasoning
+in [`DEMO.md`](DEMO.md) §8.
+
 ---
 
 ## 8. Success criteria
@@ -249,15 +286,19 @@ Checkable at the end of the project. Each is a yes/no question.
 | 1 | **Installable** | In a fresh virtualenv, `pip install -e .` succeeds and `import domembed` works. |
 | 2 | **Three-line promise kept** | Load → encode → search works from a cold start in under 10 lines of user code. |
 | 3 | **Runs on the generic model too** | `DomainEmbedder.load("sentence-transformers/all-MiniLM-L6-v2").search(...)` works unchanged. |
-| 4 | **The demo is live, not recorded** | During the presentation, a query typed by an audience member returns results in under 2 seconds. |
-| 5 | **Provenance is visible** | `model.info()` names the domain, the base model and the negative-pair strategy. |
-| 6 | **The numbers are real** | Every metric in the README traces to `results/metrics.json` in the research repo. |
-| 7 | **Honest by construction** | If the fine-tuned model loses to the baseline, the README, `info()` and the demo all still work and all say so. |
-| 8 | **Someone else can use it** | A group member who did not write the code completes UC1–UC4 from the README alone, in under 15 minutes, asking at most one question. |
-| 9 | **Tests pass** | `pytest` green, and the fast subset runs in under 5 seconds without a model download. |
-| 10 | **Small enough to read** | A newcomer can read the whole library in one sitting. Target: ~430 lines across 7 files. |
+| 4 | **The demo works live** | A query typed by an audience member returns ranked results with the gold duplicate starred, in under 2 seconds. |
+| 5 | **The demo shows the research variable** | The same query run through ≥2 negative-pair conditions produces visibly different rankings. |
+| 6 | **The demo survives a bad result** | With the TIE caption loaded, the app still runs, still looks finished, and still says something true. |
+| 7 | **Provenance is visible** | `model.info()` names the domain, the base model and the negative-pair strategy. |
+| 8 | **The numbers are real** | Every metric in the README and in Tab 2 traces to `results/metrics.json`. |
+| 9 | **Honest by construction** | If the fine-tuned model loses to the baseline, the README, `info()` and the demo all still work and all say so. |
+| 10 | **Someone else can use it** | A group member who did not write the code completes UC1–UC5 from the README alone, in under 15 minutes, asking at most one question. |
+| 11 | **Tests pass** | `pytest` green, and the fast subset runs in under 5 seconds without a model download. |
+| 12 | **Small enough to read** | A newcomer can read the whole library in one sitting. Target: ~490 lines of library + demo. |
 
-Criterion 8 is the real one. Everything else is a proxy for it.
+Criteria 4, 5 and 6 are the new centre of gravity. Everything else is a proxy for them.
+
+Criterion 4, 5 and 6 are the new centre of gravity. Everything else is a proxy for them.
 
 ---
 
@@ -270,3 +311,8 @@ Three questions to ask before adding anything:
 3. **Can a user discover it without documentation?** If no, it is probably too clever.
 
 If the answer to all three is "no", it does not go in v0.1.
+
+One addition, now that the demo leads:
+
+4. **Does it make the demo more likely to work on stage?** If no, and it competes with demo
+   time, cut it. The demo failing in front of an audience costs more than any feature earns.

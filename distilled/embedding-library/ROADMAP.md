@@ -22,7 +22,7 @@ Three columns: what ships, what might, what must not sneak into the one-month sc
 | Packaging | `pyproject.toml` (hatchling), `pip install -e .`, extras `demo` and `dev` |
 | Docs | README (with generated, honest numbers), `examples/quickstart.py` |
 | Tests | ~14 tests, including the property tests; fast subset under 5 s |
-| Demo | Streamlit app with the two-column model comparison |
+| Demo | **Streamlit app: query → ranked columns per model, gold duplicate starred, rank shown per column, plus the aggregate panel. The presentation centerpiece — designed first, and built to all four result modes (win / inverted-U / tie / loss).** |
 | Quality | `ruff` clean; ≤ 500 lines across 7 modules |
 
 **Version number: 0.1.0.** The `0.x` is deliberate — it is the honest signal that the API may
@@ -112,10 +112,16 @@ a clean repository with `pip install -e .` in the README. The second is also und
 
 ```text
 Week 1   research: data + baselines           library: nothing
-Week 2   research: negatives + first runs     library: Phases 0–1 (skeleton + embedder)
-Week 3   research: all conditions, statistics library: Phase 2 (CLI, tests, README)
-Week 4   research: write-up                   library: Phase 3 (export, demo, rehearsal)
+Week 2   research: negatives + first runs     library: Phases 0–1.5 (skeleton, embedder,
+                                                       DEMO SHELL against the generic model)
+Week 3   research: all conditions, statistics library: Phase 2 (aggregate panel, all four
+                                                       result-mode captions, CLI, tests, README)
+Week 4   research: write-up                   library: Phase 3 (export, real models, real
+                                                       numbers, delete three captions, rehearse)
 ```
+
+Week 2 now includes the demo shell. That is the change: the centerpiece is built when there is
+time to rehearse it, not in the last two days.
 
 The library is **downstream** of the research and **parallel** to it in time. If the research
 slips, the library slips — never the other way round. The hard rule from

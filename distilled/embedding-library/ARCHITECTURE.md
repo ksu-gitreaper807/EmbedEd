@@ -36,8 +36,18 @@ Seven modules, ~430 lines, one external dependency that matters.
   └───────────────────────────────────────────────────────────────┘
 ```
 
-Plus `cli.py` (~90 lines), which sits beside `embedder.py` and calls it — it does not know about
-anything below it.
+Plus two **consumers**, both of which talk only to the public API and neither of which the
+library knows about:
+
+| Consumer | ~Lines | Status |
+|---|---|---|
+| `cli.py` | 90 | Sits beside `embedder.py`; argparse and formatting only. **Cuttable.** |
+| `demo/app.py` | 120 | The Streamlit app. **The presentation centerpiece — not cuttable.** |
+
+The demo additionally reads `data/corpus.jsonl`, `data/qrels.json` and `results/metrics.json`
+**directly from the research repo**. It does not go through `domembed` for those, because
+corpora, gold labels and evaluation metrics are research concerns and must not leak into the
+library. The library never learns that qrels exist.
 
 ---
 
@@ -209,7 +219,7 @@ Cross-checking against the libraries surveyed for §9 of the brief:
 | **transformers / torch** | Indirectly, through `sentence-transformers` | We never import them directly |
 | **numpy** | Array maths | — |
 | **fastembed / model2vec** | *Idea* only: that a focused, dependency-light embedding API is good design | Not used — they target ONNX/static models and would require converting our checkpoint. Possible v0.2. |
-| **FAISS** | Nothing | Its value starts in the millions of vectors; ours is 14,231 |
+| **FAISS** | Nothing | Its value starts in the millions of vectors; ours is ~14,000 |
 | **Chroma / Qdrant / LanceDB** | Nothing — but they define our non-goal | Persistence, filtering, incremental indexing. We are stateless by design. |
 | **gensim** | Nothing | Static word vectors; a different generation of technology |
 | **scikit-learn** | Nothing | `cosine_similarity` is one line; not worth a 30 MB dependency |

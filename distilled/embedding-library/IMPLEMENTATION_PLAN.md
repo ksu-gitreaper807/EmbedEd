@@ -24,11 +24,18 @@ checkpoints, the research may still change shape.
 |---|---|---|---|---|
 | **0** | Week 2, alongside training | Packaging skeleton + `similarity.py` | 0.5 day | nothing |
 | **1** | Week 2–3, alongside training | `embedder.py` — load, encode, similarity, search, info | 1.5 days | Phase 0 |
-| **2** | Week 3, alongside training | CLI, benchmark, tests, README, examples | 1.5 days | Phase 1 |
-| **3** | Week 4, after the winning model exists | Export script, swap in the real weights, Streamlit demo, rehearsal | 2 days | a trained checkpoint |
+| **1.5** | Week 2–3, alongside training | **Demo shell** against the generic model | **0.75 day** | Phase 1 |
+| **2** | Week 3, alongside training | Aggregate panel + all four result-mode captions; CLI, benchmark, tests, README | 1.5 days | Phase 1.5 |
+| **3** | Week 4, after the winning model exists | Export script, real weights, real numbers, delete three captions, rehearse | 1.5 days | a trained checkpoint |
 
 Phases 0–2 run **in parallel with the research** and cost it nothing: they use no GPU and no
 model other than the one already downloaded. Phase 3 is the only part that waits.
+
+**Phase 1.5 is the important addition.** The demo is the presentation centerpiece, so it must not
+be built in the last two days. The shell is built in week 2 against the generic model — corpus,
+index, two-column layout, `gold_rank` — with numbers that mean nothing yet. Then week 4 is only
+"drop in the real models and delete three captions" instead of "build the most important thing
+under time pressure".
 
 ---
 
@@ -218,7 +225,7 @@ device                        cpu
 dimension                     384
 encode, single text           14.2 ms
 encode, batch of 32           103 ms   (311 texts/s)
-index build, 14,231 docs      41.3 s   (one-time)
+index build, ~14,000 docs      41.3 s   (one-time)
 index.search, per query       11.8 ms
 peak RSS                      742 MB   (torch, not domembed)
 ```
@@ -274,9 +281,22 @@ and the evaluation numbers that appear in `results/main_table.md`. Compare them 
 Run the export script on **each** condition (N1/N2/N3, or the four quadrants). Each is ~90 MB,
 so keep them local unless you want them on the Hub. The demo needs at least two.
 
-### Step 3.3 — Streamlit demo (3 hours)
+### Step 3.3 — Streamlit demo (3 hours to finish; shell built in week 2)
 
-See [`DEMO.md`](DEMO.md) for the design. One file, `demo/app.py`, ~60 lines.
+See [`DEMO.md`](DEMO.md) for the design. One file, `demo/app.py`, ~120 lines.
+
+**Built in two passes, deliberately:**
+
+| Pass | When | Against | Produces |
+|---|---|---|---|
+| Shell | Week 2 (Phase 1.5) | `all-MiniLM-L6-v2` only | Corpus + index + multi-column layout + `gold_rank` + ★ markers. Numbers meaningless; plumbing proven. |
+| Fill | Week 4 (Phase 3) | The real conditions | Real models, real qrels, real metrics, all four result-mode captions trimmed to one. |
+
+The week-2 pass is what makes this safe. If the research runs late, you still have a working
+demo with a worse model in it, rather than a beautiful app with nothing to show.
+
+`gold_rank()` must handle a miss explicitly — return `None` and render `> k`, never silently
+drop the row.
 
 ### Step 3.4 — rehearsal (1 hour)
 
@@ -351,23 +371,41 @@ Recall@10 inside the library's test suite would create two sources of truth for 
 
 ## 7. Definition of done
 
-Not "it runs" — these ten statements, each checkable:
+Not "it runs" — these statements, each checkable. The first four are the ones that matter:
 
-1. `pip install -e .` works in a clean virtualenv.
-2. `pytest` is green, and `pytest -m "not model"` finishes in under 5 seconds.
-3. `ruff check` is clean.
-4. `domembed` is importable from any directory, not just the repo root.
-5. `examples/quickstart.py` runs end to end with no edits.
-6. `model.info()` prints the domain, the base model and the negative-pair strategy.
-7. The evaluation numbers in the README match `results/main_table.md`.
-8. The Streamlit demo answers a typed query in under 2 seconds on the presentation machine.
-9. A group member who did not write the code completes UC1–UC4 from the README alone.
-10. The whole library is under 500 lines. `wc -l domembed/*.py` — if it says 1,200, something
-    crept in.
+1. **The Streamlit demo answers a typed query in under 2 seconds on the presentation machine**,
+   with the gold duplicate starred and its rank shown per column.
+2. **The same query run through ≥2 conditions produces visibly different rankings** — the
+   research variable is on screen, not just asserted.
+3. **With the TIE caption loaded, the app still runs and still says something true** — the demo
+   does not depend on a winning result.
+4. **A screenshot of the demo is above the fold in the README.**
+5. `pip install -e .` works in a clean virtualenv.
+6. `pytest` is green, and `pytest -m "not model"` finishes in under 5 seconds.
+7. `domembed` is importable from any directory, not just the repo root.
+8. `model.info()` prints the domain, the base model and the negative-pair strategy.
+9. The evaluation numbers in the README match `results/main_table.md`.
+10. A group member who did not write the code completes UC1–UC5 from the README alone.
+11. The whole library plus demo is under 620 lines
+    (`wc -l domembed/*.py demo/app.py`). If it says 1,400, something crept in.
 
-**Stop condition:** if the research runs late, cut in this order — Streamlit demo → benchmark →
-CLI → `DocumentIndex`. Never cut `model_info.json`: provenance is the only part of the library
-that is not available from `sentence-transformers` already.
+**Stop condition** — if the research runs late, cut in this order:
+
+```text
+1. CLI (keep `info` only if anything)          ← cut first
+2. benchmark module (use a pasted table)
+3. examples/quickstart.py
+4. property tests beyond the five named ones
+5. DocumentIndex — ONLY if you also trim the corpus to ~2,000 docs
+──────────────────── stop here ────────────────────
+6. the aggregate panel      ← painful; it is both evidence and fallback
+7. the gold ★ marking       ← do not; this is what makes the demo evidence
+8. export_model.py          ← do not; this is the research connection
+9. the Streamlit demo       ← do not; it is the centerpiece
+```
+
+Never cut `model_info.json`: provenance is the only part of the library that is not available
+from `sentence-transformers` already. Full reasoning in [`DEMO.md`](DEMO.md) §8.
 
 ---
 
@@ -376,7 +414,10 @@ that is not available from `sentence-transformers` already.
 | Risk | Likelihood | Mitigation |
 |---|---|---|
 | torch install breaks on the presentation laptop | medium | Rehearse on that exact machine in week 3, not the morning of |
-| Demo stalls encoding 14K documents | **high** | `DocumentIndex` + `st.cache_resource`; pre-build the index with `scripts/build_demo_index.py` |
+| Demo stalls encoding ~14,000 documents | **high** | `DocumentIndex` + `st.cache_resource`; pre-build the index with `scripts/build_demo_index.py` |
+| **Demo is built too late to be rehearsed** | **high** | Phase 1.5 builds the shell in week 2; week 4 is only "swap models, delete captions" |
+| **Result is a tie or a loss and the demo only handles winning** | **real** | All four result-mode captions written in week 3 ([`DEMO.md`](DEMO.md) §1.2) |
+| **Only one condition shipped, so Visual C is impossible** | medium | Export every condition in Step 3.2; three columns is the minimum for Visual C |
 | Fine-tuned model turns out worse than the baseline | real | The library and demo both work regardless; the honest story is specified in the README's honesty rules |
 | Scope creep ("let's add FAISS / a server / reranking") | **high** | §7 stop condition; the non-goals table in [`PRODUCT_SPEC.md`](PRODUCT_SPEC.md) §5 |
 | Library steals time from the research | medium | Phases 0–2 need no GPU and no trained model; hard rule: **no library work before the research baselines are validated in week 2** |

@@ -24,6 +24,35 @@ from domembed import (
 
 Five names and a version string. That is the whole library.
 
+> ### The demo-critical subset
+>
+> The demo is the presentation centerpiece, so it defines what the API must provide. Everything
+> below exists to serve these five calls — if a method is not reachable from this snippet, it is
+> support, not product:
+>
+> ```python
+> model   = DomainEmbedder.load(path_or_hub_id)      # must accept the generic baseline too
+> vec     = model.encode("how do I configure ssh keys?")   # shown once, in passing
+> score   = model.similarity(q, "Generate ssh key pair…")  # shown once, in passing
+> results = model.search(q, corpus, top_k=10)              # ─ or index.search(q, 10)
+> info    = model.info()                                   # fills the provenance panel
+> ```
+>
+> | Call | Demo role | Cuttable? |
+> |---|---|---|
+> | `load` (both source forms) | Runs both models through one code path — the comparison's honesty | **No** |
+> | `encode` | Establishes "three lines" in 15 seconds | No (it is 20 lines) |
+> | `similarity` | Same | No (it is 10 lines) |
+> | `search` / `index().search()` | The columns | **No** |
+> | `info` | The provenance panel; where the negative-pair strategy appears | **No** |
+> | `benchmark` | The performance panel | Yes — a pasted table works |
+> | CLI | Cachet | Yes |
+>
+> **Smallest implementation that supports the demo: ~300 lines of library** (`embedder.py` ~170,
+> `similarity.py` ~45, `metadata.py` ~60, `errors.py` ~25) **plus ~120 lines of `demo/app.py`.**
+> The other ~170 lines (CLI, benchmark) are the first things cut. See [`DEMO.md`](DEMO.md) §4 and
+> §8.
+
 ---
 
 ## 2. `DomainEmbedder`
