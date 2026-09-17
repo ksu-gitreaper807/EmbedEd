@@ -7,6 +7,10 @@ for background on embeddings, transformers or retrieval in general — see
 Organised by the taxonomy category each paper supports. Every entry states what to take from it
 and how much of it to read.
 
+> **Want the short version?** [`FIVE_KEY_PAPERS.md`](FIVE_KEY_PAPERS.md) covers the five papers
+> that use all three strategies (Random / BM25 / Semantic), one page each, with merits and demerits
+> as each paper discusses them. Start there if you are about to write `negatives.py`.
+
 ---
 
 ## Category 1 — Random and in-batch negatives

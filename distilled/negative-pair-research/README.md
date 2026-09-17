@@ -129,6 +129,7 @@ good news (less code) and bad news (less novelty), and you should re-read
 
 | File | What is in it |
 |---|---|
+| [`FIVE_KEY_PAPERS.md`](FIVE_KEY_PAPERS.md) | **Start here for the three strategies you are implementing.** Five papers that use Random, BM25 and Semantic negatives, with merits and demerits as each paper discusses them |
 | [`STRATEGY_EVIDENCE.md`](STRATEGY_EVIDENCE.md) | **Start here for the three strategies you are actually implementing.** What the papers say about Random vs BM25 vs Semantic negatives, with merits and demerits attributed to each source and numbers read from the primary PDFs |
 | [`LITERATURE.md`](LITERATURE.md) | Negative-pair-specific literature: the taxonomy's supporting papers, organised by category, plus the cross-field imports |
 | [`NEGATIVE_STRATEGIES.md`](NEGATIVE_STRATEGIES.md) | The 9-category taxonomy (each with how/why/papers/cost/weakness/suitability) and 12 candidate strategies with the full field table |
