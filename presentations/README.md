@@ -26,7 +26,9 @@ presentations/
 
 ## Source files used
 
-Both are read from the repository path:
+**Repository:** `ksu-gitreaper807/EmbedEd`  ·  **Branch:** `arena/01a0aae7-embeded`
+
+Both source files live on that branch, under `distilled-project/presentation/`:
 
 | File | Role |
 |---|---|
@@ -35,6 +37,9 @@ Both are read from the repository path:
 
 The deck follows the content source for *what* it says and the format reference for *how* it is
 laid out.
+
+Where a source file disagrees with the current project context, the current-context version was
+kept and the discrepancy recorded in [`conflict.md`](conflict.md) — see *Conflicts* below.
 
 ### Design language reproduced from `EL-phase-1.md`
 
