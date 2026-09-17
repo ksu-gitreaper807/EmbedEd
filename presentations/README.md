@@ -16,8 +16,12 @@ presentations/
 ├── assets/
 │   ├── hypotheses.png                 ← generated: H1 / H0a / H0b schematic curves
 │   └── closing-embedding-space.png    ← generated: image-only closing slide
+├── diagrams/
+│   ├── research-process-flowchart.svg ← generated: standalone research-process flowchart (vector)
+│   └── research-process-flowchart.png ← generated: same, raster (1914 × 1349)
 ├── build/
-│   └── build_deck.py                  ← the generator script
+│   ├── build_deck.py                  ← generator for the .pptx
+│   └── build_flowchart.py             ← generator for the flowchart
 └── notes/
     └── current-context-baseline.md    ← working note: authoritative facts used for conflict diffing
 ```
@@ -92,6 +96,18 @@ implementation → evaluation), with pipelines and comparisons drawn as diagrams
 |---|---|
 | `assets/hypotheses.png` | **Regenerable.** Matplotlib, inside `build_deck.py` (`make_hypotheses_figure`). Schematic only — the axes carry no measured values, because no results exist yet. |
 | `assets/closing-embedding-space.png` | **Not script-regenerable.** AI-generated artwork for the image-only closing slide. If deleted, the builder falls back to a plain navy slide. |
+| `diagrams/research-process-flowchart.svg` / `.png` | **Regenerable.** `build_flowchart.py`. The same seven-stage flow as slide 24, as a standalone asset for documents and handouts. The SVG keeps text as editable `<text>` elements, so labels can be changed in Inkscape, Illustrator or Figma. |
+
+### About the flowchart
+
+A corporate / computer-science style diagram: muted corporate palette (navy, slate, steel blue,
+amber, green), rounded process boxes, straight orthogonal connectors, downward flow, numbered
+steps down the left margin, and a bold callout marking the independent variable. Delivered as both
+vector (SVG) and raster (PNG at 200 dpi).
+
+If you want a different visual treatment — swimlanes, horizontal left-to-right flow, decision
+diamonds, a flat/monochrome palette, or a different typeface — edit the palette constants and the
+row geometry at the top of `build_flowchart.py`; the layout is deliberately data-driven.
 
 ---
 
@@ -102,7 +118,8 @@ The deck is generated, so edit the script rather than the `.pptx`.
 ```bash
 python -m venv /tmp/pptxenv
 /tmp/pptxenv/bin/pip install python-pptx matplotlib
-/tmp/pptxenv/bin/python presentations/build/build_deck.py
+/tmp/pptxenv/bin/python presentations/build/build_deck.py        # the deck
+/tmp/pptxenv/bin/python presentations/build/build_flowchart.py   # the flowchart
 ```
 
 This overwrites `presentations/presentation.pptx`. Everything is inside the script:
