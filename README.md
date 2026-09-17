@@ -14,6 +14,12 @@ embedding model).
   matrix, five shortlisted experiments, an honest novelty audit, and a recommended direction.
   Read this before you change `negatives.py`.
 
+- [`distilled/embedding-library/`](distilled/embedding-library/) — the **product layer**.
+  A specification for `domembed`, a small Python package that wraps the trained domain model
+  and exposes `encode` / `similarity` / `search` / `info`, plus a CLI and an optional
+  Streamlit demo. Built around the research, not alongside it: ~430 lines, one 40-line export
+  script as the only seam between the two halves.
+
 - [`project/distilled/`](project/distilled/) — **start here.** The plan of record: a 4-week
   project with one real independent variable. AskUbuntu duplicate questions (~15K corpus),
   one model (`all-MiniLM-L6-v2`), one loss (`MultipleNegativesRankingLoss`), and **three
