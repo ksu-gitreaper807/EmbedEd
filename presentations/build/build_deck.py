@@ -1135,8 +1135,8 @@ card(s, M, TOP + 0.10, 3.80, 2.30, "Other domains",
       "Tests whether any finding is a property of code or a property of the method."],
      accent=ACC, body_size=12.5)
 card(s, M + 4.04, TOP + 0.10, 3.80, 2.30, "Automatic strategy selection",
-     ["Choose the negative-sampling strategy for a new, unseen domain automatically, using cheap pilot "
-      "runs instead of the user's judgement.",
+     ["Choose the negative-sampling strategy for a new, unseen domain automatically, using pilot "
+      "experiments instead of the user's judgement.",
       "",
       "Deliberately excluded here, to keep the comparison clean and interpretable."],
      accent=GOOD, body_size=12.5)
