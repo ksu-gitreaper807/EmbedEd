@@ -1,15 +1,14 @@
-# Final project specification — the code track
+# Final project specification — Java code clone detection
 
 **Domain-Specific Contrastive Embeddings for Code Similarity Detection: Comparing
 Negative-Sampling Strategies**
 
-> **Status:** the primary project in this repository. Originally the second track, running **in
-> parallel** with the AskUbuntu track in [`junk/project/distilled/`](junk/project/distilled/) —
-> not a replacement for it. That track is now archived under `junk/` (gitignored), preserved on
-> disk and in the history of branch `arena/01a0aae7-embeded`.
-> The two tracks share one independent variable (how negatives are selected) and one body of
-> literature ([`junk/distilled/negative-pair-research/`](junk/distilled/negative-pair-research/));
-> they differ in domain, model, and evaluation.
+> **Status:** the specification for the project in this repository. Everything else the
+> repository used to hold is archived under `junk/` (gitignored) — preserved on disk and in the
+> history of branch `arena/01a0aae7-embeded`, but no longer part of the project. The literature
+> archive left behind
+> ([`junk/distilled/negative-pair-research/`](junk/distilled/negative-pair-research/)) is still
+> cited where it carries an argument.
 
 ---
 
@@ -22,7 +21,7 @@ Used throughout this document and [`SCOPE.md`](SCOPE.md).
 | `[spec]` | Came from your final project specification, unchanged in substance |
 | `[verified]` | Read from a primary source while writing this document |
 | `[check]` | From a search snippet or abstract; **open the source before quoting it** |
-| `[repo]` | Carried over from this repository's existing AskUbuntu specifications |
+| `[repo]` | Carried over from the earlier specification this project grew out of |
 | `[illustrative]` | A made-up number for planning. Replace it with a measurement before you rely on it |
 
 ---
@@ -152,8 +151,8 @@ train anything, and put this table in the report.
 
 ### 3.1 Hypotheses `[repo]`
 
-Carried over unchanged from the AskUbuntu track — the variable is the same, so the hypotheses are
-too. `N1` = random, `N2` = BM25, `N3` = semantic.
+Carried over from the earlier specification unchanged — the independent variable is the same, so
+the hypotheses are too. `N1` = random, `N2` = BM25, `N3` = semantic.
 
 * **H1 (monotone):** `N1 ≤ N2 ≤ N3` on F1, and all three beat the off-the-shelf baseline. The
   naive transfer of DPR's result.
@@ -200,7 +199,7 @@ positives  = (func1, func2) pairs from the train split with label == 1
 negatives  = mined per strategy, from corpus, minus excluded fragments
 ```
 
-Three rules, all borrowed from the AskUbuntu track `[repo]`:
+Three rules, all carried over from the earlier specification `[repo]`:
 
 1. **Mine from the train-split corpus only.** A fragment that appears in the test split must never
    be used as a training negative.
@@ -226,7 +225,7 @@ print(len(train_frag), len(test_frag), len(overlap), len(overlap) / len(test_fra
 
 Report the number in the write-up either way. If the overlap is large, say so plainly and treat
 the standard-benchmark F1 as an optimistic upper bound — which is exactly what the
-generalisation test (§9.3) is there to expose. `[repo — mirrors the leakage check in the AskUbuntu track]`
+generalisation test (§9.3) is there to expose. `[repo — mirrors the earlier specification's leakage check]`
 
 ---
 
@@ -291,7 +290,7 @@ neighbourhoods. AugSBERT's closest analogue put BM25 at 75.08 and semantic searc
 statistically indistinguishable `[verified]`. If C2 and C3 produce equally hard batches, your
 manipulation did not take effect and the experiment produces no evidence.
 
-**The hardness check (carried over from the AskUbuntu track, non-negotiable)** `[repo]`: after
+**The hardness check (non-negotiable)** `[repo]`: after
 mining, compute mean `cos(anchor, negative)` for each condition's negative set. Require
 `C1 < C2 ≤ C3` with a visible gap. If it fails, stop and fix the mining — do not proceed to
 training.
@@ -333,8 +332,8 @@ harder**, C1 < C2 < C3. That is not a bug in your pipeline; it is the mechanism 
 **Therefore: measure it.** Sample 50 mined negatives from C3 and 50 from C2, and manually judge
 whether each pair implements the same functionality. Two hours of work. It converts your biggest
 validity threat into your strongest finding, and it is what makes an inverted-U result
-*explainable* rather than merely observed. `[repo — this is the false-negative measurement from
-the AskUbuntu track, and it was the highest value-per-hour item there too]`
+*explainable* rather than merely observed. `[repo — the false-negative measurement, historically
+the highest value-per-hour item of this design]`
 
 Compare your measured rate against the nearest published figure: naive top-k hard negative
 mining produces false-negative rates of **47% on StackExchange-domain data** `[check —
@@ -366,8 +365,9 @@ cannot express "this specific hard negative". Pick one of:
 * `TripletLoss` / `OnlineContrastiveLoss` with explicit triples — clean, directly expresses your
   variable, but gives one negative per anchor instead of `batch_size − 1`.
 * MNRL, with hardness manipulated by **batch composition** — build each batch so the other
-  anchors' positives act as the hard negatives. This is what the AskUbuntu track does `[repo]`,
-  and it is why that track can hold the loss byte-identical across conditions.
+  anchors' positives act as the hard negatives. This is what the batch-composition variant of the
+  earlier specification does `[repo]`, and it is why the loss can be held byte-identical across
+  conditions.
 
 Either is defensible. **Do not mix them between conditions**, and state which you chose and why.
 
@@ -472,8 +472,8 @@ Any outcome — including "harder negatives made it worse" — is a legitimate, 
 
 ## 11. Demo plan
 
-Your three components, adapted to the constraints this repository already adopted for the
-AskUbuntu demo `[repo]`.
+Your three components, adapted to the demo constraints the earlier specification already
+adopted `[repo]`.
 
 ### 11.1 Live interactive pair comparison `[spec]`
 
@@ -549,28 +549,7 @@ H0b was not testable.
 
 ---
 
-## 15. How this track relates to the AskUbuntu track
-
-| | AskUbuntu track | Code track (this) |
-|---|---|---|
-| Domain | Ubuntu duplicate questions | Java code clones |
-| Corpus | ~13,000–15,000 questions | ~9,134 Java fragments |
-| Model | `all-MiniLM-L6-v2` (384-d) | `microsoft/graphcodebert-base` (768-d) |
-| Task framing | Retrieval (Recall@10, MRR@10, nDCG@10) | Pair classification (F1) + MAP@R |
-| Negatives | In-batch, via MNRL | Explicit triples (or batch composition) |
-| Extra test | none | **Generalisation to unseen functionality** |
-| Shared | The independent variable; the three strategies; the hardness check; the false-negative measurement; the literature in `junk/distilled/negative-pair-research/` | |
-
-**The code track is the stronger of the two**, because of RQ3. The AskUbuntu track answers
-"does negative strategy matter?"; the code track answers "does negative strategy matter *for
-generalisation*?", which has a published baseline to compare against and is not answered anywhere.
-
-If you must prioritise one, prioritise this one. If you run both, keep `negatives.py`'s strategy
-interface identical across them so a fix in one benefits the other.
-
----
-
-## 16. Documents in this repository
+## 15. Documents in this repository
 
 | File | What it is |
 |---|---|

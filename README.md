@@ -1,24 +1,23 @@
-# Code track — BigCloneBench / GraphCodeBERT
+# Java code clone detection — BigCloneBench / GraphCodeBERT
 
-**The primary project in this repository.** It was written as the second, parallel track and ran
-*alongside* the AskUbuntu track in [`junk/project/distilled/`](junk/project/distilled/), not
-instead of it. That track is now archived under `junk/` — still on disk, still in git history on
-branch `arena/01a0aae7-embeded`, but no longer part of this project. See
-[Repository layout](#repository-layout).
+**The project in this repository.** Domain-specific contrastive embeddings for code similarity:
+compare negative-sampling strategies on Java clone pairs from BigCloneBench, fine-tuning
+GraphCodeBERT as the encoder. Everything this repository used to hold around it is archived under
+`junk/` — see [Repository layout](#repository-layout).
 
-| | AskUbuntu track (archived) | **Code track (this repository)** |
-|---|---|---|
-| Domain | Ubuntu duplicate questions | Java code clone detection |
-| Corpus | ~13,000–15,000 questions | ~9,134 Java fragments |
-| Base model | `all-MiniLM-L6-v2` (384-d) | `microsoft/graphcodebert-base` (768-d) |
-| Framing | Retrieval (Recall@10, MRR@10, nDCG@10) | Pair classification (F1) + MAP@R |
-| Extra test | — | **Generalisation to unseen functionality** |
-| Shared | The independent variable; the three strategies; the hardness check; the false-negative measurement | |
+| | |
+|---|---|
+| Domain | Java code clone detection |
+| Corpus | ~9,134 Java fragments (BigCloneBench via CodeXGLUE) |
+| Base model | `microsoft/graphcodebert-base` (768-d) |
+| Framing | Pair classification (F1) + MAP@R |
+| Independent variable | How negatives are selected: random / BM25 / semantic |
+| Extra test | **Generalisation to unseen functionality** |
 
-**Why run this one too:** the AskUbuntu track answers *"does negative strategy matter?"*. This one
-answers *"does negative strategy matter **for generalisation**?"* — which has a published baseline
-to compare against (Kitsios et al., ASE 2025) and is not answered anywhere. If you must prioritise,
-prioritise this one.
+**The question:** does negative-sampling strategy matter **for generalisation**? Not just F1 on a
+fixed benchmark — whether the strategy changes how big the drop is on functionality the model
+never trained on. There is a published baseline for the drop itself (Kitsios et al., ASE 2025:
+up to 48%, average 31%), and no published answer for the strategy question.
 
 ---
 
@@ -68,31 +67,10 @@ These came out of verifying the spec against sources, and each one changed the p
 
 ---
 
-## Shared with the other track
-
-The independent variable, the three strategies, and the literature all live under `junk/` now.
-They are archived, not deleted — the links below resolve on disk:
-
-- [`junk/distilled/negative-pair-research/`](junk/distilled/negative-pair-research/) — start with
-  [`FIVE_KEY_PAPERS.md`](junk/distilled/negative-pair-research/FIVE_KEY_PAPERS.md): the five
-  papers that compare Random / BM25 / Semantic, with the merits and demerits as each paper
-  discusses them. Then [`STRATEGY_EVIDENCE.md`](junk/distilled/negative-pair-research/STRATEGY_EVIDENCE.md)
-  for the ten-source version.
-- [`junk/distilled/embedding-library/`](junk/distilled/embedding-library/) — the `domembed` packaging
-  layer. See [`CODE_TRACK.md`](junk/distilled/embedding-library/CODE_TRACK.md) for how it applies
-  here.
-- [`junk/distilled/adaptive-embedding/`](junk/distilled/adaptive-embedding/) — the v2
-  "pick the strategy automatically" plan. See its §18 for the code-domain mapping.
-
-**Keep `negatives.py`'s strategy interface identical across both tracks**, so a fix in one
-benefits the other.
-
----
-
 ## Repository layout
 
-This repository used to hold several parallel tracks and a large body of distilled research notes.
-The code track has been promoted to be **the** project, and everything else has been archived.
+The repository used to hold several parallel tracks and a large body of distilled research notes.
+The code clone detection project is now the whole repository; everything else has been archived.
 
 | Path | Status |
 |---|---|
@@ -100,7 +78,7 @@ The code track has been promoted to be **the** project, and everything else has 
 | [`FINAL_SPEC.md`](FINAL_SPEC.md) | The specification |
 | [`SCOPE.md`](SCOPE.md) | MUST / SHOULD / out of scope, and the stop condition |
 | [`GROUND_TRUTH.md`](GROUND_TRUTH.md) | BigCloneBench's ground-truth defects |
-| `junk/` | **Archived, gitignored.** Every other former track and note: `distilled/`, `distilled-project/`, `presentations/`, `research/`, `project/distilled/` (the AskUbuntu track), the `README.md` that indexed them, and `README-EmbedEd-original.md` (this repo's first stub README) |
+| `junk/` | **Archived, gitignored.** Not part of the project: `distilled/` and `distilled-project/` (research notes — the spec still cites `junk/distilled/negative-pair-research/`), `presentations/`, `research/`, `project/distilled/` (the archived duplicate-questions material), the `README.md` that indexed them, and `README-EmbedEd-original.md` (this repo's first stub README) |
 
 `junk/` is ignored by git (`.gitignore`) so it stays out of commits, but it is **not deleted** —
 the files remain on disk, and the same content is preserved in the history of branch

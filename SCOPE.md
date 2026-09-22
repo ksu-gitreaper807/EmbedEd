@@ -1,4 +1,4 @@
-# Scope — code track (BigCloneBench / GraphCodeBERT)
+# Scope — Java code clone detection (BigCloneBench / GraphCodeBERT)
 
 Read this before writing code, and re-read it in week 3 when you are tempted to add a fifth
 condition or switch benchmarks.
