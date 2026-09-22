@@ -11,7 +11,7 @@ The division of labour is deliberate:
 ## Sharing entry points (pick per audience)
 
 1. **The one-URL opener (best for anyone with repo read access).** They click:
-   `https://colab.research.google.com/github/ksu-gitreaper807/EmbedEd/blob/arena/01a0c848-embeded/notebooks/Phase0_Phase1_Colab.ipynb`
+   `https://colab.research.google.com/github/ksu-gitreaper807/EmbedEd/blob/arena/01a0c914-embeded/notebooks/Phase0_Phase1_Colab.ipynb`
    — Colab materializes the notebook, they attach a T4, and run. No local setup at all. Every
    step then pulls the *committed* code, so there is exactly one version of the pipeline.
 2. **Classic Drive share.** Upload the `.ipynb` to Drive → Share → *Viewer* (run-only demos),
