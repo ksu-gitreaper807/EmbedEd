@@ -26,6 +26,7 @@ up to 48%, average 31%), and no published answer for the strategy question.
 | File | What it is | Read it when |
 |---|---|---|
 | [`FINAL_SPEC.md`](FINAL_SPEC.md) | The specification, with verified dataset facts and eight corrections folded in | **Start here.** Before week 1 |
+| [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) | The engineering plan: phases, modules, gates, run matrix, and the deck-vs-spec fixes | After the spec, before writing code |
 | [`SCOPE.md`](SCOPE.md) | MUST / SHOULD / optional / out of scope, anti-scope-creep rules, stop condition, fallback | Before week 1; again in week 3 |
 | [`GROUND_TRUTH.md`](GROUND_TRUTH.md) | BigCloneBench's documented ground-truth defects, and what this project does about them | Before week 1, and again before writing the limitations section |
 

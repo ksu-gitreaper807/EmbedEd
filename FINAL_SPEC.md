@@ -554,6 +554,7 @@ H0b was not testable.
 | File | What it is |
 |---|---|
 | [`FINAL_SPEC.md`](FINAL_SPEC.md) | This document — the specification, with verified facts and corrections |
+| [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) | The implementation plan: phases, gates, module layout, risk table |
 | [`SCOPE.md`](SCOPE.md) | MUST / SHOULD / optional / out of scope, and the stop condition |
 | [`GROUND_TRUTH.md`](GROUND_TRUTH.md) | The BigCloneBench validity problem, and what this project does about it |
 | [`README.md`](README.md) | Index |
