@@ -4,10 +4,10 @@ import json
 
 import numpy as np
 
-from code import negatives as NG
-from code import settings as S
-from code.hardcheck import evaluate
-from code.mining.semantic_index import SemanticIndex
+from embeded import negatives as NG
+from embeded import settings as S
+from embeded.hardcheck import evaluate
+from embeded.mining.semantic_index import SemanticIndex
 
 
 def _fake_emb(n=24, d=8, seed=1):
@@ -68,7 +68,7 @@ def test_hardness_measure_on_fixtures(fx):
     NG.main(["--strategies", "random,bm25", "--k", "3"])
     emb = _fake_emb()
     row_of = {c: i for i, c in enumerate(sorted(fx.frags))}
-    from code.hardcheck import measure
+    from embeded.hardcheck import measure
     files = {c: str(S.ARTIFACTS / f"triples_{c}.jsonl") for c in ("C1", "C2")}
     out = measure(files, emb, row_of, n_anchors=1000, seed=S.SEED)
     assert {"mean_cos", "n_samples"} <= set(out["C1"])

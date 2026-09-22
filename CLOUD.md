@@ -13,7 +13,7 @@ Rules that follow from that:
 2. GPU stages are batched into one kind of session each; a T4 session is opened,
    filled with GPU work to the session cap, and closed.
 3. **Encode once, reuse everywhere.** The base-model corpus embedding matrix
-   (9,134 × 768 ≈ 28 MB) is the one expensive GPU artifact; mining, the C0
+   (8,063 × 768 ≈ 25 MB) is the one expensive GPU artifact; mining, the C0
    baseline, the smoke run, and every eval pass hang off the cached copy.
 4. **Checkpoint to Drive, resume, don't rerun** (IMPLEMENTATION_PLAN §5). Every
    stage is idempotent and artifact-gated: if its output exists and matches
@@ -84,8 +84,8 @@ day; everything before it is on Drive.
 pip install datasets transformers rank-bm25 umap-learn scikit-learn numpy requests pytest
 
 # Phase 0.2–0.4: download + G0 counts + overlap + token lengths (~10–20 min + download)
-python -m code.data.prepare_data --hf --verify-spec        # must print "all counts match ✅"
-python -m pytest -q code/tests                              # seconds, fully offline
+python -m embeded.data.prepare_data --hf --verify-spec        # must print "all counts match ✅"
+python -m pytest -q embeded/tests                              # seconds, fully offline
 
 # Phase 0.7: s′
 python -m scripts.fetch_sprime --dry-run && python -m scripts.fetch_sprime
@@ -104,7 +104,7 @@ Token-length p99 from `token_lengths.json` decides `MAX_LEN`
 After the cloud eval session, scoring is also local:
 
 ```bash
-python -m code.eval.evaluate --from-scores   # Phase 2 code; CPU numpy, seconds
+python -m embeded.eval.evaluate --from-scores   # Phase 2 code; CPU numpy, seconds
 ```
 
 produces the three tables (`report/tables/`). The whole week-3/4 deliverable —
@@ -123,9 +123,9 @@ stages that are missing:
 ```bash
 python -m scripts.phase0_throughput --candidates 256:32 256:16 512:16 --minutes 0.5
 #   → commit the printed MAX_LEN / TRAIN_PAIRS_CAP / BATCH / EPOCHS to settings.py FIRST
-python -m code.mining.semantic_index --batch 32        # corpus encode, cached; skips if present
-python -m code.negatives --strategies random,bm25,semantic --k 20
-python -m code.hardcheck                               # exit 0 = G1 PASS; 1 = FAIL → STOP
+python -m embeded.mining.semantic_index --batch 32        # corpus encode, cached; skips if present
+python -m embeded.negatives --strategies random,bm25,semantic --k 20
+python -m embeded.hardcheck                               # exit 0 = G1 PASS; 1 = FAIL → STOP
 # (smoke run: notebook cell, 3 min)
 ```
 
@@ -133,11 +133,11 @@ python -m code.hardcheck                               # exit 0 = G1 PASS; 1 = F
 ```bash
 # Phase 2 code (lands with train.py); idempotent — skips if runs/C1_s13/metrics.json exists
 for c in C1 C2 C3; do for s in 0 1 2; do
-  python -m code.train.train --condition $c --seed-offset $s
+  python -m embeded.train.train --condition $c --seed-offset $s
 done; done
 # generalisation (Phase 3, smaller cap):
 for c in C1 C2 C3; do for s in 0 1 2; do
-  python -m code.train.train --condition $c --seed-offset $s --sprime --holdout-k 3
+  python -m embeded.train.train --condition $c --seed-offset $s --sprime --holdout-k 3
 done; done
 ```
 Ordering: main table first (it's the deliverable); generalisation second.
@@ -148,7 +148,7 @@ ones.
 ```bash
 # Phase 2–3 code; one forward pass per (model, fragment-set); C0 reuses the
 # cached base-model embeddings — no GPU for it
-python -m code.eval.evaluate --encode-only            # writes scores/*.npy to Drive
+python -m embeded.eval.evaluate --encode-only            # writes scores/*.npy to Drive
 ```
 Then **disconnect the T4**. Everything after S5 is local CPU (§3).
 

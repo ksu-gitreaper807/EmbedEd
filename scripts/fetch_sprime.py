@@ -3,17 +3,20 @@
     python -m scripts.fetch_sprime            # download + probe (needs zenodo.org)
     python -m scripts.fetch_sprime --dry-run  # just list what would download
 
-This sandbox blocks zenodo.org; run the download in the Colab notebook. The
-probe must confirm: loads, has functionality labels, ~23 functionalities,
-~2,300 + ~2,300 pairs. Writes a "s′ acquisition" block into
-report/measurements.md. RQ3 is blocked on this file — discover breakage on
-day 2, not week 3.
+Downloads stream with a progress bar, resume via HTTP Range if a previous run
+left a *.part file, and skip files that are already complete (verified by
+size). This Arena sandbox blocks zenodo.org — run the download from a
+machine/Colab with access. The probe must confirm: loads, has functionality
+labels, ~23 functionalities, ~2,300 + ~2,300 pairs. Writes a "s′ acquisition"
+block into report/measurements.md. RQ3 is blocked on this file — discover
+breakage on day 2, not week 3.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import sys
+import time
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -21,6 +24,51 @@ from pathlib import Path
 RECORD = "17238379"          # doi:10.5281/zenodo.17238379
 API = f"https://zenodo.org/api/records/{RECORD}"
 DATA_EXT = {".jsonl", ".json", ".csv", ".tsv", ".txt", ".parquet", ".zip"}
+
+
+def _download(url: str, dest: Path, expected_size: int | None = None) -> None:
+    """Stream to disk with a progress bar; resume a partial *.part via Range;
+    skip files already complete (size-verified against the Zenodo record)."""
+    if dest.exists():
+        have = dest.stat().st_size
+        if expected_size is None or have == expected_size:
+            print(f"  {dest.name}: already complete ({have / 1e6:.1f} MB) — skipping")
+            return
+        print(f"  {dest.name}: existing file truncated ({have} != {expected_size}) — re-downloading")
+        dest.unlink()
+    part = dest.with_name(dest.name + ".part")
+    start = part.stat().st_size if part.exists() else 0
+    if start and expected_size is not None and start >= expected_size:
+        part.unlink()
+        start = 0
+    req = urllib.request.Request(url, headers={"User-Agent": "embeded/phase0"})
+    if start:
+        req.add_header("Range", f"bytes={start}-")
+    t0 = time.time()
+    with urllib.request.urlopen(req, timeout=120) as r:
+        whole = r.status == 200          # server ignored Range: start over
+        if whole and start:
+            start = 0
+        total = expected_size or (int(r.headers.get("Content-Length") or 0) + start)
+        with open(part, "ab" if (not whole and start) else "wb") as fh:
+            done = start
+            last = 0.0
+            while chunk := r.read(1 << 16):
+                fh.write(chunk)
+                done += len(chunk)
+                now = time.time()
+                if total and now - last >= 0.5:
+                    last = now
+                    rate = (done - start) / max(now - t0, 1e-9)
+                    print(f"  {dest.name}: {done / 1e6:.1f}/{total / 1e6:.1f} MB "
+                          f"({done / total:.0%}) {rate / 1e6:.2f} MB/s", end="\r", flush=True)
+    if total:
+        print(f"  {dest.name}: {done / 1e6:.1f} MB done in {time.time() - t0:.0f}s      ")
+    if expected_size is not None and part.stat().st_size != expected_size:
+        part.unlink(missing_ok=True)
+        raise IOError(f"{dest.name}: size mismatch (got {part.stat().st_size}, "
+                      f"want {expected_size}) — will retry next run")
+    part.replace(dest)
 
 
 def main(argv=None):
@@ -42,14 +90,14 @@ def main(argv=None):
         print("(--dry-run: nothing downloaded)")
         return 0
 
-    from code import settings as S
+    from embeded import settings as S
     outdir = S.artifact("sprime")
     outdir.mkdir(parents=True, exist_ok=True)
     summary = {}
     for f in files:
         dest = outdir / f["key"]
         dest.parent.mkdir(parents=True, exist_ok=True)
-        urllib.request.urlretrieve(f["links"]["self"], dest)
+        _download(f["links"]["self"], dest, f.get("size"))
         if dest.suffix == ".zip":
             with zipfile.ZipFile(dest) as z:
                 names = z.namelist()

@@ -11,7 +11,7 @@ tests can assert exact behaviour. It deliberately contains:
   * valid-only and test-only fragments -> test-only never enter the corpus,
     valid-only may (valid only tunes the threshold).
 
-    python -m code.fixtures.make_fixture OUTDIR   # writes files + fixture_meta.json
+    python -m embeded.fixtures.make_fixture OUTDIR   # writes files + fixture_meta.json
 """
 from __future__ import annotations
 

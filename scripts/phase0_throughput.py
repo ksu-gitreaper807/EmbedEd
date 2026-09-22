@@ -1,5 +1,5 @@
 """Phase 0.5 — measured throughput; replaces the [illustrative] TRAIN_PAIRS_CAP
-and EPOCHS in code/settings.py (SCOPE P2-13: fix in week 1 from a measured test,
+and EPOCHS in embeded/settings.py (SCOPE P2-13: fix in week 1 from a measured test,
 then hold constant). Run on the Colab T4.
 
     python -m scripts.phase0_throughput --candidates 256:32 256:16 512:16
@@ -23,14 +23,14 @@ def bench(max_len: int, batch: int, minutes: float, run_dir: str = ".",
     import torch.nn.functional as F
     from transformers import AutoModel, AutoTokenizer
 
-    from code import settings as S
-    from code.data.prepare_data import load_fragments
+    from embeded import settings as S
+    from embeded.data.prepare_data import load_fragments
 
     frag = S.ARTIFACTS / "fragments.jsonl"
     if not frag.exists():
         raise SystemExit(
             f"{frag} not found — Phase 0.2 (data preparation) has not run.\n"
-            "Run it first:  python -m code.data.prepare_data --hf --verify-spec\n"
+            "Run it first:  python -m embeded.data.prepare_data --hf --verify-spec\n"
             "(notebook: the 'Phase 0.2' cell). The throughput test sizes training on\n"
             "real fragment lengths, so it needs the prepared fragments on Drive.")
     texts = list(load_fragments().values())[:4000] or ["int x = 1;"] * 4000

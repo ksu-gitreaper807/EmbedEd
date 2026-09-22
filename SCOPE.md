@@ -31,8 +31,8 @@ Everything here is required for the project to be complete.
 ### Data
 
 1. **Dataset:** `load_dataset("google/code_x_glue_cc_clone_detection_big_clone_bench")`, one line.
-2. **Verify** the fragment count against the reported 9,134 and the split sizes against
-   901,028 / 415,416 / 415,416.
+2. **Verify** the fragment count against the measured 9,126 data.jsonl lines / 8,063 unique
+   texts (FINAL_SPEC correction 9) and the split sizes against 901,028 / 415,416 / 415,416.
 3. **Corpus for mining:** unique fragments appearing in the **train split only**.
 4. **Fragment-overlap measurement:** count how many test-split fragments also appear in a training
    pair; **report the number** in the write-up.
@@ -135,7 +135,7 @@ pooling; multi-GPU or distributed training.
 more than one loss; more than one negative strategy *per run* outside the declared mixing-ratio
 sweep; adversarial or curriculum training.
 
-**Evaluation:** FAISS or any approximate-index library (9,134 fragments is one matmul);
+**Evaluation:** FAISS or any approximate-index library (8,063 fragments is one matmul);
 significance tests, p-values, multiple-comparison correction; executing code to measure
 behavioural similarity; inter-dataset duplication analysis.
 

@@ -2,7 +2,7 @@
 training; if the manipulation did not take effect, the experiment produces no
 evidence. Require mean cos(anchor, negative):  C1 < C2 <= C3, C2−C1 >= margin.
 
-    python -m code.hardcheck          # real data (needs code/artifacts/corpus_emb.npy)
+    python -m embeded.hardcheck          # real data (needs embeded/artifacts/corpus_emb.npy)
 
 evaluate(means, margin) is pure so the gate logic itself is unit-tested.
 """
@@ -90,7 +90,7 @@ def main(argv=None):
         try:
             open(p).close()
         except FileNotFoundError:
-            raise SystemExit(f"missing {p} — run `python -m code.negatives` first")
+            raise SystemExit(f"missing {p} — run `python -m embeded.negatives` first")
     per = measure(files, emb, row_of, a.anchors, S.SEED)
     means = {c: per[c]["mean_cos"] for c in per}
     ok, msgs = evaluate(means, a.margin)
