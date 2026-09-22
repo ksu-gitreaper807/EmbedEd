@@ -323,7 +323,9 @@ def record_measurements(manifest, ov, tl) -> None:
     block = "\n".join(lines)
     if S.REPORT_MD.exists():
         old = S.REPORT_MD.read_text()
-        old = re.sub(r"## Phase 0 — measured numbers.*?(?=\n## |\Z)", block + "\n", old, flags=re.S)
+        # lambda replacement: block is data, never a regex template
+        old = re.sub(r"## Phase 0 — measured numbers.*?(?=\n## |\Z)",
+                     lambda _m: block + "\n", old, flags=re.S)
         S.REPORT_MD.write_text(old if "## Phase 0" in old else old + "\n" + block)
     else:
         S.REPORT_MD.write_text("# Measurements\n\n" + block)

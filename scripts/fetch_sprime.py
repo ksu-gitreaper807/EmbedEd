@@ -42,7 +42,7 @@ from pathlib import Path
 RECORD = "17238379"          # doi:10.5281/zenodo.17238379
 API = f"https://zenodo.org/api/records/{RECORD}"
 DATA_EXT = {".jsonl", ".json", ".csv", ".tsv", ".txt", ".parquet", ".zip"}
-SKIP_MEMBERS = (".git", ".DS_Store")
+JUNK_DIRS = {".git", "__MACOSX"}      # repo internals + macOS AppleDouble mirror
 
 
 # --------------------------------------------------------------------------- download
@@ -109,13 +109,16 @@ def _check_md5(dest: Path, expected_md5: str | None) -> None:
 # --------------------------------------------------------------------------- extract + probe
 
 def _extract(zf: zipfile.ZipFile, dest: Path) -> tuple[int, int]:
-    """Extract, skipping .git/ internals and .DS_Store. Returns (n, n_skipped)."""
+    """Extract, skipping .git/ and __MACOSX/ internals, .DS_Store, and
+    AppleDouble `._*` sidecar files (the release zip is macOS-made).
+    Returns (n, n_skipped)."""
     n = skipped = 0
     for info in zf.infolist():
         if info.is_dir():
             continue
         parts = info.filename.split("/")
-        if ".git" in parts or parts[-1] in SKIP_MEMBERS:
+        if JUNK_DIRS & set(parts) or parts[-1] == ".DS_Store" \
+                or parts[-1].startswith("._"):
             skipped += 1
             continue
         zf.extract(info, dest)
@@ -123,10 +126,29 @@ def _extract(zf: zipfile.ZipFile, dest: Path) -> tuple[int, int]:
     return n, skipped
 
 
+def _clean_junk(outdir: Path) -> int:
+    """Remove .git/__MACOSX dirs and ._*/.DS_Store files left behind by an
+    earlier (pre-fix) extraction pass. Returns number of paths removed."""
+    removed = 0
+    for p in list(outdir.rglob("*")):
+        if p.is_dir() and p.name in JUNK_DIRS:
+            import shutil
+            shutil.rmtree(p, ignore_errors=True)
+            removed += 1
+        elif p.name.startswith("._") or p.name == ".DS_Store":
+            p.unlink(missing_ok=True)
+            removed += 1
+    return removed
+
+
 def _probe_pickle(path: Path) -> dict:
+    import warnings
     try:
         with open(path, "rb") as fh:
-            obj = pickle.load(fh)
+            with warnings.catch_warnings():
+                # pickles from older numpy emit DeprecationWarning storms
+                warnings.simplefilter("ignore", DeprecationWarning)
+                obj = pickle.load(fh)
     except Exception as e:
         return {"kind": "pickle", "error": f"load failed: {e.__class__.__name__}: {str(e)[:120]}"}
     try:
@@ -196,13 +218,18 @@ def _probe_scb(root: Path) -> dict:
     return out
 
 
+def _is_junk(rel: Path) -> bool:
+    return bool(JUNK_DIRS & set(rel.parts)) or rel.name.startswith("._") \
+        or rel.name == ".DS_Store"
+
+
 def _list_package(root: Path) -> tuple[list[tuple[str, int]], int]:
     files, git_files = [], 0
     for p in sorted(root.rglob("*")):
         if not p.is_file():
             continue
         rel = p.relative_to(root)
-        if ".git" in rel.parts:
+        if _is_junk(rel):
             git_files += 1
             continue
         files.append((str(rel), p.stat().st_size))
@@ -231,7 +258,6 @@ def probe_package(root: Path) -> dict:
         summary["scb"] = scb
     summary["verdict"] = _gate(summary)
     return summary
-
 
 def _gate(summary: dict) -> tuple[str, str]:
     """RQ3 gate: find the s′ pair DataFrame — label column + a low-cardinality
@@ -295,8 +321,10 @@ def main(argv=None):
             with zipfile.ZipFile(dest) as z:
                 names = z.namelist()
                 n, skipped = _extract(z, dest.parent)
-            print(f"  extracted {n} files ({skipped} .git members skipped, "
-                  f"{len(names)} total members)")
+            removed = _clean_junk(dest.parent)
+            note = f" ({removed} leftover junk paths cleaned)" if removed else ""
+            print(f"  extracted {n} files ({skipped} junk members skipped, "
+                  f"{len(names)} total members){note}")
 
     probe = probe_package(outdir)
     print(json.dumps({k: v for k, v in probe.items() if k != "files"}, indent=2))
@@ -315,16 +343,20 @@ def main(argv=None):
 def _append_report(block: list[str]) -> None:
     from embeded import settings as S
     import re
+    section = "\n".join(block)
     if S.REPORT_MD.exists():
         old = S.REPORT_MD.read_text()
         if "## s′ acquisition" in old:
-            old = re.sub(r"\n## s′ acquisition.*?(?=\n## |\Z)", "\n" + "\n".join(block), old, flags=re.S)
+            # lambda replacement: the block is data (may contain backslash
+            # escapes), never a regex template
+            old = re.sub(r"\n## s′ acquisition.*?(?=\n## |\Z)",
+                         lambda _m: "\n" + section, old, flags=re.S)
         else:
-            old += "\n".join(block)
+            old += section
         S.REPORT_MD.write_text(old)
     else:
         S.REPORT_MD.parent.mkdir(parents=True, exist_ok=True)
-        S.REPORT_MD.write_text("# Measurements\n" + "\n".join(block))
+        S.REPORT_MD.write_text("# Measurements\n" + section)
 
 
 if __name__ == "__main__":
