@@ -26,6 +26,13 @@ def bench(max_len: int, batch: int, minutes: float, run_dir: str = ".",
     from code import settings as S
     from code.data.prepare_data import load_fragments
 
+    frag = S.ARTIFACTS / "fragments.jsonl"
+    if not frag.exists():
+        raise SystemExit(
+            f"{frag} not found — Phase 0.2 (data preparation) has not run.\n"
+            "Run it first:  python -m code.data.prepare_data --hf --verify-spec\n"
+            "(notebook: the 'Phase 0.2' cell). The throughput test sizes training on\n"
+            "real fragment lengths, so it needs the prepared fragments on Drive.")
     texts = list(load_fragments().values())[:4000] or ["int x = 1;"] * 4000
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     tok = AutoTokenizer.from_pretrained(S.MODEL_ID)

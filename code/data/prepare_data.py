@@ -30,12 +30,20 @@ def sha1(text: str) -> str:
 
 # --------------------------------------------------------------------------- load
 
+# HF exposes the middle split as "validation"; the pipeline names it "valid".
+HF_SPLIT_NAMES = {"valid": "validation"}
+
+
 def _rows_from_hf():
     from datasets import load_dataset  # lazy: only needed with --hf
 
     ds = load_dataset(S.HF_DATASET)
     for split in SPLITS:
-        for r in ds[split]:
+        key = HF_SPLIT_NAMES.get(split, split)
+        if key not in ds:
+            raise KeyError(f"split {key!r} (for {split!r}) not in dataset "
+                           f"(have: {sorted(ds.keys())})")
+        for r in ds[key]:
             yield split, r["func1"], r["func2"], int(bool(r["label"]))
 
 
