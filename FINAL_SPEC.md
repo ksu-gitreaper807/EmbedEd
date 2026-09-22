@@ -82,7 +82,12 @@ ASE 2025** ([arXiv:2510.04143](https://arxiv.org/pdf/2510.04143)) is your RQ3, a
   improves by up to 26% (average 9%). `[verified]`
 * They release a functionality-balanced dataset, **BCB s′: 23 functionalities, 2,300 clone +
   2,300 non-clone pairs**, at
-  [doi:10.5281/zenodo.17238379](https://doi.org/10.5281/zenodo.17238379). `[verified]`
+  [doi:10.5281/zenodo.17238379](https://doi.org/10.5281/zenodo.17238379) `[verified]`. The zip is a
+  snapshot of [github.com/kitsiosk/unseen-clones](https://github.com/kitsiosk/unseen-clones);
+  s′ itself is `datasets/bcb_v2_sampled_bf/data_bcb_v2_sampled_bf.pickle` — a DataFrame
+  `code1, code2, label, functionality_id`, 4,600 rows (2,300/2,300), 23 functionalities
+  `[verified 2026-09-22 — scripts/fetch_sprime gates on exactly this]`. The package also
+  carries the SCB corpora (`datasets/scb/{Java,C}`) used for the cross-dataset protocols.
 * One honest detail worth stealing: in one of their twelve experiments contrastive learning did
   not help, and their qualitative analysis found it had *"led to learning a different, more
   strict definition of a clone."* `[verified]`

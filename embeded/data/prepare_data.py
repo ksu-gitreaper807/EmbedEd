@@ -73,7 +73,8 @@ def _stream(url: str, part: Path, headers: dict | None = None) -> None:
                     last = now
                     print(f"  data.jsonl: {done / 1e6:.1f}/{total / 1e6:.1f} MB "
                           f"({done / total:.0%})", end="\r", flush=True)
-    print(f"  data.jsonl: {part.stat().st_size / 1e6:.1f} MB done            ")
+    print()
+    print(f"  data.jsonl: {part.stat().st_size / 1e6:.1f} MB done")
     if part.stat().st_size != S.CODEXGLUE_DATA_JSONL_SIZE:
         part.unlink(missing_ok=True)
         raise IOError(f"data.jsonl size mismatch (got {part.stat().st_size}, "
