@@ -8,7 +8,7 @@ GraphCodeBERT as the encoder. Everything this repository used to hold around it 
 | | |
 |---|---|
 | Domain | Java code clone detection |
-| Corpus | ~9,134 Java fragments (BigCloneBench via CodeXGLUE) |
+| Corpus | ~8,063 unique Java fragments — 9,126-line `data.jsonl` (BigCloneBench via CodeXGLUE) |
 | Base model | `microsoft/graphcodebert-base` (768-d) |
 | Framing | Pair classification (F1) + MAP@R |
 | Independent variable | How negatives are selected: random / BM25 / semantic |
@@ -45,7 +45,7 @@ Numbered as in [`FINAL_SPEC.md`](FINAL_SPEC.md).
 
 | # | The correction |
 |---|---|
-| 1 | "~8 million clone pairs" describes BigCloneBench, **not** the CodeXGLUE file you download, which is 9,134 fragments and 901,028 / 415,416 / 415,416 pairs |
+| 1 | "~8 million clone pairs" describes BigCloneBench, **not** the CodeXGLUE file you download, which is 9,126 lines / 8,063 unique fragments and 901,028 / 415,416 / 415,416 pairs |
 | 2 | The CodeXGLUE version has **no functionality column**, so the generalisation test needs data from outside it (use Kitsios et al.'s released BCB s′) |
 | 3 | GraphCodeBERT's **data-flow signal does not survive a default `sentence-transformers` load** — pick a loading option and state it honestly |
 | 4 | Do not assume `Random < BM25 < Semantic` in difficulty — **measure it**; an untuned code encoder is largely lexical, and the NLP analogue found BM25 ≈ semantic |
@@ -53,6 +53,7 @@ Numbered as in [`FINAL_SPEC.md`](FINAL_SPEC.md).
 | 6 | Explicit `(anchor, positive, negative)` triples mean you are **not** using `MultipleNegativesRankingLoss`; pick one loss, once, and say which |
 | 7 | The generalisation test as written **cannot run on the CodeXGLUE file alone** (see 2) |
 | 8 | The 2D visualisation is **a figure, not evidence** — fix the seed, use one shared sample, keep it after the table |
+| 9 | The **9,134** in the CodeXGLUE paper is the paper's number; the released `data.jsonl` has **9,126 lines**, 1,063 of which duplicate another fragment's text → **8,063 unique fragments**. The pipeline verifies 9,126 / 8,063 / 901,028 / 415,416 / 415,416, in both `--hf` and `--dir` mode |
 
 ---
 

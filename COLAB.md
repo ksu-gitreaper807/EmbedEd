@@ -4,7 +4,7 @@ The division of labour is deliberate:
 
 | Piece | Lives in | Why |
 |---|---|---|
-| Specs, plan, tests, `code/`, `scripts/`, `report/measurements.md` | **this repo** (source of truth, reviewed via commits/PRs) | Colab notebooks are terrible diff targets; code is where review matters |
+| Specs, plan, tests, `embeded/`, `scripts/`, `report/measurements.md` | **this repo** (source of truth, reviewed via commits/PRs) | Colab notebooks are terrible diff targets; code is where review matters |
 | GPU execution | [`notebooks/Phase0_Phase1_Colab.ipynb`](notebooks/Phase0_Phase1_Colab.ipynb) — a thin **sequencer** that `git clone`s the repo and runs `python -m …` cells | notebook contains no logic to drift out of sync; re-running always uses the latest committed code |
 | Big artifacts (fragment cache, `corpus_emb.npy`, triples, HF caches) | **Drive** (`/content/drive/MyDrive/embeded/`, set via `EMBEDED_ARTIFACTS`/`HF_HOME` in notebook cell 1) | Colab disks are ephemeral; Drive mount makes reconnects ~free |
 
@@ -21,7 +21,7 @@ The division of labour is deliberate:
    cursors, outputs, and *one* GPU runtime. Rules that keep it sane: one person "owns" the run
    at a time (say it in chat before hitting Run All — parallel re-runs corrupt the Drive
    artifact cache), gates (G0/G1 cells) are announced in channel, and nobody `pip install`s
-   anything ad hoc (versions come from `code/settings.py::PINNED`; changes go through a commit).
+   anything ad hoc (versions come from `embeded/settings.py::PINNED`; changes go through a commit).
 
 ## Get results back into the repo
 
@@ -48,8 +48,8 @@ duplicate caches cost nothing; compare hashes, not trust.
 
 ## Why not "just edit the notebook" for the pipeline itself?
 
-Everything testable here is already unit-tested offline (`pytest -q code/tests`, 12 tests,
+Everything testable here is already unit-tested offline (`pytest -q embeded/tests`, 12 tests,
 no GPU/network needed — incl. the §7.2 adversarial BM25/overlap case and the hardness-gate
-logic). The notebook adds only what *needs* a GPU or the real 9,134-fragment download: the
+logic). The notebook adds only what *needs* a GPU or the real 8,063-fragment corpus (9,126-line data.jsonl): the
 encoding pass, the gates on real numbers, and the smoke run. That split is what makes the
 Colab side safe to share: the notebook can't silently fork the logic.

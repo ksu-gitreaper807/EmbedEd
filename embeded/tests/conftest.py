@@ -12,8 +12,11 @@ if str(ROOT) not in sys.path:
 
 @pytest.fixture()
 def fx(tmp_path, monkeypatch):
-    from code.fixtures import make_fixture
-    from code import settings as S
+    from embeded.fixtures import make_fixture
+    from embeded import settings as S
+
+    # fully offline by contract: no HF retry storms inside the test suite
+    monkeypatch.setenv("HF_HUB_OFFLINE", "1")
 
     fdir = tmp_path / "fixture"
     make_fixture.main(fdir)
@@ -22,7 +25,7 @@ def fx(tmp_path, monkeypatch):
     monkeypatch.setattr(S, "ARTIFACTS", tmp_path / "artifacts")
     monkeypatch.setattr(S, "REPORT_MD", tmp_path / "report" / "measurements.md")
 
-    from code.data import prepare_data as P
+    from embeded.data import prepare_data as P
     P.main(["--dir", str(fdir)])
 
     class NS: pass

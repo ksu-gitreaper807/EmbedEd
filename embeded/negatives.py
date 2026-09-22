@@ -1,6 +1,6 @@
 """One interface for all three negative strategies (FINAL_SPEC §7.1).
 
-    python -m code.negatives --strategies random,bm25,semantic [--k 20]
+    python -m embeded.negatives --strategies random,bm25,semantic [--k 20]
 
 Same k, same exclusion pass, same self-exclusion, same anchor/positive stream
 for every condition — the ONLY thing that differs is how candidates are ranked
@@ -120,7 +120,7 @@ def main(argv=None):
                              "stats": stats, "file": path}
         print(COND[st], summary[COND[st]])
     (S.ARTIFACTS / "mining_summary.json").write_text(json.dumps(summary, indent=2))
-    print("next: pytest -q code/tests   then   python -m code.hardcheck (needs emb cache)")
+    print("next: pytest -q embeded/tests   then   python -m embeded.hardcheck (needs emb cache)")
 
 
 if __name__ == "__main__":

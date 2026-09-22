@@ -6,11 +6,11 @@ bump VERSION so artifact hashes make staleness obvious.
 import os
 from pathlib import Path
 
-VERSION = "phase01-v1"
+VERSION = "phase01-v2"   # v2: canonical data.jsonl fragment ids (8,063 unique texts); v1 derived ids from pairs
 
 ROOT = Path(__file__).resolve().parent.parent
 # env overrides let tests (and Colab-on-Drive) relocate artifacts/report
-ARTIFACTS = Path(os.environ.get("EMBEDED_ARTIFACTS", ROOT / "code" / "artifacts"))
+ARTIFACTS = Path(os.environ.get("EMBEDED_ARTIFACTS", ROOT / "embeded" / "artifacts"))
 REPORT_MD = Path(os.environ.get("EMBEDED_REPORT", ROOT / "report" / "measurements.md"))
 
 # --- identity / determinism (SCOPE P1-3, P2-12) ---------------------------
@@ -18,10 +18,27 @@ SEED = 13                # the one seed that samples positives, shuffles, splits
 N_SEEDS = 3              # training seeds: SEED+0, +1, +2
 CORPUS_SHA_KEY = "corpus"
 
-# --- dataset (FINAL_SPEC §4) ------------------------------------------------
+# --- dataset (FINAL_SPEC §4, correction 9 — re-verified against the file) ----
 HF_DATASET = "google/code_x_glue_cc_clone_detection_big_clone_bench"
-EXPECTED_FRAGMENTS = 9_134
+# The CodeXGLUE PAPER says 9,134; the released data.jsonl has 9,126 lines, and
+# 1,063 of them are byte-identical to another fragment → 8,063 unique texts.
+EXPECTED_DATA_LINES = 9_126
+EXPECTED_FRAGMENTS = 8_063
 EXPECTED_SPLIT_ROWS = {"train": 901_028, "valid": 415_416, "test": 415_416}
+# Canonical fragment list for --hf mode (pairs carry text, not idx). Pinned to
+# a commit so reruns are deterministic. Cached under ARTIFACTS;
+# EMBEDED_DATA_JSONL points at a local copy to skip the fetch. The API URL is
+# a fallback for networks that block raw.githubusercontent.com.
+CODEXGLUE_COMMIT = "ac74a62802a0dd159b3258c78a2df8ad36cdf2b9"  # microsoft/CodeXGLUE main, 2026-09-22
+_CODEXGLUE_DATA_PATH = "Code-Code/Clone-detection-BigCloneBench/dataset/data.jsonl"
+CODEXGLUE_DATA_JSONL_URL = (
+    f"https://raw.githubusercontent.com/microsoft/CodeXGLUE/{CODEXGLUE_COMMIT}/{_CODEXGLUE_DATA_PATH}"
+)
+CODEXGLUE_DATA_JSONL_API_URL = (
+    f"https://api.github.com/repos/microsoft/CodeXGLUE/contents/{_CODEXGLUE_DATA_PATH}"
+    f"?ref={CODEXGLUE_COMMIT}"
+)
+CODEXGLUE_DATA_JSONL_SIZE = 15_174_797
 
 # --- model (FINAL_SPEC §5, Option A — decision frozen here) ----------------
 MODEL_ID = "microsoft/graphcodebert-base"

@@ -35,7 +35,7 @@ Four things came out of checking the specification against sources. Two of them 
 | Quantity | BigCloneBench proper | **CodeXGLUE version (what you load)** |
 |---|---|---|
 | Functionalities | 43 `[verified]` | not exposed as a column `[verified]` |
-| Code fragments | ~6,000,000 methods indexed `[check]` | **9,134** Java fragments `[verified]` |
+| Code fragments | ~6,000,000 methods indexed `[check]` | **9,126** lines in `data.jsonl`; **8,063** unique texts `[verified — re-measured, correction 9]` |
 | True clone pairs | 8,915,130 (Svajlenko's thesis) `[verified]` | — |
 | False clone pairs | 288,367 `[verified]` | — |
 | Pairs per split | — | **901,028 / 415,416 / 415,416** `[verified]` |
@@ -44,14 +44,29 @@ Four things came out of checking the specification against sources. Two of them 
 
 ⚠ **Correction 1.** Your spec says "~8 million validated clone pairs across 43 functionalities".
 That describes **BigCloneBench**, not the file you will download. The CodeXGLUE version is a
-filtered subset: **9,134 Java code fragments**, obtained by discarding fragments with no tagged
-true or false clone pair `[verified]`. State both numbers and say clearly which one you trained
-on.
+filtered subset: the CodeXGLUE paper says **9,134 Java code fragments**; the released file has
+**9,126 lines, 8,063 unique texts** (see correction 9) `[verified]`, obtained by discarding
+fragments with no tagged true or false clone pair. State both numbers and say clearly which one
+you trained on.
 
 ⚠ **Correction 2.** The CodeXGLUE dataset **has no functionality column** `[verified]` — the
 schema is `id, id1, id2, func1, func2, label`. Your generalisation test (RQ3) needs
 functionality labels, which therefore have to come from outside this dataset. See §9.3. This is
 the single largest unbudgeted task in the plan.
+
+⚠ **Correction 9.** Correction 1's 9,134 is the CodeXGLUE paper's number, not the released
+file's. Measured against `microsoft/CodeXGLUE` (main, 2026-09-22): `wc -l data.jsonl` =
+**9,126**; 1,063 of those lines are byte-identical to another fragment → **8,063 unique
+fragment texts**. The CodeXGLUE file is a re-release of the CDLH subset, and an independent
+audit ("Generalizability of Code Clone Detection on CodeBERT", ICSE-SEIP 2023) already notes
+"instead of 9,134 given code snippets in CDLH, CodeXGlue contains 9,126". Consequences:
+- the pipeline verifies **9,126 lines / 8,063 unique fragments / 901,028 / 415,416 / 415,416
+  pairs** (`EXPECTED_DATA_LINES` / `EXPECTED_FRAGMENTS` / `EXPECTED_SPLIT_ROWS`);
+- fragments are the unique **texts**, keyed 0..8,062 by first appearance in data.jsonl;
+- `--hf` and `--dir` both join pair rows onto that canonical list, so both modes produce
+  byte-identical artifacts (the HF parquet carries text, not idx, so `--hf` fetches the
+  15 MB data.jsonl once and caches it);
+- all 9,126 fragments appear in ≥1 pair (no orphans), so nothing is lost by joining.
 
 ### 0.2 Verified: the generalisation test already exists in the literature
 
@@ -67,7 +82,12 @@ ASE 2025** ([arXiv:2510.04143](https://arxiv.org/pdf/2510.04143)) is your RQ3, a
   improves by up to 26% (average 9%). `[verified]`
 * They release a functionality-balanced dataset, **BCB s′: 23 functionalities, 2,300 clone +
   2,300 non-clone pairs**, at
-  [doi:10.5281/zenodo.17238379](https://doi.org/10.5281/zenodo.17238379). `[verified]`
+  [doi:10.5281/zenodo.17238379](https://doi.org/10.5281/zenodo.17238379) `[verified]`. The zip is a
+  snapshot of [github.com/kitsiosk/unseen-clones](https://github.com/kitsiosk/unseen-clones);
+  s′ itself is `datasets/bcb_v2_sampled_bf/data_bcb_v2_sampled_bf.pickle` — a DataFrame
+  `code1, code2, label, functionality_id`, 4,600 rows (2,300/2,300), 23 functionalities
+  `[verified 2026-09-22 — scripts/fetch_sprime gates on exactly this]`. The package also
+  carries the SCB corpora (`datasets/scb/{Java,C}`) used for the cross-dataset protocols.
 * One honest detail worth stealing: in one of their twelve experiments contrastive learning did
   not help, and their qualitative analysis found it had *"led to learning a different, more
   strict definition of a clone."* `[verified]`
@@ -176,7 +196,7 @@ All three outcomes are presentable, including the surprising ones. `[spec]`
 |---|---|
 | Origin | BigCloneBench (Svajlenko & Roy), filtered per Wang et al. (FA-AST/GNN paper) `[verified]` |
 | Loading | `load_dataset("google/code_x_glue_cc_clone_detection_big_clone_bench")` |
-| Fragments | **9,134** Java code fragments `[verified]` — confirm with `wc -l dataset/data.jsonl` |
+| Fragments | **9,126 lines / 8,063 unique texts** `[verified]` — confirm with `wc -l dataset/data.jsonl` (9,126) + sha1 dedup (8,063); correction 9 |
 | Pairs | train 901,028 / validation 415,416 / test 415,416 `[verified]` |
 | Row format | `id`, `id1`, `id2`, `func1`, `func2`, `label` (boolean) `[verified]` |
 | Functionality labels | **absent** `[verified]` |
@@ -193,7 +213,7 @@ The dataset is **pair-level**, but negative mining is an **anchor-to-corpus** op
 must construct the corpus yourself. This is the pipeline's first real job.
 
 ```text
-fragments  = every unique function in dataset/data.jsonl            ~9,134   [verified]
+fragments  = every unique function TEXT in data.jsonl           8,063 (9,126 lines) [verified]
 corpus     = fragments appearing in the TRAIN split only
 positives  = (func1, func2) pairs from the train split with label == 1
 negatives  = mined per strategy, from corpus, minus excluded fragments
@@ -209,8 +229,9 @@ Three rules, all carried over from the earlier specification `[repo]`:
 
 ### 4.2 The leakage question you must measure in week 1
 
-CodeXGLUE's splits are made at the **pair** level `[verified]`, over a shared pool of only 9,134
-fragments. It is therefore likely — but **not yet established for this dataset** — that the same
+CodeXGLUE's splits are made at the **pair** level `[verified]`, over a shared pool of only 9,126
+fragments (8,063 unique texts). It is therefore likely — and, once measured, must be measured in
+**text space**, since identical text under different idx is still leakage — that the same
 function appears in both the training and the test split. If so, your test F1 measures partly
 *memorisation of specific functions*, not clone detection.
 
@@ -269,292 +290,4 @@ wrong with your harness, and you have a ready-made external comparison.
 |---|---|
 | **C0 — Baseline** | Off-the-shelf GraphCodeBERT, no fine-tuning. Cosine similarity of mean-pooled embeddings |
 | **C1 — Random** | Contrastively fine-tuned; negatives are randomly paired non-clone snippets |
-| **C2 — BM25** | Fine-tuned; negatives are keyword-similar-but-different snippets, found via BM25 retrieval |
-| **C3 — Semantic** | Fine-tuned; negatives are snippets the **base model itself** finds embedding-similar but that are ground-truth non-clones |
-
-All four use the same positive pairs. **The only thing that changes between C1, C2 and C3 is how
-the negative was selected.** `[spec]` This is the whole design; protect it.
-
-### 6.1 What each condition costs
-
-| Condition | Extra work over C1 | Failure mode it introduces |
-|---|---|---|
-| C0 | none — it is your control | none |
-| C1 | none — the reference run | negatives so easy the model learns almost nothing |
-| C2 | build a BM25 index (`rank_bm25`) over the corpus | finds lexically similar code, which in clone detection is often *the same functionality* → false negatives |
-| C3 | encode the corpus once with the untouched base model, one similarity matmul | the worst false-negative rate of the three, because what an untuned code model finds similar is heavily lexical |
-
-⚠ **Correction 4: do not assume `C1 < C2 < C3` in difficulty — measure it.** An untuned code
-encoder is largely lexical, so C3's "semantic" neighbourhoods may look a lot like C2's BM25
-neighbourhoods. AugSBERT's closest analogue put BM25 at 75.08 and semantic search at 74.99 —
-statistically indistinguishable `[verified]`. If C2 and C3 produce equally hard batches, your
-manipulation did not take effect and the experiment produces no evidence.
-
-**The hardness check (non-negotiable)** `[repo]`: after
-mining, compute mean `cos(anchor, negative)` for each condition's negative set. Require
-`C1 < C2 ≤ C3` with a visible gap. If it fails, stop and fix the mining — do not proceed to
-training.
-
----
-
-## 7. Negative-pair construction
-
-### 7.1 The three strategies `[spec]`
-
-| Strategy | Procedure |
-|---|---|
-| **Random** | Pick any non-clone fragment at random for each anchor |
-| **BM25** | Build a BM25 index over the corpus (`rank_bm25`); retrieve top keyword-matching fragments per anchor; exclude true clones; use the remainder |
-| **Semantic** | Embed the full corpus once using the **untouched base model**; retrieve top cosine-similarity matches per anchor; exclude true clones; use the remainder |
-
-### 7.2 The verification step `[spec]`
-
-> *"for both BM25 and semantic mining, explicitly filter out any snippet that is a true clone of
-> the anchor before using it as a negative — this is a correctness check to build and test
-> carefully in week 1-2"*
-
-Build it as a standalone, unit-tested function with a deliberately adversarial test:
-
-```python
-def exclude_labeled_clones(anchor_id, candidates, positive_pairs) -> list:
-    """Drop any candidate that is a labelled clone of anchor_id."""
-```
-
-Test it against a hand-built case where you *know* the answer — an anchor whose top-1 BM25 match
-is a true clone, and assert that the clone is gone and rank 2 has been promoted.
-
-⚠ **Correction 5: this check is necessary but not sufficient.** It removes negatives that
-BigCloneBench *labelled* as clones. It cannot remove the unlabelled ones — and per §0.3 those are
-numerous: the ground truth is incomplete both within and across functionalities `[verified]`. So
-the residual false-negative rate is not zero, and — critically — **it grows as the negatives get
-harder**, C1 < C2 < C3. That is not a bug in your pipeline; it is the mechanism you are studying.
-
-**Therefore: measure it.** Sample 50 mined negatives from C3 and 50 from C2, and manually judge
-whether each pair implements the same functionality. Two hours of work. It converts your biggest
-validity threat into your strongest finding, and it is what makes an inverted-U result
-*explainable* rather than merely observed. `[repo — the false-negative measurement, historically
-the highest value-per-hour item of this design]`
-
-Compare your measured rate against the nearest published figure: naive top-k hard negative
-mining produces false-negative rates of **47% on StackExchange-domain data** `[check —
-NV-Retriever; confirm the exact figure before quoting]`.
-
----
-
-## 8. Training `[spec]`
-
-Fine-tune each variant with `sentence-transformers`' built-in contrastive/triplet losses, on the
-same subset size, the same number of epochs, the same hyperparameters. **The only thing that
-differs between the three runs is the negative-selection method.**
-
-| Parameter | Value | Note |
-|---|---|---|
-| Positive pairs | Same fixed sample for all conditions | Sample **once** with a fixed seed; never re-sample per condition |
-| Train pairs | **[illustrative] 50,000** | Decide from a measured throughput test in week 1. CodeXGLUE's own pipeline uses 10% (≈90K) `[verified]` |
-| Epochs | **[illustrative] 1–2** | |
-| Batch size | **[illustrative] 16–32** | |
-| Learning rate | **[illustrative] 2e-5** | Standard for BERT-scale code encoders |
-| Max sequence length | **measure first** | Plot the token-length distribution of the corpus, then choose 256 or 512 and state it |
-| Seeds | 3, fixed | One seed is an anecdote; three is an interval |
-| Loss | One loss, identical across conditions | |
-
-⚠ **Correction 6: with explicit `(anchor, positive, negative)` triples you are not using
-`MultipleNegativesRankingLoss`.** MNRL derives its negatives from the rest of the batch, so it
-cannot express "this specific hard negative". Pick one of:
-
-* `TripletLoss` / `OnlineContrastiveLoss` with explicit triples — clean, directly expresses your
-  variable, but gives one negative per anchor instead of `batch_size − 1`.
-* MNRL, with hardness manipulated by **batch composition** — build each batch so the other
-  anchors' positives act as the hard negatives. This is what the batch-composition variant of the
-  earlier specification does `[repo]`, and it is why the loss can be held byte-identical across
-  conditions.
-
-Either is defensible. **Do not mix them between conditions**, and state which you chose and why.
-
----
-
-## 9. Evaluation
-
-You chose **F1 primary, MAP@R secondary**. That is the right call: F1 is the field standard
-(CodeXGLUE reports F1 `[verified]`), so it is the only number you can compare to published work;
-MAP@R is threshold-free, so it is the robustness check on your threshold choice.
-
-### 9.1 Standard benchmark evaluation (primary)
-
-| Item | Decision |
-|---|---|
-| Metric | **F1** (with precision and recall reported alongside) `[verified — CodeXGLUE's official metric]` |
-| Threshold | Cosine threshold **selected on the validation split**, then applied unchanged to test |
-| Report | The chosen threshold, per condition. Per-condition thresholds tuned on test are not comparable |
-| Secondary | **MAP@R** — no threshold, so it confirms the F1 ordering is not an artefact of threshold choice |
-| Splits | Use CodeXGLUE's validation and test splits as given `[verified]` |
-| Runs | 3 seeds × 3 conditions, plus C0 |
-
-**Sanity target.** CodeXGLUE's own fine-tuned CodeBERT pipeline reports an F1 around **0.95** on
-this task `[check — confirm the exact number from the CodeXGLUE leaderboard before quoting it in
-your report]`. If your four conditions do not land in that neighbourhood, your harness is broken,
-not your hypothesis.
-
-### 9.2 Threshold discipline
-
-Two conditions can differ in F1 purely because one happened to sit better with respect to a fixed
-threshold. Guard against it:
-
-1. Choose the threshold **once per condition, on validation**. Report it.
-2. Report **MAP@R** alongside — it needs no threshold.
-3. If F1 and MAP@R disagree about the ordering, say so. That disagreement is a finding, not a
-   problem to be tuned away.
-
-### 9.3 Generalisation test (RQ3) `[spec]`
-
-Hold out one or more entire functionality categories from training, then evaluate all four
-conditions on those unseen functionalities specifically.
-
-⚠ **Correction 7: this needs data the CodeXGLUE file does not contain** (§0.2, §4). Two routes:
-
-| Route | What it is | Trade-off |
-|---|---|---|
-| **A — use Kitsios et al.'s BCB s′** `[verified]` | 23 functionalities, 2,300 clone + 2,300 non-clone pairs, released at [Zenodo](https://doi.org/10.5281/zenodo.17238379) | Functionality already balanced, already published, directly comparable to their numbers. **Recommended** |
-| **B — attach functionality labels yourself** | Join CodeXGLUE fragments back to BigCloneBench proper by matching method text | More data, and a join that can silently fail. Days of work |
-
-**Design, under Route A:**
-
-```text
-hold out k functionalities (start with k = 3, chosen from the best-represented)
-train each condition on the remaining 23 − k
-evaluate on:  F1_seen    (held-in functionalities, from the validation split)
-              F1_unseen  (held-out functionalities)
-report        Δ = F1_seen − F1_unseen       ← THIS is the dependent variable for RQ3
-```
-
-**The question is not "is F1_unseen low?"** — Kitsios et al. already showed it drops by ~31% on
-average. **The question is whether Δ differs across C1 / C2 / C3.** Does harder-negative training
-buy you generalisation, or does it buy you benchmark fit?
-
-**Honest limits.** With 23 functionalities at 200 pairs each, holding out 3 leaves ~4,000 training
-pairs — small enough that a single seed will be noisy. Report the generalisation numbers as
-**means over the 3 seeds with the spread visible**, and treat them as secondary to the standard
-benchmark. If k > 1, consider rotating the held-out set (leave-one-functionality-out) and
-reporting the mean and range across folds.
-
-### 9.4 Visualisation `[spec]`
-
-Project embeddings from all four conditions into 2D with t-SNE/UMAP and compare cluster
-tightness and separation.
-
-⚠ **Correction 8: this is a figure, not evidence.** UMAP and t-SNE are sensitive to
-hyperparameters and to the random seed, and they will happily show you a difference between two
-conditions that is not there. Rules that keep it honest:
-
-* **Fix the seed and every hyperparameter** (`n_neighbors`, `min_dist`, `random_state`) and use
-  the **same sample of fragments** in all four panels.
-* Project the **same points** in every panel; never re-sample per condition.
-* If you colour by functionality, use the held-out functionalities from §9.3 — that is the
-  visually interesting case.
-* Never put the picture before the table in your argument. One picture is an illustration; the
-  aggregate table is the evidence. `[repo]`
-
----
-
-## 10. Expected findings, framed as hypotheses `[spec]`
-
-| Open question | Most likely outcome, and why |
-|---|---|
-| Does fine-tuning help at all over the baseline? | Yes, to some degree. Already established in general — this is your setup check, not your contribution |
-| Does negative strategy matter? | Yes, in the sense that `Random ≪ {BM25, Semantic}`. Which of BM25 and Semantic wins is **not** established for code `[verified across five papers]` |
-| Does harder always mean better? | Probably not. H0b (inverted-U) is the literature-supported prediction — STAR/ADORE report that static hard negatives *"may harm the recall capability"* `[verified]` |
-| Does the standard-benchmark improvement hold up on the generalisation test? | **It will shrink.** Plan for ~30% average F1 drop on unseen functionality `[verified — Kitsios et al.]`. The open question is whether the *strategy* changes how much |
-
-Any outcome — including "harder negatives made it worse" — is a legitimate, presentable finding.
-`[spec]`
-
----
-
-## 11. Demo plan
-
-Your three components, adapted to the demo constraints the earlier specification already
-adopted `[repo]`.
-
-### 11.1 Live interactive pair comparison `[spec]`
-
-Paste two differently-written, functionally-equivalent snippets → similarity scores from baseline
-vs best fine-tuned model, side by side.
-
-⚠ **Correction 9: two hand-typed snippets prove nothing** — you can get any result you like by
-choosing the snippets. The honest version:
-
-* **Default to real test pairs.** A dropdown of held-out `(func1, func2)` pairs with their gold
-  label. The app shows: `gold = clone`, `C0 cosine = 0.42 → below threshold → judged not-clone`,
-  `C3 cosine = 0.81 → above threshold → judged clone`. Now the audience is looking at a number
-  computed the same way the headline metric is computed.
-* **Keep the free-text paste box**, clearly labelled *"your own snippets — illustrative only,
-  not part of the evaluation"*.
-* Show the threshold as a visible marker on the score bar.
-* Support all four outcome modes, not just "ours wins" `[repo — result-agnostic design]`.
-
-### 11.2 2D embedding-space visualisation `[spec]`
-
-The visual centrepiece. Four panels, UMAP, fixed seed, same sample — see §9.4.
-
-### 11.3 Results table
-
-Four conditions × {F1, precision, recall, MAP@R} on the standard test split, plus
-{F1_seen, F1_unseen, Δ} on the generalisation split. **This is the evidence**; §11.1 and §11.2 are
-the illustration.
-
----
-
-## 12. Honest scope and limitations to state upfront `[spec]`
-
-1. **Java only** — BigCloneBench's language. Other languages are future work.
-2. **A subset of the full dataset**, for time reasons; standard practice for a month-long project.
-   CodeXGLUE's own reference pipeline does the same `[verified]`.
-3. **A signal for review, not a plagiarism verdict** — a human still makes the final call.
-4. **The base model's pretraining exposure is a confound.** A public benchmark this widely used
-   has almost certainly been seen in some form during pretraining. The generalisation test
-   addresses this; it does not eliminate it.
-5. **BigCloneBench's ground truth is contested** (§0.3, and [`GROUND_TRUTH.md`](GROUND_TRUTH.md)).
-   State the 93%-mislabelled finding and the imbalance explicitly, and report your own measured
-   false-negative rate.
-6. **Under Option A (§5), you are not using GraphCodeBERT's data-flow signal at inference time.**
-   Say so.
-7. **The generalisation test is small** (§9.3). Present it as secondary.
-
----
-
-## 13. Week-by-week plan
-
-Your four weeks, with the corrections folded in.
-
-| Week | Your plan `[spec]` | Added, because of what was verified |
-|---|---|---|
-| **1** | Data pipeline; implement and verify all three negative-mining strategies with the true-clone-exclusion check; one training run (random negatives) end-to-end | **Measure the train/test fragment overlap** (§4.2) and the token-length distribution. **Decide Option A vs B** for GraphCodeBERT (§5). **Run a throughput test** and fix the subset size. Verify `wc -l dataset/data.jsonl` |
-| **2** | BM25 and semantic training variants; begin standard-benchmark evaluation for all four conditions | **Run the hardness check** before training (§6.1). **Do the manual false-negative labelling** (§7.2) — it is the highest value-per-hour item in the project. Download BCB s′ and confirm you can load it |
-| **3** | Generalisation test (held-out functionality categories); 2D visualisation; start the live demo | Build the generalisation split by **functionality**, not at random (§9.3). Fix the UMAP seed and use one shared sample (§9.4) |
-| **4** | Finalise results, polish the demo, write up findings and limitations, prepare the presentation | Write the limitations section (§12) **first**, so the claims are shaped by it rather than patched afterwards |
-
----
-
-## 14. Fallback if time gets tight `[spec]`
-
-Drop to two negative strategies instead of three — e.g. random + semantic, skip BM25 — still
-preserving the "does negative strategy matter" comparison.
-
-**Endorsed, with one caveat.** Random + Semantic spans the widest difficulty range, so it is the
-right pair for RQ2. The caveat: **with only two conditions you cannot detect an inverted-U.** A
-peak needs three points. If C1 and C3 come out equal, you will not be able to tell
-"hardness does not matter" (H0a) from "hardness helped and then hurt, and the two cancelled out"
-(H0b), and those are different findings. If you do fall back to two, say in the write-up that
-H0b was not testable.
-
----
-
-## 15. Documents in this repository
-
-| File | What it is |
-|---|---|
-| [`FINAL_SPEC.md`](FINAL_SPEC.md) | This document — the specification, with verified facts and corrections |
-| [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) | The implementation plan: phases, gates, module layout, risk table |
-| [`SCOPE.md`](SCOPE.md) | MUST / SHOULD / optional / out of scope, and the stop condition |
-| [`GROUND_TRUTH.md`](GROUND_TRUTH.md) | The BigCloneBench validity problem, and what this project does about it |
-| [`README.md`](README.md) | Index |
+| **C2 — BM25** | Fine-tuned; negatives are keyword-similar-but-different snippets, found via BM25

@@ -2,11 +2,11 @@
 fixture counts, not spec counts — --verify-spec runs against real data)."""
 import json
 
-from code import negatives as NG
+from embeded import negatives as NG
 
 
 def _triples(cond):
-    from code import settings as S
+    from embeded import settings as S
     return [json.loads(l) for l in open(S.ARTIFACTS / f"triples_{cond}.jsonl")]
 
 
@@ -49,8 +49,45 @@ def test_mining_invariants(fx):
     assert next(r["negative"] for r in t2 if r["anchor"] == 16) == 18
 
 
+def test_hf_dir_parity(fx):
+    """--hf and --dir must build identical artifacts (FINAL_SPEC correction 9).
+    Simulates the HF row stream (text, not idx) from the fixture's own files."""
+    import json as _json
+    from embeded.data import prepare_data as P
+
+    texts = {}
+    for line in open(fx.fdir / "data.jsonl", encoding="utf-8"):
+        d = _json.loads(line)
+        texts[int(d["idx"])] = d["func"]
+    rows = []
+    for split in P.SPLITS:
+        for line in open(fx.fdir / f"{split}.txt", encoding="utf-8"):
+            i, j, lab = line.split()
+            rows.append((split, texts[int(i)], texts[int(j)], int(lab)))
+
+    frags_hf, pairs_hf, n_lines = P.build_hf(iter(rows), fx.fdir / "data.jsonl")
+    assert n_lines == fx.meta["n_fragments"]
+    assert frags_hf == fx.frags, "hf and dir must key fragments identically (data.jsonl order)"
+    for s in P.SPLITS:
+        assert pairs_hf[s] == fx.P.load_pairs(s)
+
+
+def test_hf_drift_fails_loudly(fx):
+    """If the HF parquet ever drifts from the released data.jsonl, build_hf must
+    raise instead of silently building a different corpus."""
+    from embeded.data import prepare_data as P
+
+    rows = [("train", "public void m0(int n) { fileinputstream0 fileoutputstream1 }",
+             "definitely not in data.jsonl", 0)]
+    try:
+        P.build_hf(iter(rows), fx.fdir / "data.jsonl")
+        raise AssertionError("expected ValueError on unknown pair text")
+    except ValueError as e:
+        assert "not found in data.jsonl" in str(e)
+
+
 def test_measurements_written(fx):
-    from code import settings as S
+    from embeded import settings as S
     txt = S.REPORT_MD.read_text()
     assert "Phase 0 — measured numbers" in txt and "recommended" not in txt.splitlines()[0]
     tl = json.loads((fx.tmp / "artifacts" / "token_lengths.json").read_text())

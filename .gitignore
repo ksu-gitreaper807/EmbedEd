@@ -6,7 +6,7 @@ junk/
 .DS_Store
 
 # experiment artifacts (regenerable, large)
-code/artifacts/
+embeded/artifacts/
 # python
 .venv/
 __pycache__/

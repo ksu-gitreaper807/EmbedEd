@@ -1,9 +1,9 @@
 """The §7.2 adversarial exclusion test, on the fixture corpus:
 anchor 16's raw BM25 top hit is its labelled clone 17; rival 20 is a
 train/test-overlap fragment; 18 must be promoted to first negative."""
-from code.mining.bm25_index import BM25Index
-from code.mining.exclude import exclude_labeled_clones
-from code.negatives import clean_candidates
+from embeded.mining.bm25_index import BM25Index
+from embeded.mining.exclude import exclude_labeled_clones
+from embeded.negatives import clean_candidates
 
 
 def test_direct():

@@ -214,7 +214,7 @@ is not.
 
 Adapt, do not paste.
 
-> We use BigCloneBench via CodeXGLUE (9,134 Java fragments; 901,028 / 415,416 / 415,416 pairs)
+> We use BigCloneBench via CodeXGLUE (9,126 Java fragments, 8,063 unique texts; 901,028 / 415,416 / 415,416 pairs)
 > because it is the standard benchmark for this task and provides fixed splits. We acknowledge
 > that its ground truth is contested: Krinke (IWSC 2022) reports that at least 15% of labelled
 > snippets are subjective or contain validation errors, that an audit of 406 Weak Type-3/Type-4

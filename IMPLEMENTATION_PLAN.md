@@ -15,7 +15,7 @@ should be updated before it is presented.
 
 ## 1. The build, in one paragraph
 
-Five Python modules and one small demo app. A fixed pool of ~9,134 Java fragments and one shared
+Five Python modules and one small demo app. A fixed pool of ~8,063 unique Java fragments (9,126-line data.jsonl) and one shared
 positive set feed three negative-mining strategies (random / BM25 / semantic); two correctness
 gates (true-clone exclusion unit test, hardness check) sit *before* any training; eighteen
 fine-tuning runs (3 strategies × 3 seeds, main experiment) plus six smaller runs (generalisation
@@ -33,7 +33,7 @@ regenerates every number.
 | Loss | one loss for all runs, chosen in week 1 (see §4.4 below) | SCOPE P1-4 |
 | Seeds | 3, fixed | SCOPE P2-12 |
 | Base model | `microsoft/graphcodebert-base` via `Transformer` + mean `Pooling` (**Option A**; data-flow caveat stated) | FINAL_SPEC §5 |
-| Dataset | `google/code_x_glue_cc_clone_detection_big_clone_bench` (the 9,134-fragment file — *not* the 8.9 M-pair full BCB) | FINAL_SPEC §0.1, correction 1 |
+| Dataset | `google/code_x_glue_cc_clone_detection_big_clone_bench` (the 9,126-line / 8,063-unique-fragment file — *not* the 8.9 M-pair full BCB) | FINAL_SPEC §0.1, corrections 1 & 9 |
 | Generalisation data | Kitsios et al.'s BCB s′ (23 functionalities, 2,300 + 2,300 pairs, [doi:10.5281/zenodo.17238379](https://doi.org/10.5281/zenodo.17238379)) | FINAL_SPEC §9.3, correction 7 |
 | Compute | single free-tier Colab GPU (T4). No multi-GPU, no FAISS, no experiment trackers — the corpus is one matmul | deck §5 "Tools"; SCOPE P5 |
 
@@ -46,15 +46,17 @@ regenerates every number.
 
 ## 3. Repository layout for the code
 
-**Status (as of this commit): Phase 0/1 code landed and unit-tested offline** — `code/`
+**Status (as of this commit): Phase 0/1 code landed and unit-tested offline** — `embeded/`
 below minus `train/` `eval/` `demo/` (Phases 2–4), plus the Colab sequencer
 [`notebooks/Phase0_Phase1_Colab.ipynb`](notebooks/Phase0_Phase1_Colab.ipynb) and the sharing
-rules in [`COLAB.md`](COLAB.md). `python -m pytest -q code/tests` runs fully offline on the
-synthetic mini-fixture (`code/fixtures/make_fixture.py`); everything touching the real
-9,134-fragment download or the model runs in the notebook.
+rules in [`COLAB.md`](COLAB.md). `python -m pytest -q embeded/tests` runs fully offline on the
+synthetic mini-fixture (`embeded/fixtures/make_fixture.py`); everything touching the real
+8,063-fragment corpus (9,126-line data.jsonl) download or the model runs in the notebook.
+The package is named `embeded`, not `code` — a top-level `code/` package shadows the stdlib
+`code` module and crashes pytest (via `pdb`) on Python 3.14.
 
 ```
-code/
+embeded/
   settings.py          # all fixed constants in one place: seeds, paths, k, lr, epochs, max_len
                        #   + EMBEDED_ARTIFACTS/EMBEDED_REPORT env overrides (tests, Drive caches)
   data/
@@ -101,7 +103,8 @@ Delivers the deck's "Tools and Resources" line and every week-1 item in FINAL_SP
    `scikit-learn`, `gradio`, `pytest`. Pin versions in `settings.py`; nothing heavier (SCOPE P5
    bans infra of any kind).
 2. `datasets.load_dataset("google/code_x_glue_cc_clone_detection_big_clone_bench")`; verify
-   **9,134 / 901,028 / 415,416 / 415,416** against `wc -l` equivalents (SCOPE P2-2).
+   **9,126 / 8,063 / 901,028 / 415,416 / 415,416** (data.jsonl lines / unique texts / pairs,
+   FINAL_SPEC correction 9) against `wc -l` + sha1-dedup equivalents (SCOPE P2-2).
 3. Measure **train/test fragment overlap** (FINAL_SPEC §4.2 snippet) → saved number, destined for
    the report either way.
 4. Measure **token-length distribution** → choose `max_len` (256 or 512) with a stated reason
@@ -252,7 +255,8 @@ list) but predates four verified corrections. Each is a slide edit, not a design
    §0.2).
 2. **"8+ million pairs / 25,000 projects"** in the deck's "Importance" is true of BigCloneBench
    but not of the artifact trained on. Add the companion half-sentence: *"...and our experiments
-   run on CodeXGLUE's filtered subset: 9,134 fragments, 901,028 / 415,416 / 415,416 pairs"*
+   run on CodeXGLUE's filtered subset: 9,126 fragments (8,063 unique texts),
+   901,028 / 415,416 / 415,416 pairs"*
    (correction 1).
 3. **Metrics wording.** Deck §5 says "MAP@R, precision/recall at threshold"; the spec's
    primary metric is **F1 with the threshold tuned on validation and reported, per condition**,
