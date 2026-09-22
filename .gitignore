@@ -1,0 +1,6 @@
+# Archived material: everything that is not the code-clone project.
+# Kept on disk for reference, deliberately out of version control.
+# It still lives in git history on branch arena/01a0aae7-embeded.
+junk/
+
+.DS_Store
