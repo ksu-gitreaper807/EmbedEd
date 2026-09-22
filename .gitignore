@@ -4,3 +4,10 @@
 junk/
 
 .DS_Store
+
+# experiment artifacts (regenerable, large)
+code/artifacts/
+# python
+.venv/
+__pycache__/
+*.pyc

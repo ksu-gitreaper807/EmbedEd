@@ -30,6 +30,10 @@ up to 48%, average 31%), and no published answer for the strategy question.
 | [`SCOPE.md`](SCOPE.md) | MUST / SHOULD / optional / out of scope, anti-scope-creep rules, stop condition, fallback | Before week 1; again in week 3 |
 | [`GROUND_TRUTH.md`](GROUND_TRUTH.md) | BigCloneBench's documented ground-truth defects, and what this project does about them | Before week 1, and again before writing the limitations section |
 
+For the code phases: `bash scripts/run_all.sh` drives Phase 0/1; the GPU/real-data steps run
+in [`notebooks/Phase0_Phase1_Colab.ipynb`](notebooks/Phase0_Phase1_Colab.ipynb) — collaboration
+and sharing rules for that environment are in [`COLAB.md`](COLAB.md).
+
 ---
 
 ## The eight corrections, in one place
