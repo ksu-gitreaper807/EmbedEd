@@ -58,7 +58,7 @@ The package is named `embeded`, not `code` — a top-level `code/` package shado
 ```
 embeded/
   settings.py          # all fixed constants in one place: seeds, paths, k, lr, epochs, max_len
-                       #   + EMBEDED_ARTIFACTS/EMBEDED_REPORT env overrides (tests, Drive caches)
+                       #   + EMBEDED_ARTIFACTS/EMBEDED_REPORT env overrides (tests, HF-synced caches)
   data/
     prepare_data.py    # loads EITHER HF dataset or dir format; keeps data.jsonl's authoritative
                        #   idx; verifies counts; overlap & token-length stats; writes measurements
@@ -78,6 +78,7 @@ embeded/
                        #   miner invariants, semantic-vs-reference parity, gate logic
 scripts/
   fetch_sprime.py      # Phase 0.7 s′ acquisition + probe + measurements block; --dry-run first
+  hf_artifacts.py      # pull/push EMBEDED_ARTIFACTS + measurements via a HF dataset repo
   phase0_throughput.py # Phase 0.5: triplet mini-training bench -> replaces [illustrative] caps
   run_all.sh           # download -> prep -> mine -> pytest -> hardcheck (later phases get wired in)
 train/                 # Phase 2: train.py, loss.py (one loss, chosen week 1)
@@ -215,7 +216,7 @@ Delivers the deck's §9 EL deliverable (conference paper in IEEE format, journal
 18 fine-tuning runs, all on one T4, all [illustrative]-sized (≤50k pairs, 1–2 epochs). Rough
 budget: 1–2 h/run ⇒ ~20–36 GPU-hours across two weeks of Colab sessions — tight but feasible;
 the Phase-0 throughput test replaces these numbers with measured ones before the matrix is
-locked. Checkpoint every run to Drive; resume, don't rerun.
+locked. Checkpoint every run to Hugging Face Hub; resume, don't rerun.
 
 ## 6. Risk table (deck §6 promises; spec says how each risk is handled)
 
@@ -224,7 +225,7 @@ locked. Checkpoint every run to Drive; resume, don't rerun.
 | C2 ≈ C3 hardness (lexical encoder) | medium-high (correction 4) | Gate G1; fix mining, never add strategies |
 | Inverted-U (C3 < C2) | medium (STAR/ADORE report it) | This is the predicted finding. Measure FN rate, write it up, do not tune C3's lr to rescue it (SCOPE P6-2) |
 | s′ acquisition/format surprises | medium (correction 2/7) | probed on day 2 (Phase 0.7); fallback k = 2; Route B explicitly *not* attempted |
-| Colab time-outs / quota | high | throughput-tested run sizes; checkpoints to Drive; seed-cut before strategy-cut (SCOPE P6-8) |
+| Colab time-outs / quota | high | throughput-tested run sizes; checkpoints to HF Hub; seed-cut before strategy-cut (SCOPE P6-8) |
 | Whole mining pipeline behind schedule | low-medium | SCOPE P8 fallback ladder: 3 strategies → 2 (C1+C3, say inverted-U untestable) → C0+C1 only ("complete weak beats incomplete strong") |
 | Benchmark memorisation inflating F1 | medium (fragment overlap) | report overlap number (Phase 0.3); if every condition beats every other by ~20 pts, re-measure overlap before celebrating (SCOPE P6-4) |
 

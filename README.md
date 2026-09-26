@@ -34,8 +34,8 @@ up to 48%, average 31%), and no published answer for the strategy question.
 For the code phases: `bash scripts/run_all.sh` drives Phase 0/1; the GPU/real-data steps run
 in [`notebooks/Phase0_Phase1_Colab.ipynb`](notebooks/Phase0_Phase1_Colab.ipynb) — GPU
 consolidation (what stays CPU-only local vs the Colab T4, session budget, resume protocol) is
-in [`CLOUD.md`](CLOUD.md); collaboration and sharing rules for the notebook are in
-[`COLAB.md`](COLAB.md).
+in [`CLOUD.md`](CLOUD.md); collaboration and sharing rules for the notebook, including the
+Hugging Face artifact checkpoint flow that replaces the old Drive mount, are in [`COLAB.md`](COLAB.md).
 
 ---
 

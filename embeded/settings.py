@@ -9,7 +9,7 @@ from pathlib import Path
 VERSION = "phase01-v4"   # v4: torch policy = Colab platform build (no torch pin); v3: env refresh for Colab py3.13 (transformers 4.46.3 / scikit-learn 1.6.1 / gradio 5.49.1); v2: canonical data.jsonl fragment ids (8,063 unique texts); v1 derived ids from pairs
 
 ROOT = Path(__file__).resolve().parent.parent
-# env overrides let tests (and Colab-on-Drive) relocate artifacts/report
+# env overrides let tests and Colab/HF sync relocate artifacts/report
 ARTIFACTS = Path(os.environ.get("EMBEDED_ARTIFACTS", ROOT / "embeded" / "artifacts"))
 REPORT_MD = Path(os.environ.get("EMBEDED_REPORT", ROOT / "report" / "measurements.md"))
 
