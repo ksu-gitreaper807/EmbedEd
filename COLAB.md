@@ -31,6 +31,34 @@ python -m scripts.hf_artifacts push --if-configured --include-report
 
 in the final cell.
 
+## Resume protocol (what a disconnect costs, and why it is not much)
+
+A Colab VM can vanish at any time (~90 min idle, ~12 h hard cap). The environment is made
+recoverable by treating it as three layers, each restored by a different mechanism — none of
+them a Drive mount:
+
+| layer | where it lives between sessions | restored by | cost |
+|---|---|---|---|
+| code + frozen constants (`settings.py`) | GitHub | notebook cell 0 | seconds |
+| pinned Python packages | nowhere (Colab image) | notebook cell 2 (`pip`) | ~1 min |
+| model + dataset download cache (`HF_HOME`) | the Hub itself | re-downloaded by the first stage that needs it | ~1 min (GraphCodeBERT 500 MB + 1.3 GB of parquet at >100 MB/s) |
+| **generated artifacts** (`fragments.jsonl`, `pairs_*.tsv`, `corpus_emb.npy`, `triples_*.jsonl`, `mining_summary.json`, `report/measurements.md`) | **your HF dataset repo** (`EMBEDED_HF_REPO_ID`) | notebook cell 2 (`hf_artifacts pull`) | seconds |
+
+The fourth row is the one that matters: it holds the only things that are expensive to make
+(the 4-min GPU encode, the 15–30-min BM25 mining, and every measured number). The GPU-heavy
+notebook cells push a checkpoint the moment they finish; the final cell pushes everything.
+
+**Every stage is artifact-gated.** `prepare_data`, `semantic_index` and `negatives` look for
+their own outputs first and, if a complete set for the current `settings.VERSION` (and the
+same model / `MAX_LEN` / `k` / anchor count) is present, print `[cache] … skipping` and exit.
+So the recovery recipe is: *run every cell again from the top*. Only unfinished stages do
+work. `--force` re-runs a stage deliberately; bumping `VERSION` invalidates everything
+deliberately (that is what it is for).
+
+Model and dataset weights are **not** checkpointed on purpose: they are already on the Hub,
+and re-hydrating `HF_HOME` is cheaper than moving 1.8 GB through Drive's FUSE layer (which
+also mangles the symlinks the HF cache relies on).
+
 ## Sharing entry points (pick per audience)
 
 1. **The one-URL opener (best for anyone with repo read access).** They click:

@@ -213,7 +213,9 @@ Delivers the deck's §9 EL deliverable (conference paper in IEEE format, journal
 | Main benchmark (CodeXGLUE subset, 3 seeds) | 1 eval, no training | 3 | 3 | 3 | 9 train + 1 eval |
 | Generalisation (s′ minus 3 functionalities, 3 seeds) | 1 eval, no training | 3 | 3 | 3 | 9 train + 1 eval |
 
-18 fine-tuning runs, all on one T4, all [illustrative]-sized (≤50k pairs, 1–2 epochs). Rough
+18 fine-tuning runs, all on one T4, all [illustrative]-sized (≤50k pairs, 1–2 epochs) — *measured
+2026-09-26: 32k triples, 1 epoch, batch 8 at 512 tokens ≈ 40 min/run on the T4; see `settings.py` /
+`report/measurements.md` Phase 0.5*. Rough
 budget: 1–2 h/run ⇒ ~20–36 GPU-hours across two weeks of Colab sessions — tight but feasible;
 the Phase-0 throughput test replaces these numbers with measured ones before the matrix is
 locked. Checkpoint every run to Hugging Face Hub; resume, don't rerun.

@@ -39,15 +39,36 @@ def encode_corpus(texts: list[str], *, model_id: str, max_len: int,
     return out
 
 
-def save_corpus_emb(emb: np.ndarray, corpus_ids: list[int]) -> Path:
+def save_corpus_emb(emb: np.ndarray, corpus_ids: list[int], *,
+                    model_id: str | None = None, max_len: int | None = None) -> Path:
+    """Persist the matrix + a meta file recording what actually produced it
+    (the values used for encoding, not whatever settings says at call time)."""
     from .. import settings as S
     p = S.artifact("corpus_emb.npy")
     np.save(p, emb)
-    meta = {"model": S.MODEL_ID, "pooling": S.POOLING, "max_len": S.MAX_LEN,
+    meta = {"model": model_id or S.MODEL_ID, "pooling": S.POOLING,
+            "max_len": S.MAX_LEN if max_len is None else max_len,
             "option": "A (token-only; no DFG at inference)", "n": len(emb),
             "corpus_first": corpus_ids[:5], "version": S.VERSION}
     S.artifact("corpus_emb.meta.json").write_text(json.dumps(meta, indent=2))
     return p
+
+
+def cached_meta(*, model_id: str, max_len: int, n: int) -> dict | None:
+    """Meta of an existing corpus_emb.npy iff it was produced by this VERSION
+    with the same model / max_len / fragment count (artifact gating for resume)."""
+    from .. import settings as S
+    p_emb, p_meta = S.ARTIFACTS / "corpus_emb.npy", S.ARTIFACTS / "corpus_emb.meta.json"
+    if not (p_emb.exists() and p_meta.exists()):
+        return None
+    try:
+        meta = json.loads(p_meta.read_text())
+    except json.JSONDecodeError:
+        return None
+    if (meta.get("version") == S.VERSION and meta.get("model") == model_id
+            and meta.get("max_len") == max_len and meta.get("n") == n):
+        return meta
+    return None
 
 
 def load_corpus_emb() -> tuple[np.ndarray, dict]:
@@ -84,14 +105,23 @@ def main(argv=None):
     ap.add_argument("--batch", type=int, default=32)
     ap.add_argument("--max-len", type=int, default=S.MAX_LEN)
     ap.add_argument("--model", default=S.MODEL_ID)
+    ap.add_argument("--force", action="store_true",
+                    help="re-encode even if a matching corpus_emb.npy is already present")
     a = ap.parse_args(argv)
     import time
     frags = load_fragments()
+    if not a.force:
+        cached = cached_meta(model_id=a.model, max_len=a.max_len, n=len(frags))
+        if cached is not None:
+            print(f"[cache] corpus_emb.npy already encoded: {cached['model']} max_len={cached['max_len']} "
+                  f"n={cached['n']} version={cached['version']} — skipping the GPU pass (--force to redo)")
+            print("OPTION A CAVEAT (correction 3): token-only encoder; no data-flow graphs at inference.")
+            return
     ids = sorted(frags)          # ALL fragments: BM25/semantic indexes are built
     t0 = time.time()             # over these, candidates then filtered to corpus
     emb = encode_corpus([frags[c] for c in ids], model_id=a.model,
                         max_len=a.max_len, batch_size=a.batch)
-    p = save_corpus_emb(emb, ids)
+    p = save_corpus_emb(emb, ids, model_id=a.model, max_len=a.max_len)
     print(f"encoded {emb.shape} in {time.time() - t0:.1f}s -> {p}")
     print("OPTION A CAVEAT (correction 3): token-only encoder; no data-flow graphs at inference.")
 

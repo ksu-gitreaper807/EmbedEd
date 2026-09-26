@@ -194,6 +194,25 @@ def write_artifacts(frags, pairs, n_data_lines: int) -> dict:
     return manifest
 
 
+def cached_manifest() -> dict | None:
+    """The Phase 0.2 artifacts, if a complete set for THIS settings.VERSION is on
+    disk (e.g. restored by `scripts.hf_artifacts pull`). Resume protocol: every
+    stage is artifact-gated so a Colab restart costs a pull, not a rerun."""
+    mf = S.ARTIFACTS / "manifest.json"
+    if not mf.exists():
+        return None
+    try:
+        manifest = json.loads(mf.read_text())
+    except json.JSONDecodeError:
+        return None
+    if manifest.get("version") != S.VERSION:
+        return None
+    needed = [S.ARTIFACTS / "fragments.jsonl"] + [S.ARTIFACTS / f"pairs_{s}.tsv" for s in SPLITS]
+    if not all(p.exists() and p.stat().st_size > 0 for p in needed):
+        return None
+    return manifest
+
+
 # --------------------------------------------------------------------------- loaders for later stages
 
 def load_fragments() -> dict[int, str]:
@@ -340,14 +359,21 @@ def main(argv=None):
     g.add_argument("--hf", action="store_true", help="load via datasets.load_dataset")
     g.add_argument("--dir", type=Path, help="local CodeXGLUE-format directory (data.jsonl + splits)")
     ap.add_argument("--verify-spec", action="store_true")
+    ap.add_argument("--force", action="store_true",
+                    help="rebuild even if artifacts for this VERSION are already present")
     a = ap.parse_args(argv)
 
-    if a.hf:
-        data_path = fetch_data_jsonl(S.ARTIFACTS)
-        frags, pairs, n_lines = build_hf(_rows_from_hf(), data_path)
+    manifest = None if a.force else cached_manifest()
+    if manifest is not None:
+        print(f"[cache] artifacts for version {manifest['version']} already in {S.ARTIFACTS} — "
+              "skipping download/rebuild (--force to redo)")
     else:
-        frags, pairs, n_lines = build_dir(a.dir)
-    manifest = write_artifacts(frags, pairs, n_lines)
+        if a.hf:
+            data_path = fetch_data_jsonl(S.ARTIFACTS)
+            frags, pairs, n_lines = build_hf(_rows_from_hf(), data_path)
+        else:
+            frags, pairs, n_lines = build_dir(a.dir)
+        manifest = write_artifacts(frags, pairs, n_lines)
     print(json.dumps(manifest, indent=2))
     if a.verify_spec:
         bad = []

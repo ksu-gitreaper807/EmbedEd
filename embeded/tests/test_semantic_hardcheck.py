@@ -73,3 +73,22 @@ def test_hardness_measure_on_fixtures(fx):
     out = measure(files, emb, row_of, n_anchors=1000, seed=S.SEED)
     assert {"mean_cos", "n_samples"} <= set(out["C1"])
     assert set(out) == {"C1", "C2"}
+
+
+def test_hardness_report_keeps_run_history(tmp_path, monkeypatch):
+    """A later PASS must not erase the FAIL that prompted a change."""
+    from embeded.hardcheck import append_measurements
+    monkeypatch.setattr(S, "REPORT_MD", tmp_path / "measurements.md")
+    per = {c: {"mean_cos": v, "std": 0.02, "n_samples": 10}
+           for c, v in (("C1", 0.961), ("C2", 0.975), ("C3", 0.988))}
+    append_measurements(per, False, ["C1→C2 gap +0.0146 < margin 0.02"], margin=0.02, stamp="run-A")
+    append_measurements(per, True, ["order holds"], margin=0.01, stamp="run-B")
+    t = S.REPORT_MD.read_text()
+    assert t.count("## Gate G1 — hardness check") == 1
+    assert t.index("run-A") < t.index("run-B")
+    assert "verdict: FAIL" in t and "verdict: PASS" in t
+    # a following section is left intact and the runs stay inside G1
+    S.REPORT_MD.write_text(t + "\n## Later section\n\nkeep me\n")
+    append_measurements(per, True, ["again"], margin=0.01, stamp="run-C")
+    t = S.REPORT_MD.read_text()
+    assert t.index("run-C") < t.index("## Later section") and t.endswith("keep me\n")

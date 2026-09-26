@@ -54,9 +54,9 @@ From the Phase 0.5 throughput test (run it first — it replaces all
 | Work | GPU estimate |
 |---|---|
 | Session 1: throughput + corpus encode + G1 + smoke | **~0.75 h** |
-| 18 fine-tuning runs (9 main @ ≤50k pairs, 9 smaller on s′) | **~12–36 h** (1–2 h/run measured) |
+| 18 fine-tuning runs (9 main @ 32k triples ≈ 40 min each — measured 13.5 triples/s at 512:8 fp16; 9 smaller on s′) | **~6 h main + ~2–3 h s′** |
 | 6 eval encodes (+ 2 s′ evals, smaller) | **~2–4 h** |
-| **Total** | **~15–40 GPU-h**, i.e. **3–5 Colab days** at the ~12 h/day quota |
+| **Total** | **~11–14 GPU-h**, i.e. **1–2 Colab days** at the ~12 h/day quota |
 
 Calendar at the free-tier limits (12 h/session hard cap, ~12 h/day quota,
 ~90 min idle disconnect):
@@ -127,7 +127,7 @@ Then, **only** the GPU stages that are missing:
 
 **S1 — setup + mining** (GPU ~0.75 h)
 ```bash
-python -m scripts.phase0_throughput --candidates 256:32 256:16 512:16 --minutes 0.5
+python -m scripts.phase0_throughput --candidates 512:4 512:8 512:16 512:32 --minutes 0.5   # fp16 AMP; OOM candidates are skipped
 #   → commit the printed MAX_LEN / TRAIN_PAIRS_CAP / BATCH / EPOCHS to settings.py FIRST
 python -m embeded.mining.semantic_index --batch 32        # corpus encode, cached; skips if present
 python -m embeded.negatives --strategies random,bm25,semantic --k 20
@@ -163,11 +163,14 @@ Then **disconnect the T4**. Everything after S5 is local CPU (§3).
 
 ## 5. Keeping the GPU hours down (levers, ranked)
 
-1. **`MAX_LEN` 256 vs 512** — 2× cost on every GPU stage. Freeze it from the
-   Phase 0.4 p99; stay at 256 if p99 ≤ 250.
-2. **`TRAIN_PAIRS_CAP` from the measured throughput test** — size 1 epoch to
-   land in ~1–1.5 h (headroom for the 12-h cap); never above the 50k
-   [illustrative] without a measured reason.
+1. **`MAX_LEN`** — 2× cost between 256 and 512 on every GPU stage, but the Phase 0.4
+   measurement settled it: p50 = 474 tokens, p99 = 5,944 → **512** (256 would truncate the
+   median fragment). Not a lever any more; the recipe that makes 512 fit is fp16 AMP
+   (`settings.AMP_DTYPE`; plain fp32 OOMs the T4 even at 256×32).
+2. **`TRAIN_PAIRS_CAP` from the measured throughput test** — frozen at **32k**
+   (13.5 triples/s × 40 min at 512:8; `report/measurements.md` Phase 0.5). One run ≈ 40 min,
+   so a session death costs at most that; never raise it without a re-measured reason, and
+   never above ~90k (CodeXGLUE's own 10% slice).
 3. **`EPOCHS = 1`** (already frozen) — do not "try 2" without budget for the
    doubled runs.
 4. **Encode once** — the corpus matrix is hashed against `settings.VERSION`;
