@@ -39,11 +39,15 @@ def encode_corpus(texts: list[str], *, model_id: str, max_len: int,
     return out
 
 
-def save_corpus_emb(emb: np.ndarray, corpus_ids: list[int]) -> Path:
+def save_corpus_emb(emb: np.ndarray, corpus_ids: list[int], *,
+                    model_id: str | None = None, max_len: int | None = None) -> Path:
+    """Persist the matrix + a meta file recording what actually produced it
+    (the values used for encoding, not whatever settings says at call time)."""
     from .. import settings as S
     p = S.artifact("corpus_emb.npy")
     np.save(p, emb)
-    meta = {"model": S.MODEL_ID, "pooling": S.POOLING, "max_len": S.MAX_LEN,
+    meta = {"model": model_id or S.MODEL_ID, "pooling": S.POOLING,
+            "max_len": S.MAX_LEN if max_len is None else max_len,
             "option": "A (token-only; no DFG at inference)", "n": len(emb),
             "corpus_first": corpus_ids[:5], "version": S.VERSION}
     S.artifact("corpus_emb.meta.json").write_text(json.dumps(meta, indent=2))
@@ -91,7 +95,7 @@ def main(argv=None):
     t0 = time.time()             # over these, candidates then filtered to corpus
     emb = encode_corpus([frags[c] for c in ids], model_id=a.model,
                         max_len=a.max_len, batch_size=a.batch)
-    p = save_corpus_emb(emb, ids)
+    p = save_corpus_emb(emb, ids, model_id=a.model, max_len=a.max_len)
     print(f"encoded {emb.shape} in {time.time() - t0:.1f}s -> {p}")
     print("OPTION A CAVEAT (correction 3): token-only encoder; no data-flow graphs at inference.")
 

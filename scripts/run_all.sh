@@ -12,7 +12,7 @@ $PY -m embeded.data.prepare_data --hf --verify-spec
 
 # Phase 0.5 throughput (sets TRAIN_PAIRS_CAP/EPOCHS/MAX_LEN — run once, edit
 # embeded/settings.py from its output):
-#   $PY -m scripts.phase0_throughput --candidates 256:32 256:16
+#   $PY -m scripts.phase0_throughput --candidates 512:4 512:8 512:16 512:32
 # Phase 0.7 s′ acquisition:
 #   $PY -m scripts.fetch_sprime
 

@@ -6,7 +6,7 @@ bump VERSION so artifact hashes make staleness obvious.
 import os
 from pathlib import Path
 
-VERSION = "phase01-v4"   # v4: torch policy = Colab platform build (no torch pin); v3: env refresh for Colab py3.13 (transformers 4.46.3 / scikit-learn 1.6.1 / gradio 5.49.1); v2: canonical data.jsonl fragment ids (8,063 unique texts); v1 derived ids from pairs
+VERSION = "phase01-v5"   # v5: MAX_LEN 256 -> 512 from the measured Phase 0.4 token lengths (p50=474, p99=5944) + fp16 AMP training recipe (fp32 OOMs the T4); v4: torch policy = Colab platform build (no torch pin); v3: env refresh for Colab py3.13 (transformers 4.46.3 / scikit-learn 1.6.1 / gradio 5.49.1); v2: canonical data.jsonl fragment ids (8,063 unique texts); v1 derived ids from pairs
 
 ROOT = Path(__file__).resolve().parent.parent
 # env overrides let tests and Colab/HF sync relocate artifacts/report
@@ -56,7 +56,22 @@ TRAIN_PAIRS_CAP = 50_000           # [illustrative] triples per condition
 EPOCHS = 1                          # [illustrative] 1-2
 BATCH = 32
 LR = 2e-5
-MAX_LEN = 256                       # provisional; Phase 0 token-length check may move it to 512
+# Fixed by the Phase 0.4 token-length measurement (report/measurements.md, SCOPE P2-5):
+# GraphCodeBERT tokens per fragment p50=474 p90=1535 p95=2233 p99=5944 max=36823.
+# 512 is also the model's positional-embedding ceiling, so it is the max we can
+# take; even so, roughly half the fragments exceed it and are truncated — state
+# this as a limitation. (256 would have truncated the median fragment.)
+MAX_LEN = 512
+
+# --- training precision / memory recipe (fixed for the Colab T4) --------------
+# scripts/phase0_throughput.py measures throughput with exactly this recipe, so
+# train.py (Phase 2) MUST use the same one or the measured caps do not transfer.
+# Plain fp32 does not fit: a 3-stream triplet step at 256 tokens x 32 triples
+# already OOMs the 14.5 GB T4 (Phase 0.5, 2026-09). T4 = Turing: fp16 tensor
+# cores, no bfloat16.
+AMP_DTYPE = "float16"              # torch.autocast dtype; "float32" disables AMP
+GRAD_CHECKPOINT = False            # recompute activations in backward: far less memory,
+                                   # ~30% slower; turn on only if no useful batch fits at MAX_LEN
 
 # --- generalisation (FINAL_SPEC §9.3, Route A) -------------------------------
 SPRIME_DOI = "10.5281/zenodo.17238379"

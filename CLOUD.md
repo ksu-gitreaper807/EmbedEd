@@ -127,7 +127,7 @@ Then, **only** the GPU stages that are missing:
 
 **S1 — setup + mining** (GPU ~0.75 h)
 ```bash
-python -m scripts.phase0_throughput --candidates 256:32 256:16 512:16 --minutes 0.5
+python -m scripts.phase0_throughput --candidates 512:4 512:8 512:16 512:32 --minutes 0.5   # fp16 AMP; OOM candidates are skipped
 #   → commit the printed MAX_LEN / TRAIN_PAIRS_CAP / BATCH / EPOCHS to settings.py FIRST
 python -m embeded.mining.semantic_index --batch 32        # corpus encode, cached; skips if present
 python -m embeded.negatives --strategies random,bm25,semantic --k 20
