@@ -6,7 +6,7 @@ bump VERSION so artifact hashes make staleness obvious.
 import os
 from pathlib import Path
 
-VERSION = "phase01-v5"   # v5: MAX_LEN 256 -> 512 from the measured Phase 0.4 token lengths (p50=474, p99=5944) + fp16 AMP training recipe (fp32 OOMs the T4); v4: torch policy = Colab platform build (no torch pin); v3: env refresh for Colab py3.13 (transformers 4.46.3 / scikit-learn 1.6.1 / gradio 5.49.1); v2: canonical data.jsonl fragment ids (8,063 unique texts); v1 derived ids from pairs
+VERSION = "phase01-v5"   # v5: MAX_LEN 256 -> 512 from the measured Phase 0.4 token lengths (p50=474, p99=5944); training sizing measured on the T4 (BATCH 8, TRAIN_PAIRS_CAP 32k, fp16 AMP — fp32 OOMs); v4: torch policy = Colab platform build (no torch pin); v3: env refresh for Colab py3.13 (transformers 4.46.3 / scikit-learn 1.6.1 / gradio 5.49.1); v2: canonical data.jsonl fragment ids (8,063 unique texts); v1 derived ids from pairs
 
 ROOT = Path(__file__).resolve().parent.parent
 # env overrides let tests and Colab/HF sync relocate artifacts/report
@@ -51,10 +51,17 @@ K_NEGATIVES = 20                   # same k for ALL conditions (SCOPE P2-6)
 HARDNESS_MARGIN = 0.02             # "visible gap" for C1 < C2 (SCOPE P1-6)
 HARDNESS_CHECK_ANCHORS = 1_000     # anchors sampled (seeded) for the hardness check
 
-# --- training sizing: ILLUSTRATIVE until the throughput test replaces them --
-TRAIN_PAIRS_CAP = 50_000           # [illustrative] triples per condition
-EPOCHS = 1                          # [illustrative] 1-2
-BATCH = 32
+# --- training sizing: MEASURED, Phase 0.5 on the Colab T4, 2026-09-26 -------
+# scripts/phase0_throughput.py, fp16 AMP, 512 tokens (report/measurements.md):
+#   512:4  11.9 triples/s  peak  4.4 GB      512:16  14.1 triples/s  peak 11.4 GB
+#   512:8  13.5 triples/s  peak  6.7 GB      512:32  OOM   (T4 = 14.5 GB)
+# BATCH 8 is within 5% of the fastest fitting candidate and leaves ~8 GB of
+# headroom for a 40-minute run; 16 would leave ~3 GB. Frozen (SCOPE P2-13).
+# negatives.py mines TRAIN_PAIRS_CAP // K_NEGATIVES anchors, so the cap also
+# sizes Phase 1 mining: 32,000 = 1,600 anchors x k=20 = 4,000 steps of 8.
+TRAIN_PAIRS_CAP = 32_000           # triples per condition (measured 32,367 @ 13.5 triples/s x 40 min)
+EPOCHS = 1                          # 40 min/run -> 9 main runs = 6 GPU-h; "try 2" = doubled budget
+BATCH = 8                           # triples per step (the encoder sees 3x = 24 sequences)
 LR = 2e-5
 # Fixed by the Phase 0.4 token-length measurement (report/measurements.md, SCOPE P2-5):
 # GraphCodeBERT tokens per fragment p50=474 p90=1535 p95=2233 p99=5944 max=36823.
