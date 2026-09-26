@@ -44,3 +44,27 @@ def test_diagnostics_end_to_end(fx, capsys):
 
     D.main(["--examples", "0"])                      # rerun replaces the section
     assert S.REPORT_MD.read_text().count("## Gate G1 — diagnostics") == 1
+
+
+def test_label_noise_floors_on_fixture(fx):
+    from collections import defaultdict
+    from embeded.mining.bm25_index import tokenize_code
+    from embeded import negatives as NG
+    import numpy as np, json
+    emb = _fake_emb()
+    np.save(S.ARTIFACTS / "corpus_emb.npy", emb)
+    (S.ARTIFACTS / "corpus_emb.meta.json").write_text(json.dumps({"model": "fake", "max_len": 8, "n": len(emb)}))
+    NG.main(["--strategies", "random,bm25,semantic", "--k", "3"])
+    triples = {c: D._load_triples(S.ARTIFACTS / f"triples_{c}.jsonl") for c in ("C1", "C2", "C3")}
+    clones_valid = defaultdict(set)
+    for i, j, lab in fx.P.load_pairs("valid"):
+        if lab == 1:
+            clones_valid[i].add(j); clones_valid[j].add(i)
+    ln = D.label_noise(triples, fx.frags, fx.P.labeled_clones(), clones_valid)
+    for c in ("C1", "C2", "C3"):
+        assert ln[c]["train_labelled_clone_frac"] == 0.0        # the exclusion did its job
+        assert 0 <= ln[c]["valid_labelled_clone_frac"] <= 1
+        assert 0 <= ln[c]["near_dup_frac_ge_0.75"] <= ln[c]["near_dup_frac_ge_0.5"] <= 1
+    assert "jaccard_median" in ln["positives"]
+    # the fixture's adversarial anchor 16 has a near-verbatim rival (18) that BM25 promotes
+    assert D.jaccard(set(tokenize_code(fx.frags[16])), set(tokenize_code(fx.frags[18]))) > 0.5

@@ -52,6 +52,63 @@ def _cos(emb, row_of, i, j) -> float:
     return float(emb[row_of[i]] @ emb[row_of[j]])
 
 
+def jaccard(a_tokens: set, b_tokens: set) -> float:
+    return len(a_tokens & b_tokens) / len(a_tokens | b_tokens) if (a_tokens or b_tokens) else 0.0
+
+
+def label_noise(triples: dict[str, dict[int, dict]], frags: dict[int, str],
+                clones_train: dict[int, set], clones_valid: dict[int, set],
+                thresholds=(0.5, 0.75)) -> dict:
+    """Two FLOORS on 'negatives that are really clones' (correction 5 — the
+    exclusion only removes clones LABELLED in train, and harder mining finds
+    more of the unlabelled ones):
+
+    - `valid_labelled_clone_frac`: negatives that the VALID split labels as a
+      clone of the anchor (exact, but only a subset of pairs is labelled at all);
+    - `near_dup_frac_ge_<t>`: negatives whose BM25 token set has Jaccard >= t
+      with the anchor's — near-verbatim Type-1/2 code under a different name.
+    `train_labelled_clone_frac` must be 0 (the exclusion working) — reported as
+    a self-check. The 50+50 manual audit remains the real measurement.
+    """
+    from embeded.mining.bm25_index import tokenize_code
+    tok_cache: dict[int, set] = {}
+
+    def toks(i):
+        if i not in tok_cache:
+            tok_cache[i] = set(tokenize_code(frags[i]))
+        return tok_cache[i]
+
+    out = {}
+    for c, per_anchor in triples.items():
+        n = tr = va = 0
+        hits = {t: 0 for t in thresholds}
+        jacc = []
+        for a, rec in per_anchor.items():
+            ta = toks(a)
+            for x in rec["negatives"]:
+                n += 1
+                tr += x in clones_train.get(a, ())
+                va += x in clones_valid.get(a, ())
+                j = jaccard(ta, toks(x))
+                jacc.append(j)
+                for t in thresholds:
+                    hits[t] += j >= t
+        d = {"n": n, "train_labelled_clone_frac": round(tr / n, 4),
+             "valid_labelled_clone_frac": round(va / n, 4),
+             "jaccard_mean": round(float(np.mean(jacc)), 4),
+             "jaccard_median": round(float(np.median(jacc)), 4)}
+        for t in thresholds:
+            d[f"near_dup_frac_ge_{t}"] = round(hits[t] / n, 4)
+        out[c] = d
+    # the same yardstick on the labelled positives, for reference
+    pj = [jaccard(toks(a), toks(rec["positive"])) for a, rec in triples["C1"].items()]
+    out["positives"] = {"jaccard_mean": round(float(np.mean(pj)), 4),
+                        "jaccard_median": round(float(np.median(pj)), 4),
+                        **{f"near_dup_frac_ge_{t}": round(float(np.mean([j >= t for j in pj])), 4)
+                           for t in thresholds}}
+    return out
+
+
 def analyse(emb: np.ndarray, row_of: dict[int, int], corpus: list[int],
             triples: dict[str, dict[int, dict]], seed: int = S.SEED,
             top_ranks=(20, 100)) -> dict:
@@ -128,14 +185,18 @@ def _snippet(text: str, n: int = 160) -> str:
 
 
 def examples(emb, row_of, frags, triples, n: int) -> list[str]:
+    from embeded.mining.bm25_index import tokenize_code
     lines = []
     for a in list(triples["C1"])[:n]:
+        ta = set(tokenize_code(frags[a]))
         p = triples["C1"][a]["positive"]
         lines.append(f"anchor {a}: {_snippet(frags[a])}")
-        lines.append(f"  positive {p} (cos {_cos(emb, row_of, a, p):.3f}): {_snippet(frags[p])}")
+        lines.append(f"  positive {p} (cos {_cos(emb, row_of, a, p):.3f}, jaccard "
+                     f"{jaccard(ta, set(tokenize_code(frags[p]))):.2f}): {_snippet(frags[p])}")
         for c in CONDS:
             x = triples[c][a]["negatives"][0]
-            lines.append(f"  {c} neg#1 {x} (cos {_cos(emb, row_of, a, x):.3f}): {_snippet(frags[x])}")
+            lines.append(f"  {c} neg#1 {x} (cos {_cos(emb, row_of, a, x):.3f}, jaccard "
+                         f"{jaccard(ta, set(tokenize_code(frags[x]))):.2f}): {_snippet(frags[x])}")
     return lines
 
 
@@ -157,6 +218,21 @@ def write_section(res: dict) -> None:
                      f"{m['in_anchor_top100_frac']:.1%} | {m['closer_than_positive_frac']:.1%} |")
     ov = res["negative_set_overlap_frac"]
     lines += ["", "Negative-set overlap per anchor: " + ", ".join(f"{k} = {v:.1%}" for k, v in ov.items()), ""]
+    ln = res.get("label_noise")
+    if ln:
+        lines += ["Label-noise floors (correction 5; proxies, not the audit): share of negatives that the valid split "
+                  "labels as a clone of the anchor, and share whose BM25 token set is near-identical to the anchor's "
+                  "(Jaccard). Positives shown with the same yardstick.", "",
+                  "| set | train-labelled clone (must be 0) | valid-labelled clone | Jaccard median | ≥ 0.5 | ≥ 0.75 |",
+                  "|---|---|---|---|---|---|"]
+        for c in CONDS:
+            m = ln[c]
+            lines.append(f"| {c} negatives | {m['train_labelled_clone_frac']:.2%} | {m['valid_labelled_clone_frac']:.2%} | "
+                         f"{m['jaccard_median']:.2f} | {m['near_dup_frac_ge_0.5']:.1%} | {m['near_dup_frac_ge_0.75']:.1%} |")
+        pm = ln["positives"]
+        lines.append(f"| labelled positives | — | — | {pm['jaccard_median']:.2f} | {pm['near_dup_frac_ge_0.5']:.1%} | "
+                     f"{pm['near_dup_frac_ge_0.75']:.1%} |")
+        lines.append("")
     block = "\n".join(lines)
     S.REPORT_MD.parent.mkdir(parents=True, exist_ok=True)
     if S.REPORT_MD.exists():
@@ -193,6 +269,13 @@ def main(argv=None):
 
     print(f"embeddings: {meta.get('model')} max_len={meta.get('max_len')} n={meta.get('n')}")
     res = analyse(emb, row_of, corpus_ids(), triples)
+    from embeded.data.prepare_data import labeled_clones, load_pairs
+    clones_valid = defaultdict(set)
+    for i, j, lab in load_pairs("valid"):
+        if lab == 1:
+            clones_valid[i].add(j)
+            clones_valid[j].add(i)
+    res["label_noise"] = label_noise(triples, frags, labeled_clones(), clones_valid)
     print(json.dumps(res, indent=2))
     if a.examples:
         print("\nEXAMPLES (first negative per condition):")
