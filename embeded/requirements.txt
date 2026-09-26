@@ -1,11 +1,14 @@
-# Phase 0/1 runtime (mirrors settings.PINNED; Colab installs this)
+# Phase 0/1 runtime (mirrors settings.PINNED 1:1, same order; Colab installs this).
+# Pins are validated against current Colab (Python 3.13, 2026-09) — see the
+# comment above settings.PINNED for why each version moved.
+torch==2.6.0
+transformers==4.46.3
 datasets==2.20.0
-transformers==4.43.4
 sentence-transformers==3.0.1
 rank-bm25==0.2.2
 umap-learn==0.5.6
-scikit-learn==1.5.1
-gradio==4.42.0
+scikit-learn==1.6.1
+gradio==5.49.1
 pytest==8.3.2
 numpy
 pandas
