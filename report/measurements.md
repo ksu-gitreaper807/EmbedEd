@@ -457,3 +457,14 @@ Frozen in `settings.py` as `TRAIN_PAIRS_CAP = 32_000` (= 1,600 anchors × k=20 =
   ]
 }
 ```
+
+## Gate G1 — hardness check
+
+### run 2026-09-26 (Colab T4, first mining run) — version `phase01-v5`, margin 0.02
+
+- C1: mean cos(anchor, negative) = 0.96068 (sd 0.026, n = 20000)
+- C2: mean cos(anchor, negative) = 0.97526 (sd 0.022, n = 20000)
+- C3: mean cos(anchor, negative) = 0.98845 (sd 0.007, n = 20000)
+- **verdict: FAIL** — C1→C2 gap +0.0146 < margin 0.02 (mining produced equally easy negatives)
+
+Context recorded at the time: ordering C1 < C2 ≤ C3 holds; the C1→C2 gap is ≈70 standard errors (n = 20,000) and d ≈ 0.6, but the full C1→C3 range of this untuned, anisotropic space is only 0.028, so the absolute 0.02 margin (set in `settings.py` before the spread was known) asks C2 to cover ~75% of it. Per SCOPE P6-3 training is blocked; next step is `python -m scripts.hardness_diagnostics` (percentile-rank view), then either a mining fix or an explicit, documented re-operationalisation of "visible gap" — decided before any training, with this run kept here either way.

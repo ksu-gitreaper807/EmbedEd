@@ -57,21 +57,35 @@ def measure(triples_files: dict[str, str], emb: np.ndarray, row_of: dict[int, in
     return out
 
 
-def append_measurements(per_cond, ok, msgs) -> None:
-    block = ["", "## Gate G1 — hardness check", ""]
+SECTION = "## Gate G1 — hardness check"
+
+
+def append_measurements(per_cond, ok, msgs, *, margin=None, stamp=None) -> None:
+    """Record this run under the G1 section — as HISTORY, never replacing
+    earlier runs: a PASS obtained after changing the mining or the margin must
+    sit next to the FAIL that prompted the change (SCOPE P6-3 transparency)."""
+    import time
+    stamp = stamp or time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime())
+    margin = S.HARDNESS_MARGIN if margin is None else margin
+    run = ["", f"### run {stamp} — version `{S.VERSION}`, margin {margin}", ""]
     for c in ("C1", "C2", "C3"):
         m = per_cond[c]
-        block.append(f"- {c}: mean cos(anchor, negative) = {m['mean_cos']:.5f} "
-                     f"(sd {m['std']:.3f}, n = {m['n_samples']})")
-    block.append(f"- **verdict: {'PASS' if ok else 'FAIL'}** — " + "; ".join(msgs))
-    block.append("")
+        run.append(f"- {c}: mean cos(anchor, negative) = {m['mean_cos']:.5f} "
+                   f"(sd {m['std']:.3f}, n = {m['n_samples']})")
+    run.append(f"- **verdict: {'PASS' if ok else 'FAIL'}** — " + "; ".join(msgs))
+    run.append("")
+    run_text = "\n".join(run)
+    S.REPORT_MD.parent.mkdir(parents=True, exist_ok=True)
     if S.REPORT_MD.exists():
         t = S.REPORT_MD.read_text()
-        t = re.sub(r"\n## Gate G1 — hardness check.*?(?=\n## |\Z)", "\n" + "\n".join(block), t, flags=re.S)
-        S.REPORT_MD.write_text(t if "## Gate G1" in t else t + "\n".join(block))
+        m = re.search(r"\n" + re.escape(SECTION) + r".*?(?=\n## |\Z)", t, flags=re.S)
+        if m:   # append this run at the end of the existing section
+            t = t[:m.end()].rstrip("\n") + "\n" + run_text + t[m.end():]
+        else:
+            t = t.rstrip("\n") + "\n\n" + SECTION + "\n" + run_text
+        S.REPORT_MD.write_text(t)
     else:
-        S.REPORT_MD.parent.mkdir(parents=True, exist_ok=True)
-        S.REPORT_MD.write_text("# Measurements\n" + "\n".join(block))
+        S.REPORT_MD.write_text("# Measurements\n\n" + SECTION + "\n" + run_text)
 
 
 def main(argv=None):
@@ -98,7 +112,7 @@ def main(argv=None):
     print("HARDNESS GATE:", "PASS" if ok else "FAIL")
     for m in msgs:
         print(" -", m)
-    append_measurements(per, ok, msgs)
+    append_measurements(per, ok, msgs, margin=a.margin)
     raise SystemExit(0 if ok else 1)
 
 
