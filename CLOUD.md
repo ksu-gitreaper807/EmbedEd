@@ -15,7 +15,7 @@ Rules that follow from that:
 3. **Encode once, reuse everywhere.** The base-model corpus embedding matrix
    (8,063 × 768 ≈ 25 MB) is the one expensive GPU artifact; mining, the C0
    baseline, the smoke run, and every eval pass hang off the cached copy.
-4. **Checkpoint to Drive, resume, don't rerun** (IMPLEMENTATION_PLAN §5). Every
+4. **Checkpoint to Hugging Face Hub, resume, don't rerun** (IMPLEMENTATION_PLAN §5). Every
    stage is idempotent and artifact-gated: if its output exists and matches
    `settings.VERSION`, it is skipped.
 
@@ -23,7 +23,7 @@ Rules that follow from that:
 
 ## 1. Stage map — what runs where
 
-| Stage | Phase | Compute | Where | Time est. | Artifacts out (Drive: `embeded/artifacts/`) |
+| Stage | Phase | Compute | Where | Time est. | Artifacts out (local `EMBEDED_ARTIFACTS/`, optionally synced to HF Hub) |
 |---|---|---|---|---|---|
 | Data prep: download, G0 counts, overlap, token lengths | 0.2–0.4 | network + CPU (tokenizer) | **local** | 10–20 min + download | `fragments.jsonl`, `pairs_{train,valid,test}.tsv`, `manifest.json`, `overlap.json`, `token_lengths.json`, `report/measurements.md` |
 | s′ acquisition + probe | 0.7 | network + CPU | **local** | 5 min + download | `sprime/` (parsed pairs) |
@@ -73,7 +73,7 @@ A **running cell counts as activity**, so a 1.5-h training cell does not
 idle-disconnect while it runs. What kills sessions is an *idle* runtime and the
 daily quota — both are covered by the resume protocol below. Worst case: a
 session dies mid-run ⇒ that run (≤2 h) is lost and reruns from scratch next
-day; everything before it is on Drive.
+day; everything before it is in the last HF checkpoint you pushed.
 
 ---
 
@@ -91,12 +91,17 @@ python -m pytest -q embeded/tests                              # seconds, fully 
 python -m scripts.fetch_sprime --dry-run && python -m scripts.fetch_sprime
 ```
 
-Then upload the small artifacts **once** to Drive so Colab never redoes prep
-or redownloads: `fragments.jsonl` (~3 MB), `pairs_*.tsv` (~15 MB),
-`manifest.json`, `overlap.json`, `token_lengths.json` →
-`/content/drive/MyDrive/embeded/artifacts/`. (Or, if you'd rather not keep a
-local copy at all, run the same `prepare_data` cell inside a **CPU** Colab
-runtime — zero quota cost — before ever attaching a T4.)
+Then upload the small artifacts **once** to your HF dataset repo so Colab never
+redoes prep: `fragments.jsonl` (~3 MB), `pairs_*.tsv` (~15 MB),
+`manifest.json`, `overlap.json`, `token_lengths.json`.
+
+```bash
+python -m scripts.hf_artifacts push --include-report
+```
+
+(Or, if you'd rather not keep a local copy at all, run the same `prepare_data`
+cell inside a **CPU** Colab runtime — zero quota cost — before ever attaching a
+T4, then push from there.)
 
 Token-length p99 from `token_lengths.json` decides `MAX_LEN`
 (256 if p99 ≤ 250, else 512 — **a 2× GPU cost**, so read it before committing).
@@ -114,10 +119,11 @@ tables, UMAP figure, paper numbers — is then local CPU work.
 
 ## 4. Colab session recipes
 
-Every session starts identically (cells 1–2 of the notebook): clone branch
-`arena/01a0c914-embeded`, mount Drive, set `EMBEDED_ARTIFACTS` /
-`EMBEDED_REPORT`, pin env from `settings.PINNED`. Then, **only** the GPU
-stages that are missing:
+Every session starts identically (cells 1–2 of the notebook): clone the repo,
+load Colab secrets into `EMBEDED_HF_REPO_ID` / `HF_TOKEN` if present, set
+`EMBEDED_ARTIFACTS` / `EMBEDED_REPORT`, pin env from `settings.PINNED`, then
+pull any saved checkpoint with `python -m scripts.hf_artifacts pull --if-configured`.
+Then, **only** the GPU stages that are missing:
 
 **S1 — setup + mining** (GPU ~0.75 h)
 ```bash
@@ -126,6 +132,7 @@ python -m scripts.phase0_throughput --candidates 256:32 256:16 512:16 --minutes 
 python -m embeded.mining.semantic_index --batch 32        # corpus encode, cached; skips if present
 python -m embeded.negatives --strategies random,bm25,semantic --k 20
 python -m embeded.hardcheck                               # exit 0 = G1 PASS; 1 = FAIL → STOP
+python -m scripts.hf_artifacts push --if-configured --include-report
 # (smoke run: notebook cell, 3 min)
 ```
 
@@ -148,7 +155,7 @@ ones.
 ```bash
 # Phase 2–3 code; one forward pass per (model, fragment-set); C0 reuses the
 # cached base-model embeddings — no GPU for it
-python -m embeded.eval.evaluate --encode-only            # writes scores/*.npy to Drive
+python -m embeded.eval.evaluate --encode-only            # writes scores/*.npy to EMBEDED_ARTIFACTS
 ```
 Then **disconnect the T4**. Everything after S5 is local CPU (§3).
 
@@ -178,8 +185,10 @@ Then **disconnect the T4**. Everything after S5 is local CPU (§3).
 
 ## 6. Resume protocol (why a dead session costs ≤ 1 run)
 
-- All state lives on Drive: `embeded/artifacts/` (shared, versioned by
-  `settings.VERSION`), `embeded/artifacts/runs/{condition}_{seed}/` (per-run).
+- All state lives under local `EMBEDED_ARTIFACTS/` and is checkpointed to the
+  configured HF dataset repo when you run `python -m scripts.hf_artifacts push`.
+  That tree is shared, versioned by `settings.VERSION`, and per-run outputs live
+  under `runs/{condition}_{seed}/`.
 - A stage is *done* iff its output artifact exists **and** the manifest's
   version matches; otherwise it regenerates just that stage.
 - Per-run checkpoint: `runs/{c}_{s}/` contains the fine-tuned model after each
@@ -188,4 +197,5 @@ Then **disconnect the T4**. Everything after S5 is local CPU (§3).
 - The `scripts/gpu_session` orchestrator (built with Phase 2's `train.py`,
   per plan) automates exactly this table — one command, `--resume`, per-stage
   skip. Until it lands, the per-cell recipes in §4 are the protocol: each cell
-  is safe to rerun.
+  is safe to rerun, and the notebook's startup/final sync cells move checkpoints
+  between Colab and HF Hub.
