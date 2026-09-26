@@ -78,11 +78,33 @@ def mine(strategy, *, stream, corpus_list, clone_sets, k, all_ids,
     return triples, dict(stats)
 
 
+def cached_summary(strategies, *, k: int, n_anchors: int) -> dict | None:
+    """mining_summary.json iff it was produced by this VERSION with the same k,
+    anchor count and (at least) these strategies, and the triples files exist.
+    Artifact gating for resume; the whole run is otherwise deterministic."""
+    p = S.ARTIFACTS / "mining_summary.json"
+    if not p.exists():
+        return None
+    try:
+        summary = json.loads(p.read_text())
+    except json.JSONDecodeError:
+        return None
+    run = summary.get("_run") or {}
+    if not (run.get("version") == S.VERSION and run.get("k") == k and run.get("n_anchors") == n_anchors
+            and set(strategies) <= set(run.get("strategies", []))):
+        return None
+    if not all((S.ARTIFACTS / f"triples_{COND[s]}.jsonl").exists() for s in strategies):
+        return None
+    return summary
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--strategies", default="random,bm25,semantic")
     ap.add_argument("--k", type=int, default=S.K_NEGATIVES)
     ap.add_argument("--cap-anchors", type=int, default=None)
+    ap.add_argument("--force", action="store_true",
+                    help="re-mine even if matching triples for this VERSION are already present")
     a = ap.parse_args(argv)
     strategies = [s.strip() for s in a.strategies.split(",") if s.strip()]
 
@@ -93,6 +115,14 @@ def main(argv=None):
     stream = anchor_stream(a.k, a.cap_anchors)
     print(f"frags={len(all_ids)} corpus={len(corpus_list)} anchors={len(stream)} "
           f"k={a.k} -> <= {len(stream) * a.k} triples per condition")
+    if not a.force:
+        cached = cached_summary(strategies, k=a.k, n_anchors=len(stream))
+        if cached is not None:
+            for st in strategies:
+                print(COND[st], cached[COND[st]])
+            print(f"[cache] triples for version {S.VERSION} (k={a.k}, anchors={len(stream)}) already mined "
+                  "— skipping (--force to redo)")
+            return
 
     bm25 = semantic = None
     if "bm25" in strategies:
@@ -119,6 +149,9 @@ def main(argv=None):
         summary[COND[st]] = {"strategy": st, "triples": len(triples),
                              "stats": stats, "file": path}
         print(COND[st], summary[COND[st]])
+    summary["_run"] = {"version": S.VERSION, "k": a.k, "n_anchors": len(stream),
+                       "train_pairs_cap": S.TRAIN_PAIRS_CAP, "seed": S.SEED,
+                       "strategies": strategies}
     (S.ARTIFACTS / "mining_summary.json").write_text(json.dumps(summary, indent=2))
     print("next: pytest -q embeded/tests   then   python -m embeded.hardcheck (needs emb cache)")
 
