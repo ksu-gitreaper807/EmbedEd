@@ -1,7 +1,6 @@
 # Phase 0/1 runtime (mirrors settings.PINNED 1:1, same order; Colab installs this).
-# Pins are validated against current Colab (Python 3.13, 2026-09) — see the
-# comment above settings.PINNED for why each version moved.
-torch==2.6.0
+# torch deliberately absent — use Colab's preinstalled, GPU-matched build; never
+# add `torch==` here or to the notebook cell (see the comment above settings.PINNED).
 transformers==4.46.3
 datasets==2.20.0
 sentence-transformers==3.0.1

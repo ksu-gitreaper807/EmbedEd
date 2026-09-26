@@ -6,7 +6,7 @@ bump VERSION so artifact hashes make staleness obvious.
 import os
 from pathlib import Path
 
-VERSION = "phase01-v3"   # v3: env refresh for Colab py3.13 (torch 2.6.0 / transformers 4.46.3 / scikit-learn 1.6.1 / gradio 5.49.1); v2: canonical data.jsonl fragment ids (8,063 unique texts); v1 derived ids from pairs
+VERSION = "phase01-v4"   # v4: torch policy = Colab platform build (no torch pin); v3: env refresh for Colab py3.13 (transformers 4.46.3 / scikit-learn 1.6.1 / gradio 5.49.1); v2: canonical data.jsonl fragment ids (8,063 unique texts); v1 derived ids from pairs
 
 ROOT = Path(__file__).resolve().parent.parent
 # env overrides let tests (and Colab-on-Drive) relocate artifacts/report
@@ -63,16 +63,22 @@ SPRIME_DOI = "10.5281/zenodo.17238379"
 SPRIME_HELDOUT_K = 3
 
 # --- pinned environment for the shared Colab notebook -------------------------
-# torch included here too (it used to live only in the notebook cell and drifted
-# to a version without wheels for current Colab's Python). Colab is on Python
-# 3.13 as of 2026-09: torch 2.6.0 is the oldest line whose Linux deps (triton
-# 3.2.0) ship cp313 wheels; transformers had to move so its tokenizers pin
-# (>=0.20,<0.21) can resolve to a cp313 build (4.43.4's tokenizers<0.20 predates
-# 3.13 and would need a Rust build); scikit-learn needed 1.6 (first with cp313
-# wheels); gradio needed 5.4+ (4.42's pydub imports the `audioop` stdlib module
-# removed in 3.13; 5.49.1 = mature end of the py3.13-capable 5.x line).
+# torch is intentionally NOT in this list: the notebook uses Colab's preinstalled
+# torch, already matched to the image's GPU/CUDA and its torchvision/torchaudio.
+# History: (a) torch was first pinned only in the notebook cell and drifted to a
+# version with no wheels for Colab's py3.13 (2.3.1, broke 2026-09); (b) hard-
+# pinning torch==2.6.0 installed, but forced a ~3 GB re-download every session
+# and left Colab's matched torchvision broken. Policy: never add `torch==` to
+# PINNED, requirements.txt, or the notebook cell — the cell prints torch's
+# version instead, and test_env_pins.py rejects any torch== pin. Everything
+# below must keep installing on current Colab (py3.13, 2026-09): transformers
+# moved so its tokenizers pin (>=0.20,<0.21) resolves to cp313 wheels (4.43.4's
+# tokenizers<0.20 predates 3.13 and would need a Rust build); scikit-learn
+# needed 1.6 (first cp313 wheels); gradio needed 5.4+ (4.42's pydub imports the
+# `audioop` stdlib module removed in 3.13; 5.49.1 = mature end of the
+# py3.13-capable 5.x line). transformers 4.46.3 is verified against torch 2.11
+# incl. .bin checkpoints (weights_only flip) — see PR #4.
 PINNED = [
-    "torch==2.6.0",
     "transformers==4.46.3",
     "datasets==2.20.0",
     "sentence-transformers==3.0.1",

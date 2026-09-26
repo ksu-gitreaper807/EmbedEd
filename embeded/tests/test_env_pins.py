@@ -1,10 +1,13 @@
 """The three pin sources must agree exactly: settings.PINNED ==
 embeded/requirements.txt == the notebook's install cell.
 
-'change both together' is a human promise until it is a test. torch was once
-pinned only in the notebook cell and drifted to a version with no wheels for
-current Colab's Python (2.3.1 vs py3.13, 2026-09) — a session died on
-`pip install` before this test existed. Keep every pin in all three places.
+'change both together' is a human promise until it is a test. Two past failures
+motivate this: torch was once pinned only in the notebook cell and drifted to a
+version with no wheels for current Colab's Python (2.3.1 vs py3.13, 2026-09);
+then it was hard-pinned (2.6.0), which installed but forced a ~3 GB re-download
+every session and desynced Colab's matched torchvision. Final policy: torch is
+deliberately UNpinned everywhere (Colab's preinstalled build is GPU-matched) —
+so this suite also rejects any `torch==` pin sneaking back into any source.
 """
 import json
 import re
@@ -29,11 +32,7 @@ def _pins(text: str, anywhere: bool = False) -> dict:
     return dict(rx.findall(text))
 
 
-def test_requirements_mirror_pinned_exactly():
-    assert _pins(REQS.read_text()) == _pinned()
-
-
-def test_notebook_install_cell_mirror_pinned_exactly():
+def _pip_cell() -> str:
     nb = json.loads(NOTEBOOK.read_text())
     cells = [
         "".join(c["source"])
@@ -41,9 +40,21 @@ def test_notebook_install_cell_mirror_pinned_exactly():
         if c["cell_type"] == "code" and "%pip install" in "".join(c["source"])
     ]
     assert len(cells) == 1, "expected exactly one %pip install cell"
-    assert _pins(cells[0], anywhere=True) == _pinned()
+    return cells[0]
 
 
-def test_torch_is_pinned_like_the_rest():
-    # torch must live in PINNED itself — a notebook-only pin is how it drifted.
-    assert "torch" in _pinned()
+def test_requirements_mirror_pinned_exactly():
+    assert _pins(REQS.read_text()) == _pinned()
+
+
+def test_notebook_install_cell_mirror_pinned_exactly():
+    assert _pins(_pip_cell(), anywhere=True) == _pinned()
+
+
+def test_torch_stays_on_the_platform_build():
+    # torch must not be pinned anywhere — see module docstring for the two
+    # failure modes (drifted notebook-only pin; wasteful hard pin) this guards.
+    # \d after == so prose like "never add torch== to this cell" doesn't trip it.
+    assert "torch" not in _pinned()
+    assert not re.search(r"\btorch==\d", _pip_cell())
+    assert not re.search(r"^torch==\d", REQS.read_text(), re.M)
