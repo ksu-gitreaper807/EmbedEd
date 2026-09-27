@@ -104,6 +104,10 @@ does), so a failing `git pull` is usually *not* an auth problem: run `diagnose` 
 credentials, because exit 128 also comes from a dirty worktree, a missing commit identity, or an
 interrupted rebase, and each has a different fix.
 
+Notebook cell 2 now counts `FETCH_HEAD..HEAD` and refuses to move the branch when the VM has
+commits that are not on the remote; it used to run `git checkout -B <ref> FETCH_HEAD`
+unconditionally, which silently orphans them (recoverable only from the reflog).
+
 Create a **fine-grained** PAT: owner = the account with write access, repository =
 `ksu-gitreaper807/EmbedEd` only, permission **Contents: Read and write**, expiry as short as the
 run allows. Then:
@@ -116,7 +120,9 @@ run allows. Then:
 | Never pass the token on a command line | `argv` is world-readable in `/proc` |
 | Revoke it when the run is done | a Colab VM is ephemeral but a token is not |
 
-`scripts.colab_git` implements those rules, so use it rather than hand-rolling the handshake:
+`scripts.colab_git` implements those rules, so use it rather than hand-rolling the handshake —
+notebook §8 is the wrapper (it commits unstaged `report/` files, rebases the VM's own commits
+onto the branch tip, diagnoses, then pushes), and the CLI is the same code:
 
 ```bash
 python -m scripts.colab_git diagnose                 # why did git fail? read-only, nothing secret
