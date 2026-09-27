@@ -1,101 +1,101 @@
 id,label,note
-P001,,
-P002,,
-P003,,
-P004,,
-P005,,
-P006,,
-P007,,
-P008,,
-P009,,
-P010,,
-P011,,
-P012,,
-P013,,
-P014,,
-P015,,
-P016,,
-P017,,
-P018,,
-P019,,
-P020,,
-P021,,
-P022,,
-P023,,
-P024,,
-P025,,
-P026,,
-P027,,
-P028,,
-P029,,
-P030,,
-P031,,
-P032,,
-P033,,
-P034,,
-P035,,
-P036,,
-P037,,
-P038,,
-P039,,
-P040,,
-P041,,
-P042,,
-P043,,
-P044,,
-P045,,
-P046,,
-P047,,
-P048,,
-P049,,
-P050,,
-P051,,
-P052,,
-P053,,
-P054,,
-P055,,
-P056,,
-P057,,
-P058,,
-P059,,
-P060,,
-P061,,
-P062,,
-P063,,
-P064,,
-P065,,
-P066,,
-P067,,
-P068,,
-P069,,
-P070,,
-P071,,
-P072,,
-P073,,
-P074,,
-P075,,
-P076,,
-P077,,
-P078,,
-P079,,
-P080,,
-P081,,
-P082,,
-P083,,
-P084,,
-P085,,
-P086,,
-P087,,
-P088,,
-P089,,
-P090,,
-P091,,
-P092,,
-P093,,
-P094,,
-P095,,
-P096,,
-P097,,
-P098,,
-P099,,
-P100,,
+P001,clone,"both copy one file's bytes to another (temp+rename vs direct, force flag) - same functionality"
+P002,not_clone,A copies file to file; B downloads a URL to a file - different source functionality
+P003,not_clone,both JUnit tests but of unrelated subjects (StorageString vs image URL handler)
+P004,not_clone,A is graph node weighting/layout; B extracts <body> from an html file
+P005,clone,both copy file contents to a derived destination (project files vs .bak backup)
+P006,not_clone,"B embeds A's handler body verbatim plus SSL/security/server setup - containment, not same functionality"
+P007,not_clone,A converts an ascii map to binary; B extracts WordNet index tokens to gzip
+P008,not_clone,"A derives a key and builds a BlowfishCBC cipher, B returns an MD5 digest string - different functionality for the caller"
+P009,not_clone,A bzip2-compresses a file; B copies a file via FileChannel - shared API only
+P010,clone,both copy a file's bytes to a destination (OutputStream vs file channel)
+P011,not_clone,"A verifies a password (boolean, MD5 double-digest compare), B produces a digest string for storage"
+P012,not_clone,A reads an HDFS file to stdout; B compresses stdin through a codec
+P013,clone,both fetch a URL's text content into a string buffer
+P014,not_clone,A reads a URL and discards the bytes; B downloads a URL to a local file
+P015,not_clone,A pipes a stream through the tidy executable; B is a threaded log-writer integration test
+P016,not_clone,A processes server-side includes/CGI; B performs an HTTP request and reads the response
+P017,clone,both are GET handlers that proxy a remote URL's stream into the HTTP response
+P018,clone,both copy a file and preserve the source lastModified
+P019,not_clone,A launches a grid job (DRMAA/Globus/DB status); B pulls a file over FTP
+P020,not_clone,A extracts WordNet compound words to gzip; B fetches a word list from a URL
+P021,not_clone,"A inserts a user/agenda permission row, B updates a program path and re-reads it - shared JDBC boilerplate only"
+P022,not_clone,"A copies a driver jar to the WebLogic lib dir, B reads a template resource to create a wiki page"
+P023,not_clone,"A GETs and parses URL params for a session key, B POSTs a multipart image upload"
+P024,not_clone,"A normalises line endings into a temp file then renames, B copies a file verbatim"
+P025,not_clone,"A copies a weaving jar out of the bundle, B scans a package/jar for example classes"
+P026,not_clone,"A adds a record + SMS + stores an attachment, B parses an uploaded XLS and re-imports a shipment"
+P027,clone,both extract every entry of a zip archive into a directory
+P028,not_clone,"A indexes a chosen document and copies it into the collection, B is a servlet search handler writing HTML"
+P029,not_clone,"A asserts IOUtils.copy NPEs on a null stream, B prints an HDFS file"
+P030,not_clone,"A builds a sparse matrix from a CSV stream, B posts and parses a JSON question payload"
+P031,not_clone,"A is a multithreaded JDBC auto-increment stress test, B is an app self-updater that downloads and unzips"
+P032,clone,both copy a file and preserve the source lastModified (IOUtils vs FileChannel)
+P033,clone,both copy a file's bytes to a target path (temp+rename vs direct buffered)
+P034,not_clone,"A copies dependent files/dirs, B reads META-INF manifests from the classpath"
+P035,not_clone,"A checksums a whole file, B parses FASTA and hashes each contig into a map"
+P036,unsure,"A registers a temp copy of a file (rename, copy fallback), B extracts an APK asset to disk - shared IOUtils.copy only"
+P037,not_clone,"A inserts/updates an applicant row via SQLRenderer, B posts an OAuth-signed QZone share"
+P038,clone,both are LengthDelimitedEncoder file-channel transfer tests with identical scaffolding
+P039,clone,both one-way hash a string and return an encoded digest (SHA-1 hex vs MD5 base64)
+P040,clone,"both return an MD5 digest of a string, differing only in encoding"
+P041,not_clone,"A parses a host list from a URL into a combo box, B issues a raw HTTP GET/POST and returns the response"
+P042,not_clone,"A copies an image into a collection and records it in the DB, B resizes/re-encodes an image"
+P043,not_clone,"A updates a mote config row and re-reads it, B deletes a record and unindexes it"
+P044,clone,"identical FileChannel transferFrom copy, differing only in try/finally placement"
+P045,not_clone,"A copies a file verbatim, B instantiates a bundle resource into a workspace file with replacements"
+P046,clone,both copy every file of a source directory into another directory
+P047,not_clone,"A extracts an entry from an MSPack archive, B gzip-compresses then reads back a file"
+P048,not_clone,"A writes generated Groovy source to a file, B exchanges a SOAP message over HttpURLConnection"
+P049,clone,"same FileChannel copyFile, differing only in exception handling"
+P050,not_clone,"A fetches and parses a session key over HTTP, B evaluates a SASL DIGEST-MD5 response"
+P051,not_clone,"A hashes a login into an account token and registers a chat client, B obtains a Google auth cookie on Android"
+P052,clone,both return a zero-padded 32-char MD5 hex of a string
+P053,not_clone,"A writes an incoming stream under a computed nested path, B initialises torrent temp/state files"
+P054,not_clone,"A copies a deduplicated file list to an output dir, B bubble-sorts an episode list in place"
+P055,clone,both copy a file between channels (memory-mapped buffer vs transferFrom loop)
+P056,clone,"same getRandomGUID MD5-of-seed construction, differing only in formatting and throws"
+P057,clone,both return an MD5 hex string of the input
+P058,clone,both derive an identifier string by hashing a seed (FNV-1a base64 vs MD5 hex)
+P059,not_clone,"A downloads an image to a local file, B fetches an authenticated response body as text"
+P060,clone,"both copy file bytes into a target directory, creating the destination file if absent"
+P061,not_clone,"A templates and applies an XSL file, B downloads a URL to a local file"
+P062,clone,both hash a string to a hex digest (SHA-1 vs salted MD5+SHA-512)
+P063,clone,"both copy a source path to a destination path, creating parent directories"
+P064,not_clone,"A converts html to xhtml between files, B converts an RSS feed to html on stdout"
+P065,not_clone,"A rebuilds financial balance rows, B saves a shopping cart - shared JDBC transaction boilerplate only"
+P066,not_clone,"A serves a local file to the response, B is a filter returning a loader SWF as a delay hack"
+P067,clone,both copy a file's contents to a resolved destination path via file channels
+P068,clone,both copy an input stream into a file with IOUtils.copy
+P069,not_clone,"A loads a deduplicated keyword list from a classpath resource, B parses a remote concept file with local fallback"
+P070,not_clone,"A builds a synth JAR with zip entries, B encodes a PNG to a temp file and uploads it to S3"
+P071,not_clone,"A serialises a typed DB value to a binary stream, B loads a URL page into a string"
+P072,not_clone,"A deletes a pedido row, B inserts a divisionxTorneo row - shared JDBC transaction boilerplate only"
+P073,not_clone,"A tests PDF page cutting, B tests a T4C client reader/writer round trip"
+P074,clone,both hash a string with SHA-1 and return an encoded digest (hex vs base64)
+P075,clone,both return an MD5 hex digest of the input string
+P076,not_clone,"A exports information-unit binaries to a chosen directory, B creates an Eclipse Java project"
+P077,not_clone,"A GETs and returns the body text, B POSTs an XML message and reads the reply"
+P078,not_clone,"A hashes a fixed password for display, B derives a random GUID from entropy"
+P079,not_clone,"A round-trips bytes through StraightStreamReader on a temp file, B POSTs to a service URL"
+P080,clone,both generate a GUID by MD5-hashing id+time+random entropy into hex
+P081,not_clone,"A round-trips an MRSTK XML spectrum, B is a multi-action NMRShiftDB servlet"
+P082,not_clone,"A archives a directory tree to tar/zip, B copies two known xml files into a report dir"
+P083,not_clone,"A appends one file as a tar archive entry, B copies a file with an append option"
+P084,clone,both build an identifier by hashing input plus random entropy (FNV-1a base64 vs MD5 hex)
+P085,clone,"both copy a file between file channels, differing in loop and parent-dir handling"
+P086,clone,both return an MD5 hex digest of a string (A truncates to 16 chars)
+P087,clone,both fetch a URL's text content into a string (B adds a cookie header)
+P088,not_clone,"A streams a BLOB out of the DB to a response, B serialises and stores an object into a blob column"
+P089,not_clone,"A encodes a RenderedOp to PNG and uploads it to S3, B stores an uploaded image plus a thumbnail and records it"
+P090,clone,both execute an arbitrary SQL update inside a transaction and report rows/rollback
+P091,not_clone,"A hashes and stores a new password on a client bean, B parses a raw HTTP request off a socket"
+P092,not_clone,"A tests quoted-printable binary round trip, B tests TeeOutputStream"
+P093,not_clone,"A is a MySQL rollback/commit demo in a constructor, B inserts a sequencer row via a JNDI datasource"
+P094,clone,"identical doCopyFile, differing only in close vs closeQuietly"
+P095,not_clone,"A is the PSCafePOS startup routine, B is a multithreaded JDBC auto-increment stress test"
+P096,not_clone,"A snapshots an incoming stream into the update set, B rewrites a file in place with token substitutions"
+P097,not_clone,"A writes a file list into a jar, B scans a package for concrete subclasses"
+P098,clone,"both copy a file with FileChannel.transferFrom, differing in destination naming and closer"
+P099,not_clone,"A concatenates multi-part archive files with a progress UI, B materialises a word list then loads it into a map"
+P100,clone,both hash a string and return a zero-padded hex digest (MD5 store name vs SHA-1 helper)

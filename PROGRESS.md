@@ -252,6 +252,8 @@ blocked by G1 but still requires PHASE2_PLAN §2 criteria 2, 4, 5 and 6.
 | Cell 0's `rm -rf` on a live VM | would delete the clone's report edits | only run cell 0 on a fresh VM |
 | Every `hf push` staged the whole artifacts dir, s′ package included | 481 MB / 2,149 files per checkpoint; `huggingface_hub` "upload a large folder" warning on each push (2026-09-27) | `stage_upload_tree` now skips `sprime/*` and `*.zip` by default (re-downloadable by DOI + MD5); `EMBEDED_HF_EXCLUDE` overrides. Already-uploaded copies must be pruned in the Hub UI |
 | The blind audit sheet outlives the artifacts it was sampled from | a re-encode can reorder C3's top-k, so labels could describe pairs nobody trains on | `audit_sample score` now verifies every key row against the current triples and refuses a stale sheet; `make` refuses to overwrite a sheet that already has labels (`--force` to override) |
+| Files attached to the chat never appear in the agent sandbox (2026-09-27: `audit_pairs.md` + blank `audit_labels.csv` attached, `/home/user/uploads/` did not exist, filesystem-wide `find` empty) | two turns lost waiting for data that was not there | route files through GitHub — push to a branch, then `git fetch origin 'refs/heads/<b>:refs/remotes/origin/<b>'` (the clone is single-branch, so a bare `fetch --prune` silently gets nothing) |
+| The 100-pair audit was labelled by the agent, not a human (2026-09-27) | the rate inherits one reader's granularity calls, and that reader has read `GROUND_TRUTH.md` and so knows a high rate hurts the claim | rubric + tie-breaks + every flippable call written down in `artifacts/audit/AUDIT_JUDGEMENTS.md`; one `unsure`, which `score` counts *against* the mining via `fn_rate_upper_incl_unsure`; a human κ calibration on ~20 pairs is still the check that matters |
 
 ---
 
@@ -278,8 +280,14 @@ blocked by G1 but still requires PHASE2_PLAN §2 criteria 2, 4, 5 and 6.
    three conditions, ~15–30 min CPU) → 15 (diagnostics + gate under D1). Cell 15 must reproduce
    the recorded PASS with a real measurement; the run is appended to the G1 history next to the
    2026-09-26 FAIL, with the legacy margin reading beside it.
-3. `python -m scripts.audit_sample make`; label the 100 pairs blind (~2 h, no GPU needed);
-   `python -m scripts.audit_sample score`; record D2 with the observed rates.
+3. Audit — the sheet is already sampled **and** labelled: `artifacts/audit/audit_labels.csv`
+   (100/100 rows filled by the agent; rubric, tie-breaks and every flippable call in
+   `artifacts/audit/AUDIT_JUDGEMENTS.md`). On the T4, put that file at
+   `/content/embeded-artifacts/audit/audit_labels.csv` (that is `settings.ARTIFACTS/audit`), then
+   `python -m scripts.audit_sample score` and record **D2** with the observed rates. `score`
+   refuses a key that no longer matches the triples on disk, so regenerate the artifacts
+   (cells 13–14) *before* scoring, or re-sample. If you want a human or a second reader instead,
+   keep the sheet blind and run `make --force` first — the existing labels then mean nothing.
 4. Smoke run: `python -m embeded.train --condition C1 --seed 13 --smoke` (trains, reloads the
    checkpoint, evaluates and prints metrics).
 5. Phase 2: `train` + `evaluate` for C1/C2/C3 × seeds 13/14/15 (≈ 6 GPU-h), then
