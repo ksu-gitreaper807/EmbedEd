@@ -70,3 +70,75 @@ def test_load_repo_config_reads_env(monkeypatch):
     assert cfg.subdir == "alice/phase01"
     assert cfg.private is True
     assert cfg.token == "secret"
+
+
+def test_is_transient_classifies_network_vs_permanent():
+    # classes are matched by NAME (see scripts.hf_artifacts) — mirror the real
+    # requests/urllib3/huggingface_hub names here; the offline suite has none
+    class ChunkedEncodingError(Exception):
+        pass
+
+    class ProtocolError(Exception):
+        pass
+
+    class HfHubHTTPError(Exception):
+        def __init__(self, status_code: int):
+            self.response = type("Resp", (), {"status_code": status_code})()
+
+    assert H.is_transient(ChunkedEncodingError("Response ended prematurely"))
+    assert H.is_transient(ProtocolError("Connection aborted"))
+    assert H.is_transient(ConnectionError("cut"))          # builtin / requests
+    assert H.is_transient(TimeoutError("slow"))            # builtin
+    assert H.is_transient(HfHubHTTPError(503))
+    assert H.is_transient(HfHubHTTPError(429))
+    assert not H.is_transient(HfHubHTTPError(401))         # auth: show at once
+    assert not H.is_transient(HfHubHTTPError(404))
+    assert not H.is_transient(RuntimeError("bad config"))
+
+
+def test_run_with_retries_recovers_then_returns(monkeypatch):
+    monkeypatch.setattr(H.time, "sleep", lambda _s: None)
+    calls = []
+
+    def flaky():
+        calls.append(1)
+        if len(calls) < 3:
+            raise ConnectionError("cut")
+        return "ok"
+
+    assert H.run_with_retries(flaky, label="pull") == "ok"
+    assert len(calls) == 3
+
+
+def test_run_with_retries_permanent_error_raises_immediately(monkeypatch):
+    monkeypatch.setattr(H.time, "sleep", lambda _s: None)
+    calls = []
+
+    def broken():
+        calls.append(1)
+        raise RuntimeError("bad config")
+
+    try:
+        H.run_with_retries(broken)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("expected RuntimeError to propagate")
+    assert len(calls) == 1
+
+
+def test_run_with_retries_exhausts_attempts(monkeypatch):
+    monkeypatch.setattr(H.time, "sleep", lambda _s: None)
+    calls = []
+
+    def down():
+        calls.append(1)
+        raise ConnectionError("cut")
+
+    try:
+        H.run_with_retries(down)
+    except ConnectionError:
+        pass
+    else:
+        raise AssertionError("expected ConnectionError after retries")
+    assert len(calls) == H.SYNC_RETRIES + 1

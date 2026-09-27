@@ -24,6 +24,10 @@ The synced tree inside the HF repo is:
 
 `HF_HOME` is *not* synced: model/dataset cache can be re-hydrated from the Hub,
 while the generated experiment artifacts are the bits that must persist.
+
+Transient network failures (dropped connections, premature response ends,
+429/5xx) are retried with backoff before the sync fails; auth and config
+errors surface immediately.
 """
 from __future__ import annotations
 
@@ -204,6 +208,47 @@ def push_to_hf(cfg: RepoConfig, artifacts_root: Path, report_md: Path,
     return staged
 
 
+# --- transient network failures ---------------------------------------------
+# Observed on Colab (2026-09): a pull died mid-response with ChunkedEncodingError
+# ("Response ended prematurely") inside api.list_repo_files — a dropped
+# connection, not an auth/config problem. Retry those; surface permanent errors
+# (401/403, bad revision, ...) immediately so the notebook shows them at once.
+# Exception classes are matched by NAME across the MRO instead of isinstance so
+# this module keeps importing in offline environments where
+# requests/urllib3/huggingface_hub are absent (huggingface_hub pulls the first
+# two in only when a network call actually runs).
+TRANSIENT_EXC_NAMES = frozenset({
+    "ConnectionError", "ChunkedEncodingError", "ConnectTimeout", "ReadTimeout",
+    "Timeout", "TimeoutError", "ProtocolError", "IncompleteRead", "SSLError",
+    "MaxRetryError", "NewConnectionError", "TransientError",
+})
+TRANSIENT_HTTP_STATUS = frozenset({408, 425, 429, 500, 502, 503, 504})
+SYNC_RETRIES = 3          # extra attempts after the first failure
+SYNC_BACKOFF_S = 2.0      # waits 2s, 4s, 8s (exponential)
+
+
+def is_transient(exc: BaseException) -> bool:
+    """True for retryable network failures, False for permanent errors."""
+    if any(cls.__name__ in TRANSIENT_EXC_NAMES for cls in type(exc).__mro__):
+        return True
+    status = getattr(getattr(exc, "response", None), "status_code", None)
+    return status in TRANSIENT_HTTP_STATUS
+
+
+def run_with_retries(fn, *args, label: str = "sync", **kwargs):
+    """Run fn(*args, **kwargs), retrying transient network failures with backoff."""
+    for attempt in range(SYNC_RETRIES + 1):
+        try:
+            return fn(*args, **kwargs)
+        except Exception as exc:
+            if attempt >= SYNC_RETRIES or not is_transient(exc):
+                raise
+            wait = SYNC_BACKOFF_S * (2 ** attempt)
+            print(f"[hf] transient network error during {label} "
+                  f"({type(exc).__name__}: {exc}) — retry {attempt + 1}/{SYNC_RETRIES} in {wait:.0f}s")
+            time.sleep(wait)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("action", choices=("pull", "push"))
@@ -225,9 +270,10 @@ def main(argv=None):
         return
 
     if a.action == "pull":
-        pull_from_hf(cfg, S.ARTIFACTS, S.REPORT_MD)
+        run_with_retries(pull_from_hf, cfg, S.ARTIFACTS, S.REPORT_MD, label="pull")
     else:
-        push_to_hf(cfg, S.ARTIFACTS, S.REPORT_MD, include_report=a.include_report)
+        run_with_retries(push_to_hf, cfg, S.ARTIFACTS, S.REPORT_MD, label="push",
+                         include_report=a.include_report)
 
 
 if __name__ == "__main__":
