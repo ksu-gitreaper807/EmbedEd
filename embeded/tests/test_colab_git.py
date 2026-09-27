@@ -293,8 +293,93 @@ def test_diagnose_names_the_dirty_worktree_as_the_cause_of_exit_128(home: Path, 
     assert "ahead/behind vs origin/main: ahead 0, behind 0" in lines
 
 
+# --------------------------------------------------------------------------- write permission
+
+class _FakeResponse:
+    def __init__(self, payload: str):
+        self._payload = payload.encode()
+
+    def read(self):
+        return self._payload
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+def test_parse_remote_handles_https_and_ssh_forms():
+    assert G.parse_remote("https://github.com/ksu-gitreaper807/EmbedEd.git") == \
+        ("ksu-gitreaper807", "EmbedEd")
+    assert G.parse_remote("https://github.com/o/r") == ("o", "r")
+    assert G.parse_remote("git@github.com:o/r.git") == ("o", "r")
+    assert G.parse_remote("ssh://git@github.com/o/r.git") == ("o", "r")
+    assert G.parse_remote("/tmp/some/local.git") == ("tmp", "some")
+    assert G.parse_remote("") is None
+    assert G.parse_remote("nonsense") is None
+
+
+def test_repo_permissions_reads_the_api_permissions_block(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(G.request, "urlopen",
+                        lambda req, timeout=20: _FakeResponse(
+                            '{"permissions": {"admin": false, "push": false, "pull": true}}'))
+    assert G.repo_permissions("tok", "o", "r") == {"api_ok": True, "admin": False,
+                                                   "push": False, "pull": True}
+
+
+def test_repo_permissions_returns_empty_when_the_api_is_unreachable(
+        monkeypatch: pytest.MonkeyPatch):
+    def boom(req, timeout=20):
+        raise OSError("no route")
+    monkeypatch.setattr(G.request, "urlopen", boom)
+    assert G.repo_permissions("tok", "o", "r") == {}      # unknown, NOT "no access"
+
+
+def test_push_permission_reports_no_for_a_read_only_token(home: Path, remote_and_clone,
+                                                          monkeypatch: pytest.MonkeyPatch):
+    _, _, clone = remote_and_clone
+    monkeypatch.setattr(G, "repo_permissions",
+                        lambda token, owner, repo, timeout=20:
+                        {"api_ok": True, "push": False, "pull": True})
+    assert G.push_permission("tok", clone) == ("no", {"api_ok": True, "push": False, "pull": True})
+    monkeypatch.setattr(G, "repo_permissions", lambda token, owner, repo, timeout=20: {})
+    assert G.push_permission("tok", clone)[0] == "unknown"
+
+
+def test_sync_and_push_refuses_a_read_only_token_before_committing(
+        home: Path, remote_and_clone, monkeypatch: pytest.MonkeyPatch):
+    """The VM's 403: authenticated as the owner, but the PAT could not write."""
+    _, _, clone = remote_and_clone
+    monkeypatch.setattr(G, "resolve_user",
+                        lambda token, api=G.API_USER, timeout=20:
+                        {"login": "ksu-gitreaper807", "id": 267940396, "scopes": "", "api_ok": True})
+    monkeypatch.setattr(G, "repo_permissions",
+                        lambda token, owner, repo, timeout=20:
+                        {"api_ok": True, "push": False, "pull": True})
+    head_before = _git(clone, "rev-parse", "HEAD")
+
+    result = G.sync_and_push(clone, token="tok", commit="report: x",
+                             paths=["report/measurements.md"])
+
+    assert result["ok"] is False and result["stage"] == "permissions"
+    assert "Contents = Read and write" in result["message"]
+    assert _git(clone, "rev-parse", "HEAD") == head_before      # no commit was made
+
+
+def test_diagnose_reports_token_write_access(home: Path, remote_and_clone,
+                                             monkeypatch: pytest.MonkeyPatch):
+    _, _, clone = remote_and_clone
+    monkeypatch.setattr(G, "repo_permissions",
+                        lambda token, owner, repo, timeout=20: {"api_ok": True, "push": True})
+    lines = "\n".join(G.diagnose(clone, "main", token="tok"))
+    assert "token write access to origin: yes" in lines
+
+
 def test_known_causes_cover_the_documented_exit_128_paths():
     assert G._cause("error: cannot pull with rebase: You have unstaged changes.")
     assert "unset" in G._cause("fatal: empty ident name (for <>) not allowed")
     assert "credential helper" in G._cause("fatal: could not read Username for 'https://github.com'")
     assert "Contents: Read and write" in G._cause("remote: 403 forbidden")
+    assert "Contents = Read and write" in G._cause(
+        "remote: Permission to ksu-gitreaper807/EmbedEd.git denied to ksu-gitreaper807.")

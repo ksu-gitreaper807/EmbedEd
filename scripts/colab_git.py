@@ -43,6 +43,7 @@ TOKEN_NAMES = ("GITHUB_TOKEN", "GITHUB_PAT", "GH_TOKEN")
 HOST = "github.com"
 MASK = "***"
 API_USER = "https://api.github.com/user"
+API_REPO = "https://api.github.com/repos/{owner}/{repo}"
 
 # Anything that looks like a credential is masked whether or not we know the exact token:
 # a token accidentally baked into the remote URL by an earlier attempt must not be printed.
@@ -74,6 +75,9 @@ KNOWN_CAUSES = (
      "the PAT is invalid or expired; create a new one"),
     ("Repository not found",
      "wrong URL, or the repo is private and the PAT cannot see it"),
+    ("Permission to", "the PAT authenticated but cannot write this repo: a fine-grained token "
+                      "needs Repository access = the repo (not 'Public Repositories (read-only)') "
+                      "and Contents = Read and write"),
     ("403", "the PAT lacks permission — a fine-grained token needs Contents: Read and write "
             "on this repository"),
     ("insufficient scope",
@@ -255,6 +259,52 @@ def verify_credentials(repo: str | Path, token: str, host: str = HOST) -> dict:
             "stored_matches_token": stored == token}
 
 
+def parse_remote(url: str) -> tuple[str, str] | None:
+    """('owner', 'repo') from an https or ssh remote URL, or None if it does not parse."""
+    url = (url or "").strip()
+    if not url:
+        return None
+    if url.startswith("git@"):                       # git@github.com:owner/repo.git
+        path = url.split(":", 1)[-1]
+    else:
+        path = parse.urlparse(url).path
+    path = path.strip("/")
+    if path.endswith(".git"):
+        path = path[:-4]
+    parts = [part for part in path.split("/") if part]
+    return (parts[0], parts[1]) if len(parts) >= 2 else None
+
+
+def repo_permissions(token: str, owner: str, repo: str, timeout: int = 20) -> dict:
+    """What this token may do here, from the API's own `permissions` block.
+
+    ``{}`` means the API could not be reached, which is *not* the same as "no access" — callers
+    must not fail a push on an empty result.
+    """
+    req = request.Request(API_REPO.format(owner=owner, repo=repo),
+                          headers={"Authorization": f"Bearer {token}",
+                                   "Accept": "application/vnd.github+json",
+                                   "User-Agent": "embeded-colab-git"})
+    try:
+        with request.urlopen(req, timeout=timeout) as resp:      # noqa: S310 - fixed https URL
+            body = json.loads(resp.read().decode("utf-8"))
+    except (error.URLError, error.HTTPError, OSError, ValueError, TimeoutError):
+        return {}
+    perms = body.get("permissions") or {}
+    return {"api_ok": True, **{key: bool(value) for key, value in perms.items()}}
+
+
+def push_permission(token: str, repo_dir: str | Path) -> tuple[str, dict]:
+    """'yes' / 'no' / 'unknown' plus the raw permissions, for the origin of this clone."""
+    parsed = parse_remote(Git(repo_dir, token).get("remote", "get-url", "origin"))
+    if not parsed:
+        return "unknown", {}
+    perms = repo_permissions(token, *parsed)
+    if not perms:
+        return "unknown", {}
+    return ("yes" if perms.get("push") else "no"), perms
+
+
 def _cause(text: str) -> str:
     for needle, advice in KNOWN_CAUSES:
         if needle.lower() in text.lower():
@@ -306,6 +356,10 @@ def diagnose(repo: str | Path = ".", ref: str | None = None, token: str | None =
         failures.append(("pull --rebase", 128,
                          "error: cannot pull with rebase: You have unstaged changes.\n"
                          "error: please commit or stash them."))
+    if token:
+        verdict, perms = push_permission(token, repo)
+        lines.append(f"token write access to origin: {verdict}"
+                     + (f" ({perms})" if perms else " (unverified — the API did not confirm it)"))
     for label, code, blob in failures:
         lines.append(f"likely cause of `{label}` exiting {code}: {_cause(blob)}")
         lines.extend(f"  git said: {line}" for line in blob.strip().splitlines() if line.strip())
@@ -342,6 +396,17 @@ def sync_and_push(repo: str | Path = ".", ref: str | None = None, token: str | N
         if not (out["credentials"]["helper_wired"] and out["credentials"]["stored_matches_token"]):
             out["message"] = "the credential helper did not pick the token up; nothing pushed"
             return out
+        verdict, perms = push_permission(token, repo)
+        out["permissions"] = perms
+        if verdict == "no":
+            out["stage"] = "permissions"
+            out["message"] = (f"this token can read the repo but not write it ({perms}). Recreate "
+                              "the fine-grained PAT with Repository access = Only select "
+                              "repositories → this repo, and Contents = Read and write; then "
+                              "update the Colab Secret. Nothing was committed or pushed.")
+            return out
+        out["lines"].append(f"token write access to origin: {verdict}"
+                            + ("" if perms else " (unverified — the API did not confirm it)"))
 
     out["stage"] = "worktree"
     try:
