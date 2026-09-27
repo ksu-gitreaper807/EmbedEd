@@ -48,6 +48,14 @@ The fourth row is the one that matters: it holds the only things that are expens
 (the 4-min GPU encode, the 15–30-min BM25 mining, and every measured number). The GPU-heavy
 notebook cells push a checkpoint the moment they finish; the final cell pushes everything.
 
+**What is *not* pushed:** `sprime/*` and any `*.zip` — the s′ replication package is 138 MB
+plus ~2,000 extracted files, it is re-downloadable by DOI (`settings.SPRIME_DOI`) and
+MD5-verified by `scripts/fetch_sprime.py`, so checkpointing it turned every push into a 481 MB /
+2,149-file upload that `huggingface_hub` warns about. Override with
+`EMBEDED_HF_EXCLUDE="glob1,glob2"` (paths relative to the artifacts dir; `""` pushes
+everything). Exclusions only stop *future* uploads — files already in the repo stay there
+until you delete them in the Hub UI.
+
 **Every stage is artifact-gated.** `prepare_data`, `semantic_index` and `negatives` look for
 their own outputs first and, if a complete set for the current `settings.VERSION` (and the
 same model / `MAX_LEN` / `k` / anchor count) is present, print `[cache] … skipping` and exit.

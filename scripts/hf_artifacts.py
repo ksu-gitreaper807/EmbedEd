@@ -32,6 +32,7 @@ errors surface immediately.
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import json
 import os
 import shutil
@@ -43,6 +44,21 @@ from pathlib import Path
 from embeded import settings as S
 
 TRUTHY = {"1", "true", "yes", "on"}
+
+# Never checkpoint what the pipeline can re-download and verify by itself. The
+# s' replication package is 138 MB of zip plus ~2,000 extracted files; it has a
+# DOI (settings.SPRIME_DOI) and `scripts/fetch_sprime.py` re-fetches it with an
+# MD5 check, so pushing it only made every checkpoint a 481 MB / 2,149-file
+# upload that huggingface_hub warns about. Override with EMBEDED_HF_EXCLUDE
+# (comma-separated globs, relative to the artifacts dir; "" = exclude nothing).
+DEFAULT_EXCLUDE = ("sprime/*", "*.zip")
+
+
+def exclude_patterns() -> tuple[str, ...]:
+    raw = os.environ.get("EMBEDED_HF_EXCLUDE")
+    if raw is None:
+        return DEFAULT_EXCLUDE
+    return tuple(p.strip() for p in raw.split(",") if p.strip())
 
 
 @dataclass(frozen=True)
@@ -86,22 +102,42 @@ def allow_patterns(subdir: str = "") -> list[str]:
     ]
 
 
+def _is_excluded(rel_posix: str, patterns) -> bool:
+    """fnmatch on the path relative to the artifacts dir ('sprime/x/y.pkl')."""
+    return any(fnmatch.fnmatch(rel_posix, pat) for pat in patterns)
+
+
 def stage_upload_tree(stage_root: Path, artifacts_root: Path, report_md: Path,
-                      *, include_report: bool = False) -> list[str]:
-    """Copy the local artifacts/report into a clean staging tree.
+                      *, include_report: bool = False,
+                      exclude: tuple[str, ...] | None = None) -> list[str]:
+    """Copy the local artifacts/report into a clean staging tree, skipping
+    `exclude` (default: `DEFAULT_EXCLUDE`).
 
     Returns the staged relative file paths for logging/tests.
     """
+    pats = DEFAULT_EXCLUDE if exclude is None else exclude
     stage_root.mkdir(parents=True, exist_ok=True)
     staged: list[str] = []
+    skipped: list[str] = []
 
     if artifacts_root.exists():
-        shutil.copytree(artifacts_root, stage_root / "artifacts", dirs_exist_ok=True)
-        staged.extend(sorted(
-            p.relative_to(stage_root).as_posix()
-            for p in (stage_root / "artifacts").rglob("*")
-            if p.is_file()
-        ))
+        dest_root = stage_root / "artifacts"
+        for src in sorted(artifacts_root.rglob("*")):
+            if not src.is_file():
+                continue
+            rel = src.relative_to(artifacts_root).as_posix()
+            if _is_excluded(rel, pats):
+                skipped.append(rel)
+                continue
+            dst = dest_root / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)
+            staged.append(f"artifacts/{rel}")
+        if skipped:
+            top = sorted({s.split("/")[0] for s in skipped})
+            print(f"[hf] not checkpointing {len(skipped)} file(s) under "
+                  f"{', '.join(top)} — re-downloadable ({', '.join(pats)}); "
+                  f"override with EMBEDED_HF_EXCLUDE")
 
     if include_report and report_md.exists():
         dst = stage_root / "report" / "measurements.md"
@@ -113,6 +149,8 @@ def stage_upload_tree(stage_root: Path, artifacts_root: Path, report_md: Path,
         "version": S.VERSION,
         "synced_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "staged_files": staged,
+        "excluded_patterns": list(pats),
+        "excluded_files": len(skipped),
     }
     (stage_root / "sync_manifest.json").write_text(json.dumps(meta, indent=2))
     staged.append("sync_manifest.json")

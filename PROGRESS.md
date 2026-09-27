@@ -250,6 +250,8 @@ blocked by G1 but still requires PHASE2_PLAN §2 criteria 2, 4, 5 and 6.
 | Reconnect landed on a **CPU** runtime (`torch 2.11.0+cpu`) | cell 13 cannot run sensibly | check `cuda=True` in cell 2 before any GPU step; switch runtime type first |
 | `report/measurements.md` is generated *and* committed | `git pull` conflicts in the Colab clone | `git checkout -- report/measurements.md` before pulling; gate sections append rather than overwrite |
 | Cell 0's `rm -rf` on a live VM | would delete the clone's report edits | only run cell 0 on a fresh VM |
+| Every `hf push` staged the whole artifacts dir, s′ package included | 481 MB / 2,149 files per checkpoint; `huggingface_hub` "upload a large folder" warning on each push (2026-09-27) | `stage_upload_tree` now skips `sprime/*` and `*.zip` by default (re-downloadable by DOI + MD5); `EMBEDED_HF_EXCLUDE` overrides. Already-uploaded copies must be pruned in the Hub UI |
+| The blind audit sheet outlives the artifacts it was sampled from | a re-encode can reorder C3's top-k, so labels could describe pairs nobody trains on | `audit_sample score` now verifies every key row against the current triples and refuses a stale sheet; `make` refuses to overwrite a sheet that already has labels (`--force` to override) |
 
 ---
 

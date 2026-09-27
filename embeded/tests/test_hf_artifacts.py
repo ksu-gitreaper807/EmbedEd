@@ -142,3 +142,42 @@ def test_run_with_retries_exhausts_attempts(monkeypatch):
     else:
         raise AssertionError("expected ConnectionError after retries")
     assert len(calls) == H.SYNC_RETRIES + 1
+
+
+def test_stage_upload_tree_skips_redownloadable_data(tmp_path: Path, capsys):
+    """The s' replication package (138 MB + ~2,000 files) is re-fetchable by
+    DOI and MD5-verified; checkpointing it made every push a 481 MB upload."""
+    artifacts = tmp_path / "art"
+    (artifacts / "sprime" / "bcb_v2_sampled_bf").mkdir(parents=True)
+    (artifacts / "sprime" / "bcb_v2_sampled_bf" / "ast.pkl").write_bytes(b"x" * 8)
+    (artifacts / "sprime" / "ASE25.zip").write_bytes(b"z" * 8)
+    (artifacts / "triples_C1.jsonl").write_text("{}\n")
+    (artifacts / "audit").mkdir(parents=True)
+    (artifacts / "audit" / "audit_key.csv").write_text("id\n")
+    report = tmp_path / "report.md"
+    report.write_text("# Measurements\n")
+
+    staged = H.stage_upload_tree(tmp_path / "stage", artifacts, report,
+                                 include_report=True)
+    assert "artifacts/triples_C1.jsonl" in staged
+    assert "artifacts/audit/audit_key.csv" in staged          # the audit sheet IS checkpointed
+    assert not [f for f in staged if "sprime" in f]           # the s' package is not
+    import json as _json
+    meta = _json.loads((tmp_path / "stage" / "sync_manifest.json").read_text())
+    assert meta["excluded_files"] == 2 and "sprime/*" in meta["excluded_patterns"]
+    assert "not checkpointing 2 file(s)" in capsys.readouterr().out
+
+    # an explicit override wins, including "exclude nothing"
+    staged = H.stage_upload_tree(tmp_path / "stage2", artifacts, report, exclude=())
+    assert any("ASE25.zip" in f for f in staged)
+    staged = H.stage_upload_tree(tmp_path / "stage3", artifacts, report,
+                                 exclude=("triples_*",))
+    assert not [f for f in staged if "triples" in f] and any("sprime" in f for f in staged)
+
+
+def test_exclude_patterns_env_override(monkeypatch):
+    assert H.exclude_patterns() == H.DEFAULT_EXCLUDE
+    monkeypatch.setenv("EMBEDED_HF_EXCLUDE", "sprime/*, runs/*/checkpoint.pt")
+    assert H.exclude_patterns() == ("sprime/*", "runs/*/checkpoint.pt")
+    monkeypatch.setenv("EMBEDED_HF_EXCLUDE", "")
+    assert H.exclude_patterns() == ()

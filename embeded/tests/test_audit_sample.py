@@ -71,3 +71,48 @@ def test_wilson_bounds():
     assert A.wilson(0, 50)[0] == 0.0 and A.wilson(50, 50)[1] == 1.0
     lo, hi = A.wilson(25, 50)
     assert 0.36 < lo < 0.37 and 0.63 < hi < 0.64
+
+
+def test_make_refuses_to_clobber_a_filled_sheet(fx, capsys):
+    """Two hours of blind labelling must not die on a stray `make`."""
+    import csv as _csv
+    _mine(fx)
+    A.main(["make", "--n", "2", "--seed", "7"])
+    sheet = S.ARTIFACTS / "audit" / "audit_labels.csv"
+    rows = list(_csv.DictReader(open(sheet)))
+    rows[0]["label"] = "clone"
+    with open(sheet, "w", newline="") as fh:
+        w = _csv.DictWriter(fh, fieldnames=["id", "label", "note"])
+        w.writeheader(); w.writerows(rows)
+
+    assert A.filled_labels(sheet) == [rows[0]["id"]]
+    try:
+        A.main(["make", "--n", "2", "--seed", "7"])
+        raise AssertionError("expected SystemExit")
+    except SystemExit as e:
+        assert "refusing to overwrite" in str(e) and "score" in str(e)
+    assert A.filled_labels(sheet) == [rows[0]["id"]]          # untouched
+    A.main(["make", "--n", "2", "--seed", "7", "--force"])     # explicit override works
+    assert A.filled_labels(S.ARTIFACTS / "audit" / "audit_labels.csv") == []
+
+
+def test_score_refuses_a_key_that_no_longer_matches_the_triples(fx, capsys):
+    """The sheet outlives the artifacts: if C3 is re-mined, the labels describe
+    pairs nobody trains on and must not be scored."""
+    import csv as _csv
+    _mine(fx)
+    A.make(2, 7)
+    key_path = S.ARTIFACTS / "audit" / "audit_key.csv"
+    key = list(_csv.DictReader(open(key_path)))
+    assert all(m["not_in_current_triples"] == 0
+               for m in A.check_key_matches_triples(key).values())
+
+    # re-mine C3 with a different k => different negatives for the same anchors
+    NG.main(["--strategies", "semantic", "--k", "2", "--force"])
+    drift = A.check_key_matches_triples(key)
+    assert drift["C3"]["not_in_current_triples"] > 0
+    try:
+        A.score()
+        raise AssertionError("expected SystemExit on a stale key")
+    except SystemExit as e:
+        assert "does not match the triples on disk" in str(e) and "C3" in str(e)
