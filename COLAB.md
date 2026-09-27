@@ -16,6 +16,8 @@ In Colab's **Secrets** panel, add:
 - `EMBEDED_HF_REPO_ID` — e.g. `your-name/embeded-artifacts`
 - `HF_TOKEN` — token with write access to that repo if you want notebook pushes
 - optional `EMBEDED_HF_SUBDIR` — e.g. `alice/phase01` for per-person isolation
+- optional `GITHUB_TOKEN` — a fine-grained PAT, only if you want to push commits *from* the VM
+  (see § "Get results back into the repo")
 
 Cell 1 reads those secrets into env vars, and the notebook then runs:
 
@@ -85,8 +87,50 @@ also mangles the symlinks the HF cache relies on).
 
 `report/measurements.md` is written inside the git clone on the VM; the final notebook cell
 uploads it to the configured HF dataset repo **and** offers a direct `measurements.zip` download.
-Either route, a repo owner commits it. If in-VM commits are wanted, use the official Colab GitHub
-integration — **never paste a GitHub token into a shared notebook**.
+Pick whichever route you can actually finish:
+
+1. **A repo owner commits it** from the HF copy or the `measurements.zip` download. No token on
+   the VM at all; costs one round trip.
+2. **The official Colab GitHub integration** (`Tools ▸ Command palette ▸ GitHub`). Handles auth
+   for you, but it commits to whatever branch the integration is pointed at — check that first.
+3. **A personal access token, via `scripts.colab_git`** (notebook §8). Use this when you want the
+   VM's own commit, with its own message, on the branch you are working on.
+
+### Route 3 in detail: a PAT from a Colab VM
+
+`git push` from a fresh VM exits **128** — there is no credential helper configured and no
+terminal for git to prompt on. Fetching needs no token at all (the repo is public; only pushing
+does), so a failing `git pull` is usually *not* an auth problem: run `diagnose` before touching
+credentials, because exit 128 also comes from a dirty worktree, a missing commit identity, or an
+interrupted rebase, and each has a different fix.
+
+Create a **fine-grained** PAT: owner = the account with write access, repository =
+`ksu-gitreaper807/EmbedEd` only, permission **Contents: Read and write**, expiry as short as the
+run allows. Then:
+
+| Rule | Why |
+|---|---|
+| The token goes in Colab's **Secrets** panel as `GITHUB_TOKEN` | notebook source and outputs are saved to Drive and get pasted around; Secrets are not |
+| Never `os.environ['GITHUB_TOKEN'] = "ghp_…"` in a cell | that literal lands in the `.ipynb` |
+| Never `git remote set-url origin https://<token>@github.com/…` | the token then sits in `.git/config`, where `git remote -v` and any traceback print it |
+| Never pass the token on a command line | `argv` is world-readable in `/proc` |
+| Revoke it when the run is done | a Colab VM is ephemeral but a token is not |
+
+`scripts.colab_git` implements those rules, so use it rather than hand-rolling the handshake:
+
+```bash
+python -m scripts.colab_git diagnose                 # why did git fail? read-only, nothing secret
+python -m scripts.colab_git push                     # store token → pull --rebase → push
+python -m scripts.colab_git push --commit "report: audit" --paths report
+```
+
+It reads the Secret, writes it to a mode-`0600` `~/.git-credentials`, points git's `store` helper
+at it (with a local empty `credential.helper` first, so a helper inherited from the image's
+system git config cannot answer first), sets a commit identity from the token's own account if
+the clone has none, commits only the paths you name — `audit_key*` is refused outright, so the
+blind audit key can never be pushed — rebases onto the remote, pushes, and redacts every byte of
+git output before it is printed (known token, `ghp_`/`github_pat_` shapes, `password=` lines, and
+any `://user:pass@` URL).
 
 ## Per-person artifact isolation (optional, for parallel Phase-2 runs)
 

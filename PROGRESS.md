@@ -348,6 +348,7 @@ blocked by G1 but still requires PHASE2_PLAN §2 criteria 2, 4, 5 and 6.
 | Gate G1 logic, rule + replay | `embeded/hardcheck.py` (`evaluate_gap`, `bootstrap_d`, `--recorded`); recorded run `report/gate_g1/run_2026-09-26_phase01-v5.json`; machine-readable history `artifacts/gate_runs.json` |
 | Phase 2 runner | `embeded/encoder.py` (one pooling path), `embeded/train.py`, `embeded/evaluate.py` → `artifacts/runs/<cond>_<seed>/{checkpoint.pt,run_config.json,train_log.jsonl,metrics.json,eval_metrics.json,predictions.npz}` |
 | Audit | `scripts/audit_sample.py` → `artifacts/audit/{audit_pairs.md, audit_labels.csv, audit_key.csv, audit_result.json}` |
+| VM → GitHub push | `scripts/colab_git.py` (`diagnose` / `push`): PAT from Colab Secrets → mode-0600 `~/.git-credentials`, git `store` helper, redacted output; notebook §8 |
 | Notebook | `notebooks/Phase0_Phase1_Colab.ipynb` (sequencer only; all logic in `embeded/`) |
 
 ---
@@ -364,7 +365,9 @@ blocked by G1 but still requires PHASE2_PLAN §2 criteria 2, 4, 5 and 6.
    the re-mined triples 50/50, separability measured (`report/audit_separability.txt`), and **D2
    recorded as option (a)** — keep the mining, report the rate (§4.2). Nothing here blocks
    training. Remaining bookkeeping: commit `report/measurements.md` and
-   `report/audit_separability.txt` from the VM.
+   `report/audit_separability.txt` from the VM — the commit already exists there, it just needs
+   a token route and a `git pull --rebase` first (`3d5663a` landed after it): notebook §8, or
+   `python -m scripts.colab_git push --commit "report: audit separability" --paths report`.
 4. Smoke run: `python -m embeded.train --condition C1 --seed 13 --smoke` (trains, reloads the
    checkpoint, evaluates and prints metrics).
 5. Phase 2: `train` + `evaluate` for C1/C2/C3 × seeds 13/14/15 (≈ 6 GPU-h), then
