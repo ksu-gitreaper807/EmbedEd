@@ -134,6 +134,31 @@ C3 #1 `copyFileAscii(src, dest)` with the same body, C2 #1 `copyFileToDir`; anch
 `newGuidSeed(secure)` → C2/C3 #1 `getRandomGuid` / `getRandomGUID`. The anchors' *labelled*
 positives were `choosePivotVertex()` and `encryptPassword()`.
 
+### 2.7 False-negative audit (blind 50 + 50, scored 2026-09-27)
+
+`python -m scripts.audit_sample score`, version `phase01-v6`. The key matched the re-mined
+triples **50/50 in both conditions** (so the labels score pairs that exist in the mining being
+trained on) and all 100 labels parsed. Judge: the Arena agent, blind — `audit_key.csv` never
+left the Colab VM; rubric, tie-breaks and every flippable call are in
+`artifacts/audit/AUDIT_JUDGEMENTS.md`.
+
+| condition | n | clone | not_clone | unsure | FN rate [95% CI] | upper bound incl. unsure |
+|---|---|---|---|---|---|---|
+| C2 | 50 | 21 | 29 | 0 | **42%** [29%, 56%] | 42% [29%, 56%] |
+| C3 | 50 | 15 | 34 | 1 | **30%** [19%, 44%] | 32% [21%, 46%] |
+
+Pooled: 36/100 = **36%** [27%, 46%]. Two-proportion test on the C2−C3 difference: +12 pp,
+z = 1.25, **p = 0.21** — at n = 50 per condition the ordering is *not* resolvable; 252 per
+condition would be needed for 80% power at the observed effect (161 at 45% vs 30%). The
+defensible reading is one finding, not a ranking: **about a third of mined "negatives" are
+functionally equivalent to their anchor.**
+
+This is the labelled counterpart to §2.6's proxies, and it is not the same measurement: §2.6
+could only ask "how lexical is the negative", which found ~28–31% of negatives at Jaccard ≥ 0.5
+while the *labelled positives* sit at 5.1% (median Jaccard 0.28 vs 0.37–0.40). Lexical
+similarity is therefore a weak proxy for functional equivalence in this corpus, and the
+label × similarity cross-tabulation that decides D2 is `scripts/audit_separability.py`.
+
 ---
 
 ## 3. Inferences (our reading — each tagged with the facts it rests on)
@@ -233,6 +258,19 @@ bootstrapped over **anchors**.
 near-verbatim candidates from all conditions. **Recommended: (a) now — run the blind 50 + 50
 audit before training; revisit (b) only if the audit shows a large rate (≳ 30 %) in C3.**
 
+**Status 2026-09-27 — audit scored (§2.7), D2 still open on purpose.** C3 came back at 30%
+[19%, 44%], 32% counting `unsure`: the ≳ 30% trigger is met at the point estimate and missed at
+the lower bound, so this sample cannot settle it (C2 came back higher, 42%, and the difference
+is p = 0.21). Before choosing, measure whether the contamination is even separable:
+`python -m scripts.audit_separability` cross-tabulates the 100 labels against cosine / difflib /
+Jaccard and reports, per threshold, how much of a condition you must drop to remove how much
+contamination. If some threshold removes most of it cheaply, (b) is affordable — at the cost of
+re-mining all three conditions together, re-running G1, and a fresh sheet with fresh labels. If
+it does not, (a) stands and the rate is reported as a label-noise floor. Note that the floor is
+*not* equal across conditions (42% vs 30% point estimates), so it does not cancel out of the
+C2-vs-C3 comparison; whichever way that comparison goes, this is a confound to state, not to
+average away.
+
 Rules in force while D2 is open: no fourth strategy (SCOPE P6-1), no quiet edits to
 `HARDNESS_MARGIN` (it is now reported rather than decisive, and any change to it still has to be
 recorded), all three conditions re-mined together after any mining change. Training is no longer
@@ -281,14 +319,12 @@ blocked by G1 but still requires PHASE2_PLAN §2 criteria 2, 4, 5 and 6.
    three conditions, ~15–30 min CPU) → 15 (diagnostics + gate under D1). Cell 15 must reproduce
    the recorded PASS with a real measurement; the run is appended to the G1 history next to the
    2026-09-26 FAIL, with the legacy margin reading beside it.
-3. Audit — the sheet is already sampled **and** labelled: `artifacts/audit/audit_labels.csv`
-   (100/100 rows filled by the agent; rubric, tie-breaks and every flippable call in
-   `artifacts/audit/AUDIT_JUDGEMENTS.md`). On the T4, put that file at
-   `/content/embeded-artifacts/audit/audit_labels.csv` (that is `settings.ARTIFACTS/audit`), then
-   `python -m scripts.audit_sample score` and record **D2** with the observed rates. `score`
-   refuses a key that no longer matches the triples on disk, so regenerate the artifacts
-   (cells 13–14) *before* scoring, or re-sample. If you want a human or a second reader instead,
-   keep the sheet blind and run `make --force` first — the existing labels then mean nothing.
+3. Audit — **done and scored 2026-09-27** (§2.7): C2 42% [29%, 56%], C3 30% [19%, 44%], key
+   matched the re-mined triples 50/50, `## False-negative audit` section written into
+   `report/measurements.md`. Remaining: run `python -m scripts.audit_separability` on the VM
+   (about a minute) to see whether the contamination is textually separable, record **D2**
+   (§4.2) against that, and commit the report. Re-labelling by a human or a second reader would
+   need `make --force` first, which invalidates these labels.
 4. Smoke run: `python -m embeded.train --condition C1 --seed 13 --smoke` (trains, reloads the
    checkpoint, evaluates and prints metrics).
 5. Phase 2: `train` + `evaluate` for C1/C2/C3 × seeds 13/14/15 (≈ 6 GPU-h), then
