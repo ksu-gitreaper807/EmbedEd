@@ -1,6 +1,6 @@
 # Phase 2 — Main experiment and false-negative audit
 
-**Status:** Planned; Phase 2 training has not started.
+**Status:** Gate rule frozen (D1, 2026-09-27) and the runner implemented + unit-tested; **Phase 2 training has not been run** — it needs the Colab T4, the regenerated Phase 1 artifacts and the scored blind audit.
 **Purpose:** Measure whether the negative-mining strategy (C1 random, C2 BM25, C3 semantic) affects clone-detection performance, while checking whether the mined negatives contain functional clones.
 
 This file is the Phase 2 plan and running record. Mark work as complete only when its outputs exist and the corresponding measurements have been recorded in `report/measurements.md`.
@@ -20,7 +20,21 @@ The repository does not yet contain Phase 2 training/evaluation modules. Buildin
 
 ## 2. Entry criteria — do not train until all are satisfied
 
-1. **Freeze the G1 rule.** Record the owner-approved, scale-aware interpretation of “visible gap” before training. Recommended rule from `PROGRESS.md`: retain `C1 < C2 ≤ C3`, require standardized C1→C2 gap `d ≥ 0.5`, and report the corpus-percentile diagnostics. Do not silently change `HARDNESS_MARGIN` or erase the original 0.02-margin FAIL. Update the gate implementation, tests, settings/version, and documentation together if this rule is adopted.
+1. **Freeze the G1 rule.** ✅ **Done 2026-09-27 (decision D1, owner-approved).** The rule in force is
+   `C1 < C2 ≤ C3` **and** standardised gap `d(C1→C2) ≥ HARDNESS_D_MIN = 0.5`, with the
+   corpus-percentile diagnostics reported alongside every verdict. Implemented in
+   `embeded/hardcheck.evaluate_gap` (Cohen's *d*, pooled sd, one definition shared with
+   `scripts/hardness_diagnostics.py`), frozen in `settings.py` (`HARDNESS_D_MIN`,
+   `HARDNESS_RULE`, `VERSION = phase01-v6`), covered by `embeded/tests/test_gate_rule.py`.
+   `HARDNESS_MARGIN = 0.02` is **unchanged and still computed and written into every recorded
+   run** — it is reported, no longer decisive — and the original 2026-09-26 FAIL stays verbatim
+   in `report/measurements.md`. The measured Phase 1 run re-judged under the new rule:
+   `d = 0.614 ≥ 0.5` → **PASS**, legacy margin → FAIL, both recorded
+   (`python -m embeded.hardcheck --recorded report/gate_g1/run_2026-09-26_phase01-v5.json`).
+   Uncertainty is estimated by resampling **anchors**, never individual negatives
+   (`hardcheck.bootstrap_d`), because one anchor contributes *k* = 20 correlated negatives.
+   Still to redo on the T4: run the gate on freshly regenerated artifacts, so the PASS rests on
+   a measurement and not only on the recorded replay.
 2. **Regenerate/retrieve the exact Phase 1 artifacts** for the frozen corpus/version: embeddings and all three conditions’ triples. Verify hashes/metadata and ensure all conditions use the same anchors, positives, `k`, and split-safe candidate corpus. If mining changes, re-mine all three conditions together and rerun tests, gate, and diagnostics.
 3. **Pass the updated G1 and mining tests.** For uncertainty estimates, resample anchors (not individual negatives as if all 32,000 were independent), since each anchor contributes multiple negatives.
 4. **Complete and record the blind audit.** Generate 50 C2 and 50 C3 pairs with `python -m scripts.audit_sample make`; label without opening the key; score with `python -m scripts.audit_sample score`. Record the rubric, rates, Wilson intervals, and unsure upper bounds. Decide how the observed false-negative rates affect interpretation before training.
@@ -44,8 +58,8 @@ Use the same train/validation/test definitions, positive pairs, training-pair ca
 
 ### 3.2 Training objective and implementation
 
-- Implement the Phase 2 training entry point, reusable loss/data-loading code, checkpointing, and deterministic seed setup under `embeded/`.
-- **Recommended objective:** explicit-triplet `TripletLoss`/triplet-margin loss. The mined negative is an explicit member of each training example, so this objective directly tests the negative-selection intervention. Use one frozen loss and margin for all conditions; do not tune them separately by condition.
+- ✅ **Implemented and unit-tested** (`embeded/encoder.py`, `embeded/train.py`, `embeded/evaluate.py`; 70 offline tests). One encoder path is shared by the Phase 1 corpus embeddings, C0 and the trained conditions, so pooling/truncation/normalisation cannot differ between conditions. Runs are artifact-gated and resumable: a run whose `metrics.json` matches the current config fingerprint is skipped, an interrupted run continues from its `checkpoint.pt`, and a checkpoint from a different config is refused rather than silently evaluated.
+- **Objective (frozen):** explicit-triplet margin loss, `max(0, margin + cos(a,neg) − cos(a,pos))` with `TRIPLET_MARGIN = 0.10` — the mined negative is an explicit member of each training example, so this objective directly tests the negative-selection intervention. One loss and margin for all conditions (`settings.LOSS`); never tuned per condition.
 - Keep the measured resource recipe: `MAX_LEN = 512`, `BATCH = 8`, `TRAIN_PAIRS_CAP = 32,000`, `EPOCHS = 1`, fp16 autocast, and no gradient checkpointing, unless a documented smoke-test failure requires a new measured configuration. Any such change requires updating the throughput basis and rerunning all conditions consistently.
 - Save resumable checkpoints and per-run configuration/metrics. Upload/checkpoint completed artifacts according to the repository’s existing artifact workflow; do not commit large model weights or datasets to Git.
 - Run C0 with the same tokenizer, pooling, truncation, and scoring path as trained models, but without fine-tuning.
@@ -70,7 +84,7 @@ Phase 2 is complete when all of the following are available and reproducible:
 5. A G2 review: explain any unexpected or implausible metrics and fix the harness before claiming results. Record whether the sanity comparison is within a reasonable range and why.
 6. A concise conclusion limited to what the main benchmark and audit support, including dataset/label and truncation limitations.
 
-**Not Phase 2:** training on s′ or computing the unseen-functionality generalisation gap, UMAP plots, the demo, and the paper/deck. Those belong to Phase 3 and later in `IMPLEMENTATION_PLAN.md`.
+**Not Phase 2:** training on s′ or computing the unseen-functionality generalisation gap, UMAP plots, the demo, and the paper/deck. Those belong to Phase 3 and later — see `PHASE3_PLAN.md` (protocol, open decisions D3–D6) and `IMPLEMENTATION_PLAN.md` §4.
 
 ## 5. Risks and controls
 
@@ -87,4 +101,6 @@ No Phase 2 training or evaluation has been completed yet. Append dated entries h
 
 | Date | Work performed | Evidence / output | Status / deviations |
 |---|---|---|---|
-| — | Planning document created; execution not started | `PHASE2_PLAN.md` | Pending entry criteria |
+| 2026-09-26 | Planning document created; execution not started | `PHASE2_PLAN.md` | Pending entry criteria |
+| 2026-09-27 | **Entry criterion 1 (G1 rule) closed.** Decision D1 adopted: `C1 < C2 ≤ C3` and `d(C1→C2) ≥ 0.5`, percentiles reported, legacy 0.02 margin kept as a reported-only reading, original FAIL preserved. Gate rewritten (`evaluate_gap`, anchor-resampled `bootstrap_d`, `--recorded` replay), settings bumped to `phase01-v6`, 30 new tests. | `embeded/hardcheck.py`, `embeded/tests/test_gate_rule.py`, `report/measurements.md` (G1 history: FAIL then PASS), `report/gate_g1/run_2026-09-26_phase01-v5.json` | PASS is currently a **replay** of the 2026-09-26 measurement; re-run the gate on regenerated artifacts (criterion 2) before training. |
+| 2026-09-27 | **Phase 2 runner implemented** (§3.2/§3.3): `embeded/encoder.py` (one pooling path), `embeded/train.py` (triplet loss, fp16 AMP, checkpoint + resume + fingerprint gating, `--smoke`), `embeded/evaluate.py` (validation-selected threshold, F1/P/R, MAP@R, predictions, `--results-table`). Executed on a tiny transformer in the offline suite: forward/backward, weight change, checkpoint save/reload, resume, evaluation and table. | `70 passed` in `embeded/tests`; `scripts/run_all.sh`, `CLOUD.md` updated to the real CLI | No real training run: needs a T4, the regenerated artifacts and the scored audit. Smoke test on the target runtime (criterion 5) not yet run. |

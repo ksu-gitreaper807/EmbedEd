@@ -73,11 +73,28 @@ def sample_pairs(n: int, seed: int) -> list[dict]:
     return out
 
 
-def make(n: int, seed: int) -> dict:
+def filled_labels(labels_csv) -> list[str]:
+    """ids that already carry a label — i.e. work that must not be overwritten."""
+    if not labels_csv.exists():
+        return []
+    with open(labels_csv, encoding="utf-8") as fh:
+        return [r["id"] for r in csv.DictReader(fh)
+                if (r.get("label") or "").strip()]
+
+
+def make(n: int, seed: int, force: bool = False) -> dict:
     from embeded.data.prepare_data import load_fragments
     frags = load_fragments()
-    pairs = sample_pairs(n, seed)
     d = audit_dir()
+    done = filled_labels(d / "audit_labels.csv")
+    if done and not force:
+        raise SystemExit(
+            f"{d / 'audit_labels.csv'} already has {len(done)} label(s) "
+            f"({done[0]} ... {done[-1]}) — refusing to overwrite the audit sheet.\n"
+            "  Score what you have:      python -m scripts.audit_sample score\n"
+            "  Or start a new sample:   python -m scripts.audit_sample make "
+            f"--n {n} --seed {seed} --force   (the old labels become meaningless)")
+    pairs = sample_pairs(n, seed)
 
     with open(d / "audit_key.csv", "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=["id", "condition", "anchor", "negative"])
@@ -161,13 +178,52 @@ def write_section(res: dict) -> None:
     print(f"wrote {S.REPORT_MD}")
 
 
+def check_key_matches_triples(key: list[dict]) -> dict:
+    """Every (anchor, negative) in the key must still be a mined pair of that
+    condition. The sheet is blind and long-lived, the artifacts are not: a
+    re-encode on a different GPU can reorder C3's top-k, and then the labels
+    describe pairs that no longer exist — scoring them would report a
+    false-negative rate for a mining run nobody trained on."""
+    out = {}
+    for cond in CONDS:
+        by_anchor = _triples(cond)
+        pairs = {(a, x) for a, negs in by_anchor.items() for x in negs}
+        want = [(int(r["anchor"]), int(r["negative"]))
+                for r in key if r["condition"] == cond]
+        missing = [p for p in want if p not in pairs]
+        out[cond] = {"n": len(want), "not_in_current_triples": len(missing),
+                     "examples": [list(p) for p in missing[:3]]}
+    return out
+
+
 def score() -> dict:
     d = audit_dir()
+    for name in ("audit_key.csv", "audit_labels.csv"):
+        if not (d / name).exists():
+            raise SystemExit(f"missing {d / name} — run "
+                             "`python -m scripts.audit_sample make` first")
     with open(d / "audit_key.csv", encoding="utf-8") as fh:
         key = list(csv.DictReader(fh))
+    drift = check_key_matches_triples(key)
+    stale = [c for c, m in drift.items() if m["not_in_current_triples"]]
+    if stale:
+        detail = "; ".join(f"{c}: {drift[c]['not_in_current_triples']}/{drift[c]['n']} "
+                           f"(e.g. anchor {drift[c]['examples'][0][0]} → "
+                           f"negative {drift[c]['examples'][0][1]})" for c in stale)
+        raise SystemExit(
+            "the audit sheet does not match the triples on disk — " + detail + "\n"
+            "  The labels were made against a different mining run, so scoring them "
+            "would report a rate for pairs nobody trains on.\n"
+            "  Either restore the artifacts the sheet was made from "
+            "(`python -m scripts.hf_artifacts pull --if-configured`), or re-sample "
+            "and re-label (`make ... --force`).")
+    print("audit key matches the current triples: "
+          + ", ".join(f"{c} {drift[c]['n']}/{drift[c]['n']}" for c in CONDS))
     with open(d / "audit_labels.csv", encoding="utf-8") as fh:
         labels = {r["id"]: r["label"] for r in csv.DictReader(fh)}
     res = score_rows(labels, key)
+    res["_provenance"] = {"key_matches_triples": drift, "version": S.VERSION,
+                          "n_labelled": len([v for v in labels.values() if v.strip()])}
     (d / "audit_result.json").write_text(json.dumps(res, indent=2))
     print(json.dumps(res, indent=2))
     write_section(res)
@@ -179,9 +235,11 @@ def main(argv=None):
     ap.add_argument("action", choices=("make", "score"))
     ap.add_argument("--n", type=int, default=50, help="pairs per condition")
     ap.add_argument("--seed", type=int, default=S.SEED)
+    ap.add_argument("--force", action="store_true",
+                    help="make: overwrite an audit sheet that already has labels")
     a = ap.parse_args(argv)
     if a.action == "make":
-        info = make(a.n, a.seed)
+        info = make(a.n, a.seed, force=a.force)
         print(json.dumps(info, indent=2))
         print(f"read  {info['dir']}/audit_pairs.md\nfill  {info['dir']}/audit_labels.csv\nthen  python -m scripts.audit_sample score")
     else:

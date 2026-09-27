@@ -2,9 +2,10 @@
 
     python -m scripts.hardness_diagnostics [--examples 2]
 
-Computes, it does not judge: the verdict stays with `embeded.hardcheck` and
-`settings.HARDNESS_MARGIN`. Run it when the gate fails (or passes narrowly)
-before touching either the mining or the margin.
+Computes, it does not judge: the verdict stays with `embeded.hardcheck` and the
+gate rule frozen in `settings` (decision D1: ordering plus a standardised
+C1→C2 gap). Run it when the gate fails (or passes narrowly) before touching
+either the mining or the rule.
 
 Why it exists (2026-09-26, T4 run): mean cos(anchor, negative) came out
 C1 0.961 / C2 0.975 / C3 0.988 — the whole ruler is 0.027 wide because the
@@ -33,6 +34,7 @@ from collections import defaultdict
 import numpy as np
 
 from embeded import settings as S
+from embeded.hardcheck import missing_artifact_message, standardized_gap
 
 CONDS = ("C1", "C2", "C3")
 
@@ -157,10 +159,11 @@ def analyse(emb: np.ndarray, row_of: dict[int, int], corpus: list[int],
     sds = {c: float(np.std(per[c]["cos"])) for c in CONDS}
     span = means["C3"] - means["C1"]
     for c in CONDS:
-        pooled = float(np.sqrt((sds[c] ** 2 + sds["C1"] ** 2) / 2)) or 1e-9
         d = {"mean_cos": round(means[c], 5), "sd": round(sds[c], 5),
              "gap_vs_C1": round(means[c] - means["C1"], 5),
-             "d_vs_C1": round((means[c] - means["C1"]) / pooled, 3),
+             # the gate's definition, imported — diagnostics and hardcheck can
+             # never quote a different d for the same run
+             "d_vs_C1": round(standardized_gap(means["C1"], sds["C1"], means[c], sds[c]), 3),
              "position_in_C1_C3_range": round((means[c] - means["C1"]) / span, 3) if span > 0 else None,
              "percentile_mean": round(100 * float(np.mean(per[c]["pct"])), 2),
              "percentile_median": round(100 * float(np.median(per[c]["pct"])), 2),
@@ -208,6 +211,10 @@ def write_section(res: dict) -> None:
              "negative (50 = random, 100 = nearest).", "",
              f"Scale: random corpus pair cos = **{sc['random_pair_cos']:.4f}**; cos(anchor, positive) = "
              f"**{sc['anchor_positive_cos_mean']:.4f}** (sd {sc['anchor_positive_cos_sd']:.3f}).", "",
+             f"Rule in force (decision D1, `settings.HARDNESS_RULE`): *{S.HARDNESS_RULE}* — the "
+             f"`d vs C1` column below is the gate's own quantity "
+             f"(`embeded.hardcheck.standardized_gap`); the percentiles are reported with the "
+             "verdict so a pass can be read without re-deriving the scale of this space.", "",
              "| cond | mean cos | sd | gap vs C1 | d vs C1 | position C1→C3 | pct mean | pct median | in top-20 | in top-100 | closer than positive |",
              "|---|---|---|---|---|---|---|---|---|---|---|"]
     for c in CONDS:
@@ -255,6 +262,10 @@ def main(argv=None):
     from embeded.data.prepare_data import corpus_ids, load_fragments
     from embeded.mining.semantic_index import load_corpus_emb
 
+    for p in (S.ARTIFACTS / "fragments.jsonl", S.ARTIFACTS / "corpus_emb.npy",
+              S.ARTIFACTS / "corpus_emb.meta.json"):
+        if not p.exists():
+            raise SystemExit(missing_artifact_message(p))
     emb, meta = load_corpus_emb()
     frags = load_fragments()
     row_of = {c: i for i, c in enumerate(sorted(frags))}
@@ -262,7 +273,7 @@ def main(argv=None):
     for c in CONDS:
         p = S.artifact(f"triples_{c}.jsonl")
         if not p.exists():
-            raise SystemExit(f"missing {p} — run `python -m embeded.negatives` first")
+            raise SystemExit(missing_artifact_message(p))
         triples[c] = _load_triples(p)
     if not (set(triples["C1"]) == set(triples["C2"]) == set(triples["C3"])):
         raise SystemExit("anchor sets differ between conditions — re-mine all three strategies in one run")

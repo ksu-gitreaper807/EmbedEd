@@ -1,0 +1,22 @@
+{
+  "measured": "2026-09-26",
+  "runtime": "Colab T4, first mining run",
+  "version": "phase01-v5",
+  "source": "report/measurements.md § 'Gate G1 — hardness check', run 2026-09-26; sds at full precision from PROGRESS.md §2.5",
+  "rule_at_the_time": "legacy absolute margin 0.02 — verdict FAIL (kept verbatim in the report)",
+  "n_anchors": 1000,
+  "k": 20,
+  "per_condition": {
+    "C1": {"mean_cos": 0.96068, "std": 0.0257, "n_samples": 20000},
+    "C2": {"mean_cos": 0.97526, "std": 0.0216, "n_samples": 20000},
+    "C3": {"mean_cos": 0.98845, "std": 0.0072, "n_samples": 20000}
+  },
+  "context": {
+    "corpus_percentile_median": {"C1": 50.1, "C2": 91.9, "C3": 99.8},
+    "in_anchor_top20_frac": {"C1": 0.003, "C2": 0.154, "C3": 0.948},
+    "random_pair_cos": 0.9603,
+    "anchor_positive_cos": 0.9651,
+    "note": "measured on all 1,600 anchors by scripts.hardness_diagnostics (PROGRESS §2.6); the gate itself sampled 1,000 anchors. Summary only — no per-anchor values were kept, so this record cannot be bootstrapped over anchors."
+  },
+  "why_this_file_exists": "A gate rule change must be re-judgeable against the measurement that prompted it, without re-spending GPU time on artifacts that may no longer exist. Re-judge with: python -m embeded.hardcheck --recorded report/gate_g1/run_2026-09-26_phase01-v5.json"
+}
