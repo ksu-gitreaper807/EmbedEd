@@ -229,6 +229,29 @@ def test_sync_and_push_reports_a_missing_identity_instead_of_raising(home: Path,
     assert "identity" in result["message"]
 
 
+def test_sync_and_push_ignores_untracked_files(home: Path, remote_and_clone):
+    """An untracked stray does not block pull --rebase or push — measured, not assumed."""
+    _, _, clone = remote_and_clone
+    (clone / "audit_labels.csv").write_text("id,label,note\n", encoding="utf-8")
+
+    result = G.sync_and_push(clone, token=None)
+
+    assert result["ok"] is True, result
+    assert any("leaving untracked: audit_labels.csv" in line for line in result["lines"])
+    assert (clone / "audit_labels.csv").is_file()                 # untouched, still untracked
+
+
+def test_diagnose_does_not_blame_untracked_files_for_exit_128(home: Path, remote_and_clone):
+    _, _, clone = remote_and_clone
+    (clone / "audit_labels.csv").write_text("id,label,note\n", encoding="utf-8")
+
+    lines = "\n".join(G.diagnose(clone, "main", token=None))
+
+    assert "untracked only — does not block a rebase" in lines
+    assert "cannot pull with rebase" not in lines
+    assert "no known blocker found" in lines
+
+
 def test_sync_and_push_will_not_stage_the_audit_key(home: Path, remote_and_clone):
     _, _, clone = remote_and_clone
     (clone / "report" / "audit_key.csv").write_text("id,label\n", encoding="utf-8")

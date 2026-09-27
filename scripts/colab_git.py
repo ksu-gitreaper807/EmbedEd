@@ -268,7 +268,9 @@ def diagnose(repo: str | Path = ".", ref: str | None = None, token: str | None =
         if (Path(git.repo) / ".git" / name).exists():
             lines.append(f"warning: .git/{name} exists — an interrupted rebase is in progress")
     status = git.get("status", "--porcelain=v1")
-    lines.append(f"worktree: {'clean' if not status else 'DIRTY'}")
+    blocking = [line for line in status.splitlines() if line[:2].strip() not in ("", "??")]
+    lines.append(f"worktree: {'clean' if not status else 'DIRTY'}"
+                 f"{'' if blocking or not status else ' (untracked only — does not block a rebase)'}")
     lines.extend(f"  {line}" for line in status.splitlines())
     path = credential_path()
     lines.append(f"credential file: {path} "
@@ -289,7 +291,7 @@ def diagnose(repo: str | Path = ".", ref: str | None = None, token: str | None =
     if fetch.returncode:
         failures.append((f"fetch origin {target}", fetch.returncode,
                          f"{fetch.stdout}\n{fetch.stderr}"))
-    if status:
+    if blocking:
         # the same 128 git itself would print, so the advice is matched against git's own words
         failures.append(("pull --rebase", 128,
                          "error: cannot pull with rebase: You have unstaged changes.\n"
@@ -349,11 +351,15 @@ def sync_and_push(repo: str | Path = ".", ref: str | None = None, token: str | N
         out["message"] = f"{exc}; likely cause: {_cause(blob)}"
         return out
     dirty = git.get("status", "--porcelain=v1")
-    if dirty:
-        out["message"] = ("the worktree is dirty — commit or stash it first "
-                          "(or pass --commit MSG --paths ...). Untracked/unstaged:\n  "
-                          + dirty.replace("\n", "\n  "))
-        out["lines"] += [f"  {line}" for line in dirty.splitlines()]
+    # untracked files do not block pull --rebase or push: only tracked changes do
+    blocking = [line for line in dirty.splitlines() if line[:2].strip() not in ("", "??")]
+    untracked = [line for line in dirty.splitlines() if line[:2].strip() == "??"]
+    out["lines"] += [f"  leaving untracked: {line[3:].strip()}" for line in untracked]
+    if blocking:
+        out["message"] = ("the worktree has tracked changes — commit or stash them first "
+                          "(or pass --commit MSG --paths ...):\n  "
+                          + "\n  ".join(blocking))
+        out["lines"] += [f"  {line}" for line in blocking]
         return out
 
     out["stage"] = "pull --rebase"
