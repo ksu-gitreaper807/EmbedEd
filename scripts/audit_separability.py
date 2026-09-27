@@ -1,7 +1,7 @@
 """Is the audited contamination separable? (decision D2 input)
 
     python -m scripts.audit_separability
-    python -m scripts.audit_separability --sweep 0.99 0.98 0.95 0.90
+    python -m scripts.audit_separability --sweep 0.6 0.5 0.4   # override all three metric sweeps
 
 The blind audit found that a large share of mined "negatives" are functionally
 equivalent to their anchor (C2 21/50, C3 15/50 — see report/measurements.md).
@@ -90,7 +90,15 @@ def _quartiles(values: list[float]) -> str:
     return f"n={len(v)} p25={q(0.25):.3f} med={median(v):.3f} p75={q(0.75):.3f} max={v[-1]:.3f}"
 
 
-def report(rows: list[dict], sweep: list[float]) -> None:
+# Per metric, because the scales are not comparable: cosine of two GraphCodeBERT
+# embeddings lives in 0.96-1.00, while token Jaccard between a clone pair sits
+# around 0.35-0.45. One shared list of thresholds measures nothing.
+DEFAULT_SWEEP = {"cosine": [0.995, 0.99, 0.985, 0.98],
+                 "ratio": [0.6, 0.5, 0.4, 0.3],
+                 "jaccard": [0.6, 0.5, 0.4, 0.35, 0.3]}
+
+
+def report(rows: list[dict], sweep: list[float] | None = None) -> None:
     conds = sorted({r["condition"] for r in rows})
     print(f"audited pairs: {len(rows)}  (version {S.VERSION})\n")
     print("== how similar is a 'negative' to its anchor? ==")
@@ -103,7 +111,25 @@ def report(rows: list[dict], sweep: list[float]) -> None:
             print(f"  {'':<3} {'':<10} jaccard {_quartiles([r['jaccard'] for r in sub])}")
             print(f"  {'':<3} {'':<10} ratio   {_quartiles([r['ratio'] for r in sub])}")
 
-    print("\n== what would a near-verbatim exclusion buy? ==")
+    print("\n== cleanest cut per metric: the threshold that drops no clean pair ==")
+    print("  (in-sample: the maximum of ~30 not_clone values has wide sampling error, so this")
+    print("   identifies a candidate threshold, it does not validate one)\n")
+    for metric in ("cosine", "ratio", "jaccard"):
+        if metric == "cosine" and rows[0]["cosine"] is None:
+            continue
+        for cond in conds:
+            sub = [r for r in rows if r["condition"] == cond]
+            clean = [r[metric] for r in sub if r["label"] == "not_clone" and r[metric] is not None]
+            dirty = [r[metric] for r in sub if r["label"] == "clone" and r[metric] is not None]
+            if not clean or not dirty:
+                continue
+            top = max(clean)
+            caught = sum(1 for v in dirty if v > top)
+            print(f"  {cond} {metric:<8} every not_clone <= {top:.3f}; a cut just above it removes "
+                  f"{caught}/{len(dirty)} = {caught/len(dirty):.0%} of the contamination and no "
+                  f"clean pair (median clone = {median(dirty):.3f})")
+
+    print("\n== what would an exclusion buy? ==")
     print("  drop every pair at or above the threshold; 'removed' counts the labelled clones "
           "it catches, 'residual' is the contamination left behind.\n")
     for metric in ("cosine", "ratio", "jaccard"):
@@ -112,7 +138,7 @@ def report(rows: list[dict], sweep: list[float]) -> None:
         print(f"  --- filter on {metric} ---")
         print("  | threshold | pairs dropped | of the condition | contamination removed | residual FN rate |")
         print("  |---|---|---|---|---|")
-        for t in sweep:
+        for t in (sweep or DEFAULT_SWEEP[metric]):
             for cond in conds:
                 sub = [r for r in rows if r["condition"] == cond]
                 drop = [r for r in sub if (r[metric] or 0) >= t]
@@ -133,8 +159,8 @@ def report(rows: list[dict], sweep: list[float]) -> None:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--sweep", type=float, nargs="+", default=[0.99, 0.98, 0.95, 0.90, 0.80],
-                    help="similarity thresholds to evaluate")
+    ap.add_argument("--sweep", type=float, nargs="+", default=None,
+                    help="override the per-metric threshold lists")
     ap.add_argument("--json", default=None, help="also dump the per-pair features (no text) here")
     a = ap.parse_args(argv)
     rows = load()

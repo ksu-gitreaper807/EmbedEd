@@ -159,6 +159,27 @@ while the *labelled positives* sit at 5.1% (median Jaccard 0.28 vs 0.37–0.40).
 similarity is therefore a weak proxy for functional equivalence in this corpus, and the
 label × similarity cross-tabulation that decides D2 is `scripts/audit_separability.py`.
 
+Separability of the contamination (`report/audit_separability.txt`), median [p25, p75]:
+
+| | embedding cosine | token Jaccard | difflib ratio |
+|---|---|---|---|
+| C2 clone (21) | 0.987 [0.984, 0.994] | 0.418 [0.253, 0.625] | 0.253 [0.147, 0.573] |
+| C2 not_clone (29) | 0.976 [0.964, 0.984], max 0.989 | 0.168 [0.091, 0.232], **max 0.345** | 0.093, max 0.318 |
+| C3 clone (15) | 0.992 [0.991, 0.994] | 0.347 [0.218, 0.447] | 0.319 [0.119, 0.443] |
+| C3 not_clone (34) | 0.984 [0.981, 0.989], max 0.994 | 0.153 [0.097, 0.224], max 0.814 | 0.089, max 0.861 |
+
+**A near-verbatim exclusion — what D2(b) actually proposed — buys almost nothing**: Jaccard ≥ 0.8
+removes 5% (C2) / 7% (C3) of the contamination, difflib ≥ 0.8 removes 10% / 7%. The contaminated
+pairs are functionally equivalent implementations written differently: a clone pair differs in
+roughly 70% of its characters (median difflib 0.25 / 0.32).
+
+What does separate, in one place each: **in C2 every not_clone pair sits at Jaccard ≤ 0.345 while
+the clone median is 0.418**, so a cut near 0.4 removes ~40% of C2's contamination without dropping
+a single clean pair — in-sample, on 50 pairs, so it identifies a candidate threshold and does not
+validate one. **C3 has no clean cut on any metric**; its best available is cosine ≥ 0.99, which
+removes 80% of the contamination at the cost of 40% of the condition — and cosine is the metric
+that *defines* C3, so cutting on it changes the independent variable rather than cleaning it.
+
 ---
 
 ## 3. Inferences (our reading — each tagged with the facts it rests on)
@@ -218,6 +239,18 @@ that cost time are the GPU encode (4 min), BM25 mining (15–30 min) and every m
 number — those now go to the HF dataset repo after each heavy cell, and every stage skips
 itself when its artifacts are present (`COLAB.md`, *Resume protocol*).
 
+**I10 — The contamination is semantic, not textual — and I6 was wrong to dismiss Jaccard
+outright.** I6 argued from two eyeballed pairs that a Jaccard threshold "would both miss and
+over-catch". On 100 labelled pairs that is half right: it is useless at the near-verbatim end
+(≥ 0.8 catches 5–7% of the clones), but in C2 the not_clone distribution *ends* at 0.345 while
+the clone median is 0.418, so a threshold near 0.4 is precision-perfect in-sample. The wider
+point stands and is the interesting one: pairs that are functionally identical differ in ~70% of
+their characters, so **no textual near-duplicate filter can find them** — which is exactly the
+failure mode `GROUND_TRUTH.md` attributes to the corpus's own ground truth, now measured inside
+our negatives rather than argued from the literature. Consequence for the write-up: the
+false-negative rate is a property of the dataset, not an artefact of our mining, and it is
+reported as a label-noise floor rather than filtered away. *(§2.7.)*
+
 ---
 
 ## 4. Decisions
@@ -258,18 +291,26 @@ bootstrapped over **anchors**.
 near-verbatim candidates from all conditions. **Recommended: (a) now — run the blind 50 + 50
 audit before training; revisit (b) only if the audit shows a large rate (≳ 30 %) in C3.**
 
-**Status 2026-09-27 — audit scored (§2.7), D2 still open on purpose.** C3 came back at 30%
-[19%, 44%], 32% counting `unsure`: the ≳ 30% trigger is met at the point estimate and missed at
-the lower bound, so this sample cannot settle it (C2 came back higher, 42%, and the difference
-is p = 0.21). Before choosing, measure whether the contamination is even separable:
-`python -m scripts.audit_separability` cross-tabulates the 100 labels against cosine / difflib /
-Jaccard and reports, per threshold, how much of a condition you must drop to remove how much
-contamination. If some threshold removes most of it cheaply, (b) is affordable — at the cost of
-re-mining all three conditions together, re-running G1, and a fresh sheet with fresh labels. If
-it does not, (a) stands and the rate is reported as a label-noise floor. Note that the floor is
-*not* equal across conditions (42% vs 30% point estimates), so it does not cancel out of the
-C2-vs-C3 comparison; whichever way that comparison goes, this is a confound to state, not to
-average away.
+**Status 2026-09-27 — ✅ RECORDED: option (a), keep the mining and report the rate.** The audit
+came back at C3 = 30% [19%, 44%] (32% counting `unsure`), so the ≳ 30% trigger was met at the
+point estimate — but the separability measurement (§2.7) then showed that **(b) as written does
+not work**: dropping *near-verbatim* candidates (Jaccard or difflib ≥ 0.8) removes only 5–10% of
+the contamination, because functionally equivalent pairs in this corpus differ in ~70% of their
+characters. The variants that do separate are new experiments rather than fixes:
+
+- a token-Jaccard cut near **0.40** is precision-perfect in C2 (every not_clone pair is ≤ 0.345)
+  and would remove ~40% of C2's contamination — but it is an in-sample threshold on 50 pairs, and
+  C3 has no equivalent clean cut;
+- **cosine ≥ 0.99** removes 80% of C3's contamination but drops 40% of the condition, and cosine
+  is the metric that *defines* C3 — cutting on it changes the independent variable, so the
+  C1 < C2 ≤ C3 comparison and gate G1 would both have to be recomputed on truncated sets.
+
+Either variant costs a VERSION bump, re-mining all three conditions together, a re-run of G1, and
+a fresh sheet with fresh labels, for a benefit bounded by the residual rates above. So (a) stands:
+the mining is unchanged, the 36% pooled rate is reported as a label-noise floor (§2.7), and the
+C2-vs-C3 comparison carries it as a stated confound rather than an averaged-away one. If the owner
+later wants the filtered variant it is a **v7 experiment**, validated on a fresh audit sample
+first; the runs made under (a) remain the baseline and stay valid.
 
 Rules in force while D2 is open: no fourth strategy (SCOPE P6-1), no quiet edits to
 `HARDNESS_MARGIN` (it is now reported rather than decisive, and any change to it still has to be
@@ -319,12 +360,11 @@ blocked by G1 but still requires PHASE2_PLAN §2 criteria 2, 4, 5 and 6.
    three conditions, ~15–30 min CPU) → 15 (diagnostics + gate under D1). Cell 15 must reproduce
    the recorded PASS with a real measurement; the run is appended to the G1 history next to the
    2026-09-26 FAIL, with the legacy margin reading beside it.
-3. Audit — **done and scored 2026-09-27** (§2.7): C2 42% [29%, 56%], C3 30% [19%, 44%], key
-   matched the re-mined triples 50/50, `## False-negative audit` section written into
-   `report/measurements.md`. Remaining: run `python -m scripts.audit_separability` on the VM
-   (about a minute) to see whether the contamination is textually separable, record **D2**
-   (§4.2) against that, and commit the report. Re-labelling by a human or a second reader would
-   need `make --force` first, which invalidates these labels.
+3. Audit — **done, scored and decided**: C2 42% [29%, 56%], C3 30% [19%, 44%] (§2.7), key matched
+   the re-mined triples 50/50, separability measured (`report/audit_separability.txt`), and **D2
+   recorded as option (a)** — keep the mining, report the rate (§4.2). Nothing here blocks
+   training. Remaining bookkeeping: commit `report/measurements.md` and
+   `report/audit_separability.txt` from the VM.
 4. Smoke run: `python -m embeded.train --condition C1 --seed 13 --smoke` (trains, reloads the
    checkpoint, evaluates and prints metrics).
 5. Phase 2: `train` + `evaluate` for C1/C2/C3 × seeds 13/14/15 (≈ 6 GPU-h), then
