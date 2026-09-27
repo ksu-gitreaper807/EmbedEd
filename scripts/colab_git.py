@@ -62,7 +62,11 @@ KNOWN_CAUSES = (
     ("there is already a rebase-merge directory",
      "an interrupted rebase is still in progress; `git rebase --abort`"),
     ("empty ident name",
-     "git identity is unset; set user.name / user.email (push does this for you)"),
+     "git identity is unset; set user.name / user.email, or pass a token and it is derived "
+     "from the token's account"),
+    ("unable to auto-detect email address",
+     "git identity is unset; set user.name / user.email, or pass a token and it is derived "
+     "from the token's account"),
     ("could not read Username",
      "no credential helper and no terminal; store the PAT (push does this for you)"),
     ("Authentication failed",
