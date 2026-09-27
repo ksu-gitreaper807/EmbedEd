@@ -364,10 +364,8 @@ blocked by G1 but still requires PHASE2_PLAN §2 criteria 2, 4, 5 and 6.
 3. Audit — **done, scored and decided**: C2 42% [29%, 56%], C3 30% [19%, 44%] (§2.7), key matched
    the re-mined triples 50/50, separability measured (`report/audit_separability.txt`), and **D2
    recorded as option (a)** — keep the mining, report the rate (§4.2). Nothing here blocks
-   training. Remaining bookkeeping: commit `report/measurements.md` and
-   `report/audit_separability.txt` from the VM — the commit already exists there, it just needs
-   a token route and a `git pull --rebase` first (`3d5663a` landed after it): notebook §8, or
-   `python -m scripts.colab_git push --commit "report: audit separability" --paths report`.
+   training. The VM's own commit `505264e` carries both artifacts into the repo:
+   `report/audit_separability.txt` and the audit section of `report/measurements.md`.
 4. Smoke run: `python -m embeded.train --condition C1 --seed 13 --smoke` (trains, reloads the
    checkpoint, evaluates and prints metrics).
 5. Phase 2: `train` + `evaluate` for C1/C2/C3 × seeds 13/14/15 (≈ 6 GPU-h), then
