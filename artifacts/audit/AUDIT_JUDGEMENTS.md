@@ -54,6 +54,18 @@ per-contig FASTA hashes), P060 (cache materialisation vs single-file archive cop
 (`copyFile` vs path-resolution + duplicate check + copy), P089 (PNG→S3 pipeline vs upload +
 thumbnail + DB record).
 
+## What I did not read in full
+
+The sheet's fragments run to 541 lines (p50 = 25, p90 = 71). I read each pair with fragments
+capped at 80 lines, so **14 fragments were truncated** for the reading pass:
+P009A P016A P019A P019B P026B P031B P037A P050B P071A P079A P081B P091B P095A P099A.
+
+Every one of those 13 pairs is labelled `not_clone`. That makes the truncation a
+**one-directional** risk: a clone relationship hiding below line 80 of a 500-line method would
+have been missed, so 36 is a floor rather than a central estimate. Nobody can call a 461-line
+servlet and a 12-line unit test the same functionality from the tail, but the honest statement
+is that these 13 calls rest on the first 80 lines of each long side.
+
 ## Known bias
 
 I have read this repository's `GROUND_TRUTH.md`, so I know the audit exists to test whether
