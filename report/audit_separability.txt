@@ -1,0 +1,65 @@
+audited pairs: 100  (version phase01-v6)
+
+== how similar is a 'negative' to its anchor? ==
+  C2 clone      cosine  n=21 p25=0.984 med=0.987 p75=0.994 max=0.998
+                 jaccard n=21 p25=0.253 med=0.418 p75=0.625 max=0.925
+                 ratio   n=21 p25=0.147 med=0.253 p75=0.573 max=0.849
+  C2 not_clone  cosine  n=29 p25=0.964 med=0.976 p75=0.984 max=0.989
+                 jaccard n=29 p25=0.091 med=0.168 p75=0.232 max=0.345
+                 ratio   n=29 p25=0.055 med=0.093 p75=0.179 max=0.318
+  C3 clone      cosine  n=15 p25=0.991 med=0.992 p75=0.994 max=1.000
+                 jaccard n=15 p25=0.218 med=0.347 p75=0.447 max=0.949
+                 ratio   n=15 p25=0.119 med=0.319 p75=0.443 max=0.992
+  C3 not_clone  cosine  n=34 p25=0.981 med=0.984 p75=0.989 max=0.994
+                 jaccard n=34 p25=0.097 med=0.153 p75=0.224 max=0.814
+                 ratio   n=34 p25=0.055 med=0.089 p75=0.138 max=0.861
+  C3 unsure     cosine  n=1 p25=0.988 med=0.988 p75=0.988 max=0.988
+                 jaccard n=1 p25=0.170 med=0.170 p75=0.170 max=0.170
+                 ratio   n=1 p25=0.109 med=0.109 p75=0.109 max=0.109
+
+== what would a near-verbatim exclusion buy? ==
+  drop every pair at or above the threshold; 'removed' counts the labelled clones it catches, 'residual' is the contamination left behind.
+
+  --- filter on cosine ---
+  | threshold | pairs dropped | of the condition | contamination removed | residual FN rate |
+  |---|---|---|---|---|
+  | cosine ≥ 0.99 (C2) | 10/50 = 20% | 10/21 = 48% | 28% |
+  | cosine ≥ 0.99 (C3) | 20/50 = 40% | 12/15 = 80% | 10% |
+  | cosine ≥ 0.98 (C2) | 28/50 = 56% | 18/21 = 86% | 14% |
+  | cosine ≥ 0.98 (C3) | 42/50 = 84% | 15/15 = 100% | 0% |
+  | cosine ≥ 0.95 (C2) | 48/50 = 96% | 20/21 = 95% | 50% |
+  | cosine ≥ 0.95 (C3) | 49/50 = 98% | 15/15 = 100% | 0% |
+  | cosine ≥ 0.90 (C2) | 50/50 = 100% | 21/21 = 100% | 0% |
+  | cosine ≥ 0.90 (C3) | 50/50 = 100% | 15/15 = 100% | 0% |
+  | cosine ≥ 0.80 (C2) | 50/50 = 100% | 21/21 = 100% | 0% |
+  | cosine ≥ 0.80 (C3) | 50/50 = 100% | 15/15 = 100% | 0% |
+
+  --- filter on ratio ---
+  | threshold | pairs dropped | of the condition | contamination removed | residual FN rate |
+  |---|---|---|---|---|
+  | ratio ≥ 0.99 (C2) | 0/50 = 0% | 0/21 = 0% | 42% |
+  | ratio ≥ 0.99 (C3) | 1/50 = 2% | 1/15 = 7% | 29% |
+  | ratio ≥ 0.98 (C2) | 0/50 = 0% | 0/21 = 0% | 42% |
+  | ratio ≥ 0.98 (C3) | 1/50 = 2% | 1/15 = 7% | 29% |
+  | ratio ≥ 0.95 (C2) | 0/50 = 0% | 0/21 = 0% | 42% |
+  | ratio ≥ 0.95 (C3) | 1/50 = 2% | 1/15 = 7% | 29% |
+  | ratio ≥ 0.90 (C2) | 0/50 = 0% | 0/21 = 0% | 42% |
+  | ratio ≥ 0.90 (C3) | 1/50 = 2% | 1/15 = 7% | 29% |
+  | ratio ≥ 0.80 (C2) | 2/50 = 4% | 2/21 = 10% | 40% |
+  | ratio ≥ 0.80 (C3) | 2/50 = 4% | 1/15 = 7% | 29% |
+
+  --- filter on jaccard ---
+  | threshold | pairs dropped | of the condition | contamination removed | residual FN rate |
+  |---|---|---|---|---|
+  | jaccard ≥ 0.99 (C2) | 0/50 = 0% | 0/21 = 0% | 42% |
+  | jaccard ≥ 0.99 (C3) | 0/50 = 0% | 0/15 = 0% | 30% |
+  | jaccard ≥ 0.98 (C2) | 0/50 = 0% | 0/21 = 0% | 42% |
+  | jaccard ≥ 0.98 (C3) | 0/50 = 0% | 0/15 = 0% | 30% |
+  | jaccard ≥ 0.95 (C2) | 0/50 = 0% | 0/21 = 0% | 42% |
+  | jaccard ≥ 0.95 (C3) | 0/50 = 0% | 0/15 = 0% | 30% |
+  | jaccard ≥ 0.90 (C2) | 1/50 = 2% | 1/21 = 5% | 41% |
+  | jaccard ≥ 0.90 (C3) | 1/50 = 2% | 1/15 = 7% | 29% |
+  | jaccard ≥ 0.80 (C2) | 1/50 = 2% | 1/21 = 5% | 41% |
+  | jaccard ≥ 0.80 (C3) | 2/50 = 4% | 1/15 = 7% | 29% |
+
+Read it as: a threshold that drops few pairs while removing most contamination means D2's near-verbatim exclusion is cheap; one that only removes contamination by dropping most of the condition means the noise is not textually separable, and the honest move is to keep the mining and report the rate as a label-noise floor.
