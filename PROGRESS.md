@@ -371,3 +371,6 @@ blocked by G1 but still requires PHASE2_PLAN §2 criteria 2, 4, 5 and 6.
 5. Phase 2: `train` + `evaluate` for C1/C2/C3 × seeds 13/14/15 (≈ 6 GPU-h), then
    `evaluate --condition C0` and `evaluate --results-table`; append the real entries to
    `PHASE2_PLAN.md` §6.
+6. Phase 3 (generalisation on s′, UMAP figure, demo): planned in `PHASE3_PLAN.md`, blocked on the
+   runs above and on decisions D3–D6 recorded there. Note the documentation gap it flags —
+   `FINAL_SPEC.md` ends at §6, so the §9.3/§11/§12 that five files cite do not exist.

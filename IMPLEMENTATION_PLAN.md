@@ -182,6 +182,10 @@ fixed.
 
 ### Phase 3 — Generalisation, figure, demo (week 3)
 
+Detailed plan, entry criteria and open decisions: **`PHASE3_PLAN.md`**. Note that the `FINAL_SPEC`
+sections this paragraph cites (§9.3, §11) are **not in the committed `FINAL_SPEC.md`** — it ends at
+§6 — so `PHASE3_PLAN.md` §3–§5 restates the protocol instead of deferring to it.
+
 Delivers deck §6 third expected-result bullet ("the *size* of the drop across strategies is the
 new finding") and §5's visualisation.
 

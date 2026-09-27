@@ -84,7 +84,7 @@ Phase 2 is complete when all of the following are available and reproducible:
 5. A G2 review: explain any unexpected or implausible metrics and fix the harness before claiming results. Record whether the sanity comparison is within a reasonable range and why.
 6. A concise conclusion limited to what the main benchmark and audit support, including dataset/label and truncation limitations.
 
-**Not Phase 2:** training on s′ or computing the unseen-functionality generalisation gap, UMAP plots, the demo, and the paper/deck. Those belong to Phase 3 and later in `IMPLEMENTATION_PLAN.md`.
+**Not Phase 2:** training on s′ or computing the unseen-functionality generalisation gap, UMAP plots, the demo, and the paper/deck. Those belong to Phase 3 and later — see `PHASE3_PLAN.md` (protocol, open decisions D3–D6) and `IMPLEMENTATION_PLAN.md` §4.
 
 ## 5. Risks and controls
 
