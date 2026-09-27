@@ -138,6 +138,30 @@ blind audit key can never be pushed — rebases onto the remote, pushes, and red
 git output before it is printed (known token, `ghp_`/`github_pat_` shapes, `password=` lines, and
 any `://user:pass@` URL).
 
+### Recovering a clone stuck mid-rebase
+
+Symptoms: `git commit` reports `[detached HEAD …]`, and `git rebase` says *It seems that there is
+already a rebase-merge directory*. An earlier `pull --rebase` was interrupted, which leaves
+`.git/rebase-merge` behind **and HEAD detached**, so every later commit lands on no branch at all.
+Never start with `rm -fr .git/rebase-merge`:
+
+1. `git branch -f vm-rescue HEAD` — name the commit first, so nothing below can lose it.
+2. `git fetch origin <ref>`, then `git log --oneline FETCH_HEAD..HEAD` and
+   `git diff --name-only $(git merge-base FETCH_HEAD HEAD) HEAD` — confirm the only un-pushed work
+   is what you expect (for the audit that is `report/…` and nothing else).
+3. Copy those files out of the clone (`/tmp/…`) — step 5 rewrites the worktree.
+4. `git rebase --abort`; only if that fails because the directory is corrupt, remove
+   `.git/rebase-merge`.
+5. `git checkout -f -B <ref> FETCH_HEAD`, restore the files, commit, push.
+
+`scripts.colab_git.diagnose` reports a leftover `.git/rebase-merge` but never clears it — clearing
+discards the in-progress rebase, which is a decision for a human.
+
+One more VM trap: a kernel with `GIT_AUTHOR_NAME` / `GIT_AUTHOR_EMAIL` exported overrides
+`user.name` / `user.email` for **new commits** (commits come out authored by
+`colab-vm <colab-vm@local>` no matter what you configure). `scripts.colab_git` strips them from the
+child environment; check `git log -1 --format='%an <%ae>'` after committing.
+
 ## Per-person artifact isolation (optional, for parallel Phase-2 runs)
 
 `EMBEDED_ARTIFACTS` is the local path and `EMBEDED_HF_SUBDIR` is the remote path, so two people
