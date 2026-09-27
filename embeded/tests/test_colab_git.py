@@ -229,6 +229,25 @@ def test_sync_and_push_reports_a_missing_identity_instead_of_raising(home: Path,
     assert "identity" in result["message"]
 
 
+def test_git_ignores_an_exported_author_identity(home: Path, fresh_clone,
+                                                 monkeypatch: pytest.MonkeyPatch):
+    """A kernel with GIT_AUTHOR_* exported must not override the identity we configure."""
+    monkeypatch.setenv("GIT_AUTHOR_NAME", "colab-vm")
+    monkeypatch.setenv("GIT_AUTHOR_EMAIL", "colab-vm@local")
+    monkeypatch.setenv("GIT_COMMITTER_NAME", "colab-vm")
+    monkeypatch.setenv("GIT_COMMITTER_EMAIL", "colab-vm@local")
+    _git(fresh_clone, "config", "user.name", "alice")
+    _git(fresh_clone, "config", "user.email", "4242+alice@users.noreply.github.com")
+    (fresh_clone / "x.txt").write_text("x\n", encoding="utf-8")
+
+    G.Git(fresh_clone).run("add", "x.txt")
+    G.Git(fresh_clone).run("commit", "-m", "x")
+    shown = _git(fresh_clone, "log", "-1", "--format=%an <%ae> / %cn <%ce>")
+
+    assert shown == ("alice <4242+alice@users.noreply.github.com> / "
+                     "alice <4242+alice@users.noreply.github.com>"), shown
+
+
 def test_sync_and_push_ignores_untracked_files(home: Path, remote_and_clone):
     """An untracked stray does not block pull --rebase or push — measured, not assumed."""
     _, _, clone = remote_and_clone

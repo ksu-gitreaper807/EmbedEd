@@ -60,7 +60,8 @@ KNOWN_CAUSES = (
     ("cannot pull with rebase: You have unmerged files",
      "a previous rebase stopped on a conflict; `git rebase --abort` and retry"),
     ("there is already a rebase-merge directory",
-     "an interrupted rebase is still in progress; `git rebase --abort`"),
+     "an interrupted rebase is still in progress and HEAD is detached; `git rebase --abort` "
+     "(then re-point the branch — see COLAB.md)"),
     ("empty ident name",
      "git identity is unset; set user.name / user.email, or pass a token and it is derived "
      "from the token's account"),
@@ -133,6 +134,11 @@ class Git:
     def run(self, *args: str, check: bool = True, stdin: str | None = None,
             timeout: int = 600) -> subprocess.CompletedProcess:
         env = dict(os.environ)
+        # a kernel with GIT_AUTHOR_*/GIT_COMMITTER_* exported silently overrides the identity we
+        # just configured (seen on a VM: commits authored by `colab-vm <colab-vm@local>`)
+        for name in list(env):
+            if name.startswith(("GIT_AUTHOR_", "GIT_COMMITTER_")):
+                del env[name]
         env.update(GIT_TERMINAL_PROMPT="0", GIT_PAGER="cat", GIT_ASKPASS="echo", PAGER="cat")
         proc = subprocess.run(["git", *args], cwd=self.repo, input=stdin,
                               capture_output=True, text=True, env=env, timeout=timeout)
