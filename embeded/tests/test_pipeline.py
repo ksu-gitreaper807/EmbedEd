@@ -92,3 +92,14 @@ def test_measurements_written(fx):
     assert "Phase 0 — measured numbers" in txt and "recommended" not in txt.splitlines()[0]
     tl = json.loads((fx.tmp / "artifacts" / "token_lengths.json").read_text())
     assert tl["recommended_max_len"] in (256, 512) and tl["p99"] >= tl["p50"]
+
+
+def test_semantic_mining_without_embeddings_says_what_to_run(fx):
+    """A fresh VM has no corpus_emb.npy: the failure must name the stage that
+    produces it, not surface as a numpy FileNotFoundError."""
+    import pytest
+    from embeded import negatives as NG
+    with pytest.raises(SystemExit) as e:
+        NG.main(["--strategies", "semantic", "--k", "3"])
+    msg = str(e.value)
+    assert "corpus_emb.npy" in msg and "embeded.mining.semantic_index" in msg

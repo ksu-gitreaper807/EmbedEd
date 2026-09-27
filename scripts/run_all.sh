@@ -20,10 +20,19 @@ $PY -m embeded.data.prepare_data --hf --verify-spec
 $PY -m embeded.mining.semantic_index            # GPU here; all-fragment embeddings
 $PY -m embeded.negatives --strategies random,bm25,semantic
 $PY -m pytest -q embeded/tests                  # §7.2 adversarial test + pipeline
-$PY -m embeded.hardcheck                         # gate G1: C1 < C2 <= C3, visible gap
+$PY -m scripts.hardness_diagnostics             # scale of the space + percentiles (no verdict)
+$PY -m embeded.hardcheck                         # gate G1, rule D1: C1 < C2 <= C3 and d(C1->C2) >= 0.5
 
-# --- Phase 2+ (TODO, wired in later) ----------------------------------------
-# $PY -m embeded.train --condition C1 --seed 13 ...   (18 runs)
-# $PY -m embeded.evaluate ; $PY -m embeded.generalize
-# $PY -m embeded.visualize ; tables + limitations first (FINAL_SPEC §12)
-echo "Phase 0/1 complete — see report/measurements.md (commit it)."
+# --- Phase 2: main experiment (PHASE2_PLAN) ---------------------------------
+# Entry criteria first: G1 passing, artifacts verified, and the blind 50+50
+# audit scored. Then one run per cell — each is idempotent and resumes from its
+# own checkpoint, so a disconnect costs one run, not the batch.
+$PY -m embeded.train --condition C1 --seed 13 --smoke    # harness check, ~3 min
+for c in C1 C2 C3; do for s in 13 14 15; do
+  $PY -m embeded.train    --condition $c --seed $s
+  $PY -m embeded.evaluate --condition $c --seed $s
+done; done
+$PY -m embeded.evaluate --condition C0                  # untuned baseline, evaluated once
+$PY -m embeded.evaluate --results-table                 # rebuilds report/measurements.md
+# Phase 3+ (TODO): $PY -m embeded.generalize ; $PY -m embeded.visualize
+echo "done — see report/measurements.md (commit it)."

@@ -5,8 +5,8 @@ Running log for the Phase 0 / Phase 1 work. **Facts (measured numbers) and infer
 `report/measurements.md` and the Colab outputs of 2026-09-26; the report file is the source
 of truth if the two ever disagree.
 
-*Last updated 2026-09-26 · branch `arena/01a0dc7d-embeded` · PR
-[#6](https://github.com/ksu-gitreaper807/EmbedEd/pull/6) (open, unmerged) · tip `4146485`.*
+*Last updated 2026-09-27 · branch `arena/01a0e257-embeded` · Phase 2 entry criterion 1 closed
+(decision D1) and the Phase 2 runner implemented.*
 
 ---
 
@@ -21,15 +21,16 @@ of truth if the two ever disagree.
 | 0.7 s′ acquisition (**s′ gate**) | ✅ PASS | 4,600 pairs, 23 functionalities |
 | 1.0 all-fragment embeddings | ✅ ran once (245 s, T4) — **artifact lost with the VM, must be regenerated** | `corpus_emb.npy` 8,063 × 768 |
 | 1.1 mining C1 / C2 / C3 | ✅ ran once — **artifacts lost, regenerate** | 32,000 triples per condition |
-| 1.2 tests | ✅ | 36 passed at `4146485` (29 at the time of the mining run) |
-| 1.3 **Gate G1** hardness check | ❌ **FAIL** as defined | C1→C2 gap +0.0146 < margin 0.02 |
+| 1.2 tests | ✅ | 70 passed at `arena/01a0e257-embeded` (36 at `4146485`, 29 at the time of the mining run) |
+| 1.3 **Gate G1** hardness check | ❌ FAIL under the v1–v5 absolute margin → ✅ **PASS under decision D1** (`d = 0.614 ≥ 0.5`); the FAIL is kept verbatim | `report/measurements.md` G1 history; `hardcheck --recorded report/gate_g1/run_2026-09-26_phase01-v5.json` |
 | 1.4 hardness diagnostics + label-noise floors | ✅ measured | §2.6 |
 | 1.5 smoke run | ⏸ not run (harmless, but pointless before G1 is settled) | — |
-| 2.x **training** | ⛔ **blocked** by G1 (SCOPE P6-3) | — |
+| 2.0 Phase 2 runner (`embeded.train` / `embeded.evaluate`) | ✅ implemented + unit-tested offline | `embeded/{encoder,train,evaluate}.py`, 70 tests |
+| 2.x **training** | ⛔ **not run** — G1 no longer blocks it, but the artifacts must be regenerated (criterion 2) and the audit scored (criterion 4); needs a T4 | `PHASE2_PLAN.md` §2 |
 | 2.5 50 + 50 false-negative audit | 🛠 tooling ready, **pulled forward to before training** | `scripts/audit_sample.py` |
 
-Two decisions are open and must be recorded before any training (§4.2): the **gate rule** and
-**what to do about near-duplicate negatives**.
+One decision is still open (§4.2): **what to do about near-duplicate negatives** (D2). The
+**gate rule** (D1) was recorded on 2026-09-27 and is implemented.
 
 ---
 
@@ -207,25 +208,35 @@ itself when its artifacts are present (`COLAB.md`, *Resume protocol*).
 | anchor stream, exclusion, k | identical across C1/C2/C3 (tested) | `test_mining_invariants` |
 | s′ source | ASE '25 replication package, `bcb_v2_sampled_bf` | §2.3 |
 | G1 record | FAIL kept verbatim, run history from now on | SCOPE P6-3 transparency |
+| **G1 rule (D1)** | `C1 < C2 ≤ C3` **and** `d(C1→C2) ≥ HARDNESS_D_MIN = 0.5`, percentiles reported; `HARDNESS_MARGIN = 0.02` reported but not decisive | §2.5/§2.6 + I1/I3; recorded 2026-09-27 |
+| Phase 2 loss | explicit-triplet cosine hinge, `TRIPLET_MARGIN = 0.10`, AdamW `LR = 2e-5`, one loss for all conditions | SCOPE P1-4; PHASE2_PLAN §3.2 |
+| threshold policy | F1-maximising cosine threshold on **validation**, applied unchanged to test | PHASE2_PLAN §3.3 |
+| settings version | `phase01-v6` (gate rule change; artifacts regenerate bit-identically, mining unchanged) | §4.2 D1 |
 
 ### 4.2 Open — owner's call, to be recorded before training
 
-**D1 — the gate rule.** SCOPE P1-6 requires `C1 < C2 ≤ C3` "with a visible gap"; the 0.02
+**D1 — the gate rule. ✅ RECORDED 2026-09-27: option (b) adopted.** SCOPE P1-6 requires `C1 < C2 ≤ C3` "with a visible gap"; the 0.02
 absolute margin is an implementation choice that ignores the scale of the space (I1, I3).
 Options: (a) keep 0.02 and change the mining until it passes (sanctioned by the plan, but
 pushes the *lexical* condition to look *semantic*, and the ceiling of the ruler makes it
 unlikely); (b) re-operationalise "visible gap" scale-free — **recommended: standardised gap
 `d(C1→C2) ≥ 0.5`, ordering kept, percentiles reported alongside**, committed once with the
-rationale and the FAIL left in the history. Current numbers pass (b) with d = 0.63.
+rationale and the FAIL left in the history. Current numbers pass (b) with d = 0.63. **Implemented as specified**: `hardcheck.evaluate_gap`
+is the verdict, `standardized_gap` is the single definition shared with the diagnostics,
+`HARDNESS_MARGIN` is still computed and written into every recorded run, the 2026-09-26 FAIL is
+untouched, and `hardcheck --recorded` re-judges the recorded run offline (d = 0.614 on the
+1,000-anchor gate sample; 0.63 on the full 32,000-negative diagnostics run). Uncertainty is
+bootstrapped over **anchors**.
 
 **D2 — near-duplicate negatives (I5, I6).** Options: (a) keep the mining as specified and
 *measure* the false-negative rate (the plan's default); (b) extend the exclusion to drop
 near-verbatim candidates from all conditions. **Recommended: (a) now — run the blind 50 + 50
 audit before training; revisit (b) only if the audit shows a large rate (≳ 30 %) in C3.**
 
-Rules in force while these are open: no Phase 2 training (SCOPE P6-3), no fourth strategy
-(SCOPE P6-1), no quiet edits to `HARDNESS_MARGIN`, all three conditions re-mined together
-after any mining change.
+Rules in force while D2 is open: no fourth strategy (SCOPE P6-1), no quiet edits to
+`HARDNESS_MARGIN` (it is now reported rather than decisive, and any change to it still has to be
+recorded), all three conditions re-mined together after any mining change. Training is no longer
+blocked by G1 but still requires PHASE2_PLAN §2 criteria 2, 4, 5 and 6.
 
 ---
 
@@ -250,6 +261,8 @@ after any mining change.
 | Measured numbers | `report/measurements.md` (Phase 0, 0.5, s′, G1 history, diagnostics when re-run) |
 | Generated artifacts checkpoint | HF dataset repo `Kusshal/Embed` — currently Phase 0 artifacts + report (10 files); embeddings / triples to be added on the next GPU run |
 | Diagnostics | `scripts/hardness_diagnostics.py` → `hardness_diagnostics.json` + report section |
+| Gate G1 logic, rule + replay | `embeded/hardcheck.py` (`evaluate_gap`, `bootstrap_d`, `--recorded`); recorded run `report/gate_g1/run_2026-09-26_phase01-v5.json`; machine-readable history `artifacts/gate_runs.json` |
+| Phase 2 runner | `embeded/encoder.py` (one pooling path), `embeded/train.py`, `embeded/evaluate.py` → `artifacts/runs/<cond>_<seed>/{checkpoint.pt,run_config.json,train_log.jsonl,metrics.json,eval_metrics.json,predictions.npz}` |
 | Audit | `scripts/audit_sample.py` → `artifacts/audit/{audit_pairs.md, audit_labels.csv, audit_key.csv, audit_result.json}` |
 | Notebook | `notebooks/Phase0_Phase1_Colab.ipynb` (sequencer only; all logic in `embeded/`) |
 
@@ -257,8 +270,16 @@ after any mining change.
 
 ## 7. Next steps
 
-1. Get a T4 (`Runtime ▸ Change runtime type`), confirm `cuda=True` in cell 2.
-2. Cells 0 → 1 → 2 → 5 (`[cache]`) → 11 (`36 passed`) → 13 → 14 → 15 (FAIL again, recorded as run 2; diagnostics + checkpoint run automatically).
-3. `python -m scripts.audit_sample make`; label the 100 pairs blind (~2 h, no GPU needed); `python -m scripts.audit_sample score`.
-4. Record D1 and D2 (settings + `measurements.md`), re-run `hardcheck` under the chosen rule.
-5. Smoke run (cell 17), then Phase 2: 3 conditions × 3 seeds ≈ 6 GPU-hours.
+1. Get a T4 (`Runtime ▸ Change runtime type`), confirm `cuda=True` in cell 2, and check out
+   `arena/01a0e257-embeded` (Phase 2 notebook cell 0 already points at it).
+2. Cells 0 → 1 → 2 → 5 (`[cache]`) → 11 (`70 passed`) → 13 (encode, ~4 min GPU) → 14 (mine all
+   three conditions, ~15–30 min CPU) → 15 (diagnostics + gate under D1). Cell 15 must reproduce
+   the recorded PASS with a real measurement; the run is appended to the G1 history next to the
+   2026-09-26 FAIL, with the legacy margin reading beside it.
+3. `python -m scripts.audit_sample make`; label the 100 pairs blind (~2 h, no GPU needed);
+   `python -m scripts.audit_sample score`; record D2 with the observed rates.
+4. Smoke run: `python -m embeded.train --condition C1 --seed 13 --smoke` (trains, reloads the
+   checkpoint, evaluates and prints metrics).
+5. Phase 2: `train` + `evaluate` for C1/C2/C3 × seeds 13/14/15 (≈ 6 GPU-h), then
+   `evaluate --condition C0` and `evaluate --results-table`; append the real entries to
+   `PHASE2_PLAN.md` §6.

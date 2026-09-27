@@ -6,7 +6,7 @@ bump VERSION so artifact hashes make staleness obvious.
 import os
 from pathlib import Path
 
-VERSION = "phase01-v5"   # v5: MAX_LEN 256 -> 512 from the measured Phase 0.4 token lengths (p50=474, p99=5944); training sizing measured on the T4 (BATCH 8, TRAIN_PAIRS_CAP 32k, fp16 AMP — fp32 OOMs); v4: torch policy = Colab platform build (no torch pin); v3: env refresh for Colab py3.13 (transformers 4.46.3 / scikit-learn 1.6.1 / gradio 5.49.1); v2: canonical data.jsonl fragment ids (8,063 unique texts); v1 derived ids from pairs
+VERSION = "phase01-v6"   # v6: gate G1 re-operationalised (decision D1, 2026-09-27) — the verdict is now the scale-aware rule C1 < C2 <= C3 AND standardised gap d(C1->C2) >= HARDNESS_D_MIN; HARDNESS_MARGIN is kept and REPORTED but is no longer the verdict. No mining or encoding input changed, so artifacts regenerate bit-identically; the bump makes every recorded run say which rule judged it. v5: MAX_LEN 256 -> 512 from the measured Phase 0.4 token lengths (p50=474, p99=5944); training sizing measured on the T4 (BATCH 8, TRAIN_PAIRS_CAP 32k, fp16 AMP — fp32 OOMs); v4: torch policy = Colab platform build (no torch pin); v3: env refresh for Colab py3.13 (transformers 4.46.3 / scikit-learn 1.6.1 / gradio 5.49.1); v2: canonical data.jsonl fragment ids (8,063 unique texts); v1 derived ids from pairs
 
 ROOT = Path(__file__).resolve().parent.parent
 # env overrides let tests and Colab/HF sync relocate artifacts/report
@@ -48,8 +48,28 @@ EMBED_DIM = 768
 
 # --- mining -----------------------------------------------------------------
 K_NEGATIVES = 20                   # same k for ALL conditions (SCOPE P2-6)
-HARDNESS_MARGIN = 0.02             # "visible gap" for C1 < C2 (SCOPE P1-6)
+
+# --- gate G1: the "visible gap" rule (SCOPE P1-6 / P6-3; decision D1) --------
+# D1 was recorded 2026-09-27 (PROGRESS §4.2, PHASE2_PLAN §2 item 1): "visible
+# gap" is scale-aware, because this untuned encoder's whole usable cosine range
+# is ~0.028 wide (random corpus pair 0.9603 vs nearest neighbour 0.9884,
+# measurements §2.6). An absolute 0.02 margin asks C2 to cover ~75% of that
+# ruler and FAILED on the 2026-09-26 mining run (+0.0146), which is kept
+# verbatim in report/measurements.md. The verdict now is:
+#     C1 < C2 <= C3   AND   d(C1->C2) >= HARDNESS_D_MIN
+# with the corpus-percentile diagnostics reported alongside, so a pass can be
+# read without re-deriving the scale. HARDNESS_MARGIN is NOT the verdict any
+# more but is still computed and recorded on every run: a rule change must stay
+# visible next to the FAIL that prompted it (SCOPE P6-3), and quietly deleting
+# the old number is exactly what the anti-hindsight rule forbids.
+HARDNESS_D_MIN = 0.50              # standardised C1->C2 gap required to pass G1
+HARDNESS_MARGIN = 0.02             # LEGACY absolute margin (v1-v5 verdict): reported, not decisive
 HARDNESS_CHECK_ANCHORS = 1_000     # anchors sampled (seeded) for the hardness check
+HARDNESS_BOOTSTRAP = 2_000         # resamples for the d CI — over ANCHORS, never over
+                                   # individual negatives: one anchor contributes k
+                                   # correlated negatives (PHASE2_PLAN §2 item 3)
+HARDNESS_CI = 0.95
+HARDNESS_RULE = (f"D1 scale-aware: C1 < C2 <= C3 and d(C1->C2) >= {HARDNESS_D_MIN}")
 
 # --- training sizing: MEASURED, Phase 0.5 on the Colab T4, 2026-09-26 -------
 # scripts/phase0_throughput.py, fp16 AMP, 512 tokens (report/measurements.md):
@@ -79,6 +99,32 @@ MAX_LEN = 512
 AMP_DTYPE = "float16"              # torch.autocast dtype; "float32" disables AMP
 GRAD_CHECKPOINT = False            # recompute activations in backward: far less memory,
                                    # ~30% slower; turn on only if no useful batch fits at MAX_LEN
+
+# --- Phase 2 objective, one for every condition (SCOPE P1-4, PHASE2_PLAN §3.2) -
+# Explicit-triplet margin loss on the mined negative: the independent variable
+# IS the specific negative, so the objective must consume it directly rather
+# than meet it through in-batch composition. Frozen here — never tuned per
+# condition (a per-condition margin would be a second manipulated variable).
+# Evaluated with the same mean-pooled cosine as C0, so training and scoring
+# share one similarity definition (PHASE2_PLAN §3.2).
+LOSS = "triplet"
+TRIPLET_MARGIN = 0.10              # cosine hinge: max(0, margin + cos(a,n) - cos(a,p))
+WEIGHT_DECAY = 0.01
+WARMUP_STEPS = 100                 # linear warmup then linear decay to 0 over the run
+GRAD_CLIP = 1.0                    # 0 disables; fp16 on a T4 needs *some* ceiling
+SEEDS = (SEED, SEED + 1, SEED + 2)  # 13, 14, 15 — PHASE2_PLAN §3.1
+RUNS_SUBDIR = "runs"               # ARTIFACTS/runs/<condition>_<seed>/{checkpoint,config,metrics}
+# Threshold policy (PHASE2_PLAN §3.3): the F1-maximising cosine threshold on the
+# VALIDATION split, per condition/model, applied unchanged to test. Test scores
+# never feed back into it.
+THRESHOLD_POLICY = "max_f1_on_valid"
+# Smoke test sizing: exercises load -> forward/backward -> checkpoint save/reload
+# -> validation scoring -> test metrics without pretending to be a result.
+SMOKE_TRIPLES = 24
+SMOKE_EPOCHS = 1
+SMOKE_MAX_LEN = 64
+SMOKE_PAIRS = 64
+EVAL_BATCH = 64                    # pairs per forward batch at evaluation (no gradients)
 
 # --- generalisation (FINAL_SPEC §9.3, Route A) -------------------------------
 SPRIME_DOI = "10.5281/zenodo.17238379"

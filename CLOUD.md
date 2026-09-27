@@ -31,11 +31,12 @@ Rules that follow from that:
 | Throughput test → freezes `MAX_LEN`/`CAP`/`BATCH`/`EPOCHS` | 0.5 | GPU (T4) | cloud | ~5 min | printed settings (commit to `settings.py`) |
 | Corpus encode (base model, ONCE) | 1 | GPU (T4) | cloud | ~15–30 min | `corpus_emb.npy`, `corpus_emb.sha1` |
 | Mining C1/C2/C3 (random / BM25 / semantic top-k) | 1 | CPU (matmul on cached embeddings) | cloud (or local) | ~5 min | `triples_C{1,2,3}.jsonl`, BM25 index |
-| **Gate G1: hardness check** | 1 | GPU (small encode) | cloud | ~5–10 min | `hardcheck.json` — **FAIL ⇒ stop, fix mining** |
+| **Gate G1: hardness check** | 1 | CPU (reads cached embeddings) | cloud | ~1–2 min | `gate_runs.json` + a run appended to the G1 section of `report/measurements.md` — **FAIL ⇒ stop, fix mining** |
 | Smoke run (15 steps) | 1.5 | GPU (trivial) | cloud | ~3 min | log only |
-| **Training: 9 main + 9 generalisation runs** | 2–3 | GPU (T4) | cloud, batched | 1–2 h each (measured) | `runs/{condition}_{seed}/` checkpoint + `train.log` + `metrics.json` |
-| Eval passes: encode test/s′ fragments per fine-tuned model | 2–3 | GPU (T4) | cloud, batched | ~15–25 min per model × 6 | `scores/{condition}_{set}.npy` + `threshold.json` |
-| Scoring: threshold-on-val, F1, P/R, MAP@R, Δ per condition | 2–3 | CPU (numpy) | **local** | seconds | `report/tables/*.csv` |
+| **Training: 9 main runs** (`embeded.train`) | 2 | GPU (T4) | cloud, one cell per run | ~40 min each (measured 13.5 triples/s) | `runs/{condition}_{seed}/` `checkpoint.pt` + `run_config.json` + `train_log.jsonl` + `metrics.json` |
+| Eval passes: threshold on validation, then test once (`embeded.evaluate`) | 2 | GPU (T4) | cloud, batched | ~10–20 min per model | `runs/{condition}_{seed}/` `eval_metrics.json` + `predictions.npz` + `eval_config.json` |
+| Main-results table (F1, P/R, MAP@R, mean/spread) | 2 | CPU (numpy) | **local** | seconds | `## Phase 2 — main results` in `report/measurements.md` |
+| Generalisation on s′ (`embeded.generalize`) | 3 | GPU (T4) | cloud | ~15 min per model | Δ per condition (Phase 3) |
 | False-negative labelling (50+50 judged by hand) | 2 | human + CPU | **local** | ~2 h | rubric + sheet (committed) |
 | UMAP figure, tables, paper | 3–4 | CPU | **local** | — | `report/`, paper |
 
@@ -138,26 +139,32 @@ python -m scripts.hf_artifacts push --if-configured --include-report
 
 **S2–S4 — training** (the bulk; one cell per run so a death costs one run)
 ```bash
-# Phase 2 code (lands with train.py); idempotent — skips if runs/C1_s13/metrics.json exists
-for c in C1 C2 C3; do for s in 0 1 2; do
-  python -m embeded.train.train --condition $c --seed-offset $s
+# idempotent: skips a run whose metrics.json matches the current config
+# fingerprint, resumes an interrupted one from its checkpoint
+for c in C1 C2 C3; do for s in 13 14 15; do
+  python -m embeded.train    --condition $c --seed $s
+  python -m embeded.evaluate --condition $c --seed $s
 done; done
-# generalisation (Phase 3, smaller cap):
-for c in C1 C2 C3; do for s in 0 1 2; do
-  python -m embeded.train.train --condition $c --seed-offset $s --sprime --holdout-k 3
-done; done
+python -m embeded.evaluate --condition C0        # untuned baseline, once
+python -m embeded.evaluate --results-table       # rebuild the main-results section
+# generalisation on s′ (Phase 3 — NOT implemented yet; `embeded.generalize`):
+# for c in C1 C2 C3; do for s in 13 14 15; do
+#   python -m embeded.generalize --condition $c --seed $s --holdout-k 3
+# done; done
 ```
 Ordering: main table first (it's the deliverable); generalisation second.
 If a session runs low, stop between runs — the next session skips finished
 ones.
 
-**S5 — eval** (GPU ~2–4 h)
+**S5 — nothing separate to run.** `embeded.evaluate` encodes the split
+fragments, selects the validation threshold and scores test in one pass per
+run, so it runs inside the S2–S4 loop (and `--condition C0` for the untuned
+baseline). It writes `predictions.npz`, so the table can be rebuilt later
+without a GPU:
 ```bash
-# Phase 2–3 code; one forward pass per (model, fragment-set); C0 reuses the
-# cached base-model embeddings — no GPU for it
-python -m embeded.eval.evaluate --encode-only            # writes scores/*.npy to EMBEDED_ARTIFACTS
+python -m embeded.evaluate --results-table               # local CPU, seconds
 ```
-Then **disconnect the T4**. Everything after S5 is local CPU (§3).
+Then **disconnect the T4**. Everything after the runs is local CPU (§3).
 
 ---
 

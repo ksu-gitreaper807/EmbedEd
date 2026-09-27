@@ -17,26 +17,18 @@ import numpy as np
 
 def encode_corpus(texts: list[str], *, model_id: str, max_len: int,
                   batch_size: int = 32, device: str | None = None) -> np.ndarray:
-    """(n, 768) float32, L2-normalised. Order matches `texts`."""
-    import torch
-    from transformers import AutoModel, AutoTokenizer
+    """(n, 768) float32, L2-normalised. Order matches `texts`.
 
-    dev = device or ("cuda" if torch.cuda.is_available() else "cpu")
-    tok = AutoTokenizer.from_pretrained(model_id)
-    model = AutoModel.from_pretrained(model_id).to(dev).eval()
-    out = np.zeros((len(texts), model.config.hidden_size), dtype=np.float32)
-    with torch.no_grad():
-        for s in range(0, len(texts), batch_size):
-            enc = tok(texts[s:s + batch_size], padding=True, truncation=True,
-                      max_length=max_len, return_tensors="pt").to(dev)
-            m = model(**enc).last_hidden_state                       # (b, t, h)
-            mask = enc["attention_mask"].unsqueeze(-1).float()
-            v = (m * mask).sum(1) / mask.sum(1).clamp(min=1e-6)      # mean pooling
-            v = torch.nn.functional.normalize(v, dim=1)
-            out[s:s + batch_size] = v.float().cpu().numpy()
-            if s % (batch_size * 50) == 0:
-                print(f"encoded {s + batch_size}/{len(texts)}")
-    return out
+    Delegates to `embeded.encoder` — the single pooling/truncation path shared
+    with Phase 2 training and evaluation (PHASE2_PLAN §3.2). fp32, no autocast:
+    exactly what produced the recorded Phase 1 `corpus_emb.npy`."""
+    from ..encoder import encode_texts, load_encoder
+
+    tok, model, dev = load_encoder(model_id, device)
+    model.eval()
+    return encode_texts(model, tok, texts, max_len=max_len, device=dev,
+                        batch_size=batch_size, amp_dtype=None,
+                        progress_every=batch_size * 50)
 
 
 def save_corpus_emb(emb: np.ndarray, corpus_ids: list[int], *,

@@ -129,7 +129,14 @@ def main(argv=None):
         from .mining.bm25_index import BM25Index
         bm25 = BM25Index([frags[i] for i in all_ids])
     if "semantic" in strategies:
+        from .hardcheck import missing_artifact_message
         from .mining.semantic_index import SemanticIndex, load_corpus_emb
+        for name in ("corpus_emb.npy", "corpus_emb.meta.json"):
+            if not (S.ARTIFACTS / name).exists():
+                raise SystemExit(missing_artifact_message(
+                    S.ARTIFACTS / name,
+                    hint="encode the corpus first (GPU, ~4 min on a T4): "
+                         "python -m embeded.mining.semantic_index"))
         emb, meta = load_corpus_emb()
         semantic = SemanticIndex(emb, all_ids)
         print("semantic index:", meta["model"], f"max_len={meta['max_len']}",

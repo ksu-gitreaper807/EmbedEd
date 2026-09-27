@@ -468,3 +468,12 @@ Frozen in `settings.py` as `TRAIN_PAIRS_CAP = 32_000` (= 1,600 anchors × k=20 =
 - **verdict: FAIL** — C1→C2 gap +0.0146 < margin 0.02 (mining produced equally easy negatives)
 
 Context recorded at the time: ordering C1 < C2 ≤ C3 holds; the C1→C2 gap is ≈70 standard errors (n = 20,000) and d ≈ 0.6, but the full C1→C3 range of this untuned, anisotropic space is only 0.028, so the absolute 0.02 margin (set in `settings.py` before the spread was known) asks C2 to cover ~75% of it. Per SCOPE P6-3 training is blocked; next step is `python -m scripts.hardness_diagnostics` (percentile-rank view), then either a mining fix or an explicit, documented re-operationalisation of "visible gap" — decided before any training, with this run kept here either way.
+
+### run 2026-09-26 measurement, re-evaluated under the rule now in force — version `phase01-v6`, rule: D1 scale-aware: C1 < C2 <= C3 and d(C1->C2) >= 0.5
+
+- C1: mean cos(anchor, negative) = 0.96068 (sd 0.026, n = 20000)
+- C2: mean cos(anchor, negative) = 0.97526 (sd 0.022, n = 20000)
+- C3: mean cos(anchor, negative) = 0.98845 (sd 0.007, n = 20000)
+- **no new measurement**: this re-judges the recorded run `2026-09-26` (version `phase01-v5`, 1000 anchors × k) under the rule now in force. Anchor-level resampling is impossible from a summary record, so no CI.
+- legacy absolute-margin rule (0.02): FAIL — C1→C2 gap +0.0146 < margin 0.02 (mining produced equally easy negatives) (reported for the record; not the verdict since v6)
+- **verdict: PASS** — order C1 < C2 <= C3 holds (0.9607 < 0.9753 <= 0.9885) and d(C1→C2) = 0.614 >= 0.5 (absolute gap +0.0146)
