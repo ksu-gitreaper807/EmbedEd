@@ -5,8 +5,9 @@ Running log for the Phase 0 / Phase 1 work. **Facts (measured numbers) and infer
 `report/measurements.md` and the Colab outputs of 2026-09-26; the report file is the source
 of truth if the two ever disagree.
 
-*Last updated 2026-09-27 · branch `arena/01a0e257-embeded` · Phase 2 entry criterion 1 closed
-(decision D1) and the Phase 2 runner implemented.*
+*Last updated 2026-09-28 · branch `arena/01a0e714-embeded` · `PHASE3_PLAN.md` and
+`notebooks/Phase3_Colab.ipynb` reviewed against the tree (no code changed yet); Phase 3 remains
+blocked on Phase 2's nine runs and on decisions D3–D6.*
 
 ---
 
