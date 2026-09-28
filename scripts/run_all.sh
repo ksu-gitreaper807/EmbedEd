@@ -34,5 +34,20 @@ for c in C1 C2 C3; do for s in 13 14 15; do
 done; done
 $PY -m embeded.evaluate --condition C0                  # untuned baseline, evaluated once
 $PY -m embeded.evaluate --results-table                 # rebuilds report/measurements.md
-# Phase 3+ (TODO): $PY -m embeded.generalize ; $PY -m embeded.visualize
+
+# --- Phase 3: generalisation on s′ + the figure (PHASE3_PLAN) ------------------
+# NOT live yet: embeded/generalize.py, embeded/visualize.py and demo/app.py are the
+# Phase 3 code deliverables. Same commands, same order as notebooks/Phase3_Colab.ipynb
+# (the CLI contract for those modules is that notebook's second cell) — keep the two in
+# step, and uncomment only when the modules land.
+# $PY -m scripts.fetch_sprime                               # s′ (skips size-verified files)
+# $PY -m embeded.generalize --census --holdout-k 3          # D4: measured holdout, before any F1
+# $PY -m embeded.generalize --mine --holdout-k 3 --k 20 --cap "<settings.SPRIME_TRAIN_CAP>"
+# $PY -m embeded.generalize --hardness --holdout-k 3        # gate G1s: exit 1 = FAIL -> stop
+# for c in C1 C2 C3; do for s in 13 14 15; do
+#   $PY -m embeded.generalize --condition $c --seed $s --holdout-k 3
+# done; done
+# $PY -m embeded.generalize --results-table
+# $PY -m embeded.visualize --panels C0,C1,C2,C3
+# $PY -m demo.app --check
 echo "done — see report/measurements.md (commit it)."
