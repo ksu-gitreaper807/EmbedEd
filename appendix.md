@@ -205,6 +205,58 @@ The indexes rank all canonical fragments and the final candidate-cleaning step r
 the train-safe mining corpus. The semantic search is an exact matrix multiplication; FAISS or
 another approximate index is deliberately out of scope because the corpus is small enough.
 
+### What “mining” means in this project
+
+**Mining** means deliberately searching the available fragment pool to construct useful training
+examples. It does not mean creating new Java code or discovering a new dataset. For anchor `A`,
+EmbedEd:
+
+1. starts with a candidate pool;
+2. ranks or samples candidates with random, BM25, or semantic selection;
+3. removes `A`, known labelled clones, and test-unsafe fragments; and
+4. keeps `k=20` clean candidates, padding from the safe corpus if necessary.
+
+For example, selecting `N_semantic` because it is close to `A` in the base model's embedding
+space is **semantic negative mining**. Selecting `N_random` without a similarity ranking is
+**random negative mining**. Mining is therefore a data-preparation method that determines which
+negative examples the model sees; it is not itself a model or an evaluation metric.
+
+### Benchmarking and comparison methods
+
+| Term | Meaning | Running example |
+|---|---|---|
+| **Benchmark** | A fixed dataset, task, split, and metric used to compare systems fairly. | CodeXGLUE's BigCloneBench clone-pair splits plus F1 and MAP@R form the main benchmark. |
+| **Benchmark dataset** | The data portion of a benchmark, including its labels and standard splits. | The 9,126-line fragment file and its train/validation/test pair files. |
+| **Benchmark task** | The prediction problem being measured. | Given two Java fragments, predict whether they are clones. |
+| **Benchmarking** | Running one or more systems under the same benchmark task and evaluation protocol, then comparing their measurements. | Run C0, C1, C2, and C3 on the same test pairs and compare F1/MAP@R. |
+| **Benchmarking method / evaluation protocol** | The exact procedure used to produce a benchmark result: data split, preprocessing, model, threshold policy, metric, and reporting rules. | Choose the threshold on validation, freeze it, score test once, and report F1, precision, recall, and MAP@R. |
+| **Baseline** | A reference system against which changes are judged. | C0 is the untuned GraphCodeBERT baseline. |
+| **Off-the-shelf baseline** | A pretrained model used without task-specific fine-tuning. | Encode `A` and `P` with the original GraphCodeBERT and score their cosine. |
+| **Trained comparison condition** | A system trained under one controlled experimental choice. | C1, C2, and C3 use the same training recipe but different mined negatives. |
+| **Pair-classification benchmark** | A benchmark where each pair receives a binary clone/non-clone decision. | Apply a cosine threshold to `(A,P)` and `(A,N_bm25)`. |
+| **Ranking benchmark** | A benchmark where candidates are ordered by score and quality is measured by the position of positives. | Sort pairs by cosine and calculate MAP@R without selecting a threshold. |
+| **Standard/in-domain benchmark** | Evaluation on the same benchmark family and task distribution used to build the model. | CodeXGLUE test pairs measure ordinary BCB performance. |
+| **Generalisation benchmark** | Evaluation designed to test transfer to a different or held-out distribution. | Evaluate on functionality held out using BCB s′ and compare `F1_seen` with `F1_unseen`. |
+| **Comparative experiment** | A controlled comparison in which one declared factor changes and the others stay fixed. | The independent variable is the negative-selection method; the positive stream and loss stay fixed. |
+| **Ablation** | Removing or disabling one component to measure its contribution. | C0 removes fine-tuning; it is the project's baseline comparison, not a separate mining method. |
+| **Sanity check** | A plausibility check that catches an implementation or metric error before interpretation. | Compare the result with the published approximate CodeXGLUE CodeBERT F1 reference, without tuning on test. |
+| **Primary metric** | The metric chosen as the main answer to the research question. | F1 is primary. |
+| **Secondary metric** | A supporting metric used to check whether the conclusion depends on one scoring view. | MAP@R is secondary and threshold-free. |
+| **Fair comparison** | A comparison where every condition receives the same data policy, positive pairs, model path, and non-condition settings. | Do not give C2 different positives or a different threshold-selection rule than C1. |
+
+In the running example, a valid benchmark comparison looks like this:
+
+```text
+C0: original encoder, no fine-tuning        → score the fixed test pairs
+C1: fine-tune with random mined negatives   → same test pairs and protocol
+C2: fine-tune with BM25 mined negatives     → same test pairs and protocol
+C3: fine-tune with semantic mined negatives → same test pairs and protocol
+```
+
+The difference between their results can then be attributed mainly to the negative-selection
+strategy. If C2 used different positive pairs, a different loss, or a test-tuned threshold, the
+comparison would no longer be a clean benchmark of mining strategy.
+
 ### Hardness and the G1 gate
 
 | Term | Meaning | Running example |
