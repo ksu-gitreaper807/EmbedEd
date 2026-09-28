@@ -155,6 +155,14 @@ PINNED = [
     "scikit-learn==1.6.1",
     "gradio==5.49.1",
     "pytest==8.3.2",
+    # matplotlib: the Phase 3 figure (PHASE3_PLAN §4 — umap-learn was pinned but no
+    # plotting library was). Added to settings.PINNED, embeded/requirements.txt and
+    # the notebook %pip cells TOGETHER, which test_env_pins.py enforces; 3.9.4 is a
+    # py3.13-capable line with cp313 wheels (the same constraint gradio/scikit-learn
+    # were chosen for). Additive only: no mining/encoding input changed, so VERSION
+    # is deliberately NOT bumped — a bump would invalidate the mined triples and
+    # with them the fingerprint of every completed Phase 2 run.
+    "matplotlib==3.9.4",
 ]
 
 

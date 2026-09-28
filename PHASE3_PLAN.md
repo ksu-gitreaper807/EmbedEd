@@ -1,6 +1,8 @@
 # Phase 3 — Generalisation on unseen functionality, the figure, and the demo
 
-**Status:** planned, **nothing started**. Phase 3 is blocked on Phase 2: the main table holds one
+**Status:** planned, **nothing started**. The Colab sequencer now exists
+(`notebooks/Phase3_Colab.ipynb`, written 2026-09-28 against the CLI this plan assumes) but stops at
+each missing prerequisite, because Phase 3 is blocked on Phase 2: the main table holds one
 row (C0, F1 0.2572) and the nine trained runs do not exist yet.
 **Purpose:** answer RQ3 — does the *negative-selection strategy* change how much performance drops
 on functionality the model never trained on — and ship the two artefacts that make the result
@@ -250,3 +252,4 @@ artifacts, the outcome and any deviation from this plan.
 | Date | Work performed | Evidence / output | Status / deviations |
 |---|---|---|---|
 | 2026-09-28 | Plan written from the state of the repo; no Phase 3 code, data or runs | `PHASE3_PLAN.md` | Blocked on Phase 2 (§2 criterion 1) and on D3–D6 |
+| 2026-09-28 | **Colab sequencer written** (`notebooks/Phase3_Colab.ipynb`, 36 cells) as the thin driver for the CLI this plan assumes: preflight (Phase 2 finished) → s′ verify → D3–D6 recorded to `artifacts/phase3_decisions.json` + the report → census → mine → gate G1s → smoke → 9 runs → free transfer reading → generalisation table → figure → demo check → HF/GitHub push. Every cell checks its prerequisite and stops with one actionable line; the CLI contract lives in the notebook's second cell, so the modules (`embeded/generalize.py`, `embeded/visualize.py`, `demo/app.py`, `settings.SPRIME_TRAIN_CAP`) must match it or the notebook changes in the same commit. Also closed §4's dependency gap: `matplotlib==3.9.4` added to `settings.PINNED`, `embeded/requirements.txt` and both existing notebooks' `%pip` cells together (no `VERSION` bump — no pipeline input changed). | `notebooks/Phase3_Colab.ipynb`; `matplotlib` in the three pin sources, `test_env_pins.py` green | Still **no Phase 3 code, data or runs**: the notebook cannot produce a number until Phase 2's nine runs exist, D3–D6 are recorded, and the Phase 3 modules land. Deviations to note: the plan's §5 demo constraint "all four outcome modes" is given a concrete reading in D6 (2 × 2 of C0 × C_best decisions) and checked by `demo.app --check`; `scripts/run_all.sh` remains commented until the modules exist. |
