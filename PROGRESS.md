@@ -5,9 +5,10 @@ Running log for the Phase 0 / Phase 1 work. **Facts (measured numbers) and infer
 `report/measurements.md` and the Colab outputs of 2026-09-26; the report file is the source
 of truth if the two ever disagree.
 
-*Last updated 2026-09-28 · branch `arena/01a0e714-embeded` · `PHASE3_PLAN.md` and
-`notebooks/Phase3_Colab.ipynb` reviewed against the tree (no code changed yet); Phase 3 remains
-blocked on Phase 2's nine runs and on decisions D3–D6.*
+*Last updated 2026-09-28 · branch `arena/01a0e714-embeded` · the Phase 3 runner
+(`embeded/generalize.py` + tests, `SPRIME_TRAIN_CAP`) landed against the notebook's CLI contract;
+Phase 3 still produces no numbers until Phase 2's nine runs exist, s′ is fetched on a GPU machine,
+and D3–D6 are recorded.*
 
 ---
 
@@ -29,6 +30,7 @@ blocked on Phase 2's nine runs and on decisions D3–D6.*
 | 2.0 Phase 2 runner (`embeded.train` / `embeded.evaluate`) | ✅ implemented + unit-tested offline | `embeded/{encoder,train,evaluate}.py`, 70 tests |
 | 2.x **training** | ⛔ **not run** — G1 no longer blocks it, but the artifacts must be regenerated (criterion 2) and the audit scored (criterion 4); needs a T4 | `PHASE2_PLAN.md` §2 |
 | 2.5 50 + 50 false-negative audit | 🛠 tooling ready, **pulled forward to before training** | `scripts/audit_sample.py` |
+| 3.x Phase 3 runner (`embeded.generalize`) | ✅ implemented + unit-tested offline (17 tests; census → mine → gate G1s → smoke run → transfer → table all exercised on a synthetic s′) — **not run for real**: needs s′ + a GPU | `embeded/generalize.py`, `embeded/tests/test_generalize.py`, `PHASE3_PLAN.md` §9 |
 
 One decision is still open (§4.2): **what to do about near-duplicate negatives** (D2). The
 **gate rule** (D1) was recorded on 2026-09-27 and is implemented.

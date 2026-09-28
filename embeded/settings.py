@@ -129,6 +129,15 @@ EVAL_BATCH = 64                    # pairs per forward batch at evaluation (no g
 # --- generalisation (FINAL_SPEC §9.3, Route A) -------------------------------
 SPRIME_DOI = "10.5281/zenodo.17238379"
 SPRIME_HELDOUT_K = 3
+# Triples per condition for the Phase 3 generalisation runs (PHASE3_PLAN §3.4,
+# CLOUD.md §5.6): deliberately SMALLER than the main TRAIN_PAIRS_CAP — s′ has only
+# 4,600 pairs (~2,300 clone, ~2,000 clone pairs inside the 20 held-in functionalities
+# after the seen/unseen split), so the main 32,000 cap is unreachable anyway and the
+# "six smaller runs" language is intentional: never normalise the generalisation runs
+# to the main cap. 16,000 = up to 800 anchors × k=20 = 2,000 steps of 8 ≈ 20 min at
+# the measured 13.5 triples/s on the T4 → nine runs ≈ 3 GPU-h. Identical across
+# conditions and seeds; mining subsamples the anchor stream to it.
+SPRIME_TRAIN_CAP = 16_000
 
 # --- pinned environment for the shared Colab notebook -------------------------
 # torch is intentionally NOT in this list: the notebook uses Colab's preinstalled
