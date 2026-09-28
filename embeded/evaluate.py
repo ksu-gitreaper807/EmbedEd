@@ -134,7 +134,7 @@ def default_embed_fn(condition: str, seed: int, *, smoke: bool = False,
     if condition != "C0":
         # checked BEFORE the model loads: a missing run is a one-line message,
         # not a 500 MB download that ends in "checkpoint not found"
-        ck_path = run_dir(condition, seed) / CHECKPOINT_NAME
+        ck_path = run_dir(condition, seed, smoke=smoke) / CHECKPOINT_NAME
         if not ck_path.exists():
             raise SystemExit(f"missing {ck_path} — train it first: "
                              f"`python -m embeded.train --condition {condition} --seed {seed}`")
@@ -173,7 +173,7 @@ def evaluate(condition: str, seed: int = S.SEED, *, smoke: bool = False,
         raise SystemExit(missing_artifact_message(frag_path))
     frags = load_fragments()
 
-    out = run_dir(condition, seed)
+    out = run_dir(condition, seed, smoke=smoke)
     out.mkdir(parents=True, exist_ok=True)
     metrics_path, pred_path = out / EVAL_METRICS_NAME, out / PREDICTIONS_NAME
     cfg = {"condition": condition, "seed": int(seed), "smoke": bool(smoke),

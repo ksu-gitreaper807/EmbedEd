@@ -153,7 +153,8 @@ def test_train_smoke_runs_and_checkpoints(mined, encoder):
     # checkpoint save/reload round-trip is part of the harness
     assert m["checkpoint_reload"]["tensors"] > 0 and m["checkpoint_reload"]["step"] == m["steps"]
 
-    rd = TR.run_dir("C1", 13)
+    rd = TR.run_dir("C1", 13, smoke=True)
+    assert rd.name == "smoke_C1_13", "smoke must live in its own directory"
     assert (rd / TR.CHECKPOINT_NAME).exists() and (rd / TR.METRICS_NAME).exists()
     cfg = json.loads((rd / TR.CONFIG_NAME).read_text())
     assert cfg["loss"] == S.LOSS and cfg["triplet_margin"] == S.TRIPLET_MARGIN
@@ -170,7 +171,7 @@ def test_training_actually_moves_the_weights(mined, encoder):
     after = encoder[1].state_dict()
     changed = [k for k in before if not torch.equal(before[k], after[k])]
     assert m["steps"] > 0 and changed, "no parameter changed during training"
-    ck = torch.load(TR.run_dir("C2", 13) / TR.CHECKPOINT_NAME, weights_only=False)
+    ck = torch.load(TR.run_dir("C2", 13, smoke=True) / TR.CHECKPOINT_NAME, weights_only=False)
     assert torch.equal(ck["model"][changed[0]].cpu(), after[changed[0]].cpu())
 
 
@@ -191,7 +192,7 @@ def test_completed_run_is_skipped_and_stale_config_is_not(mined, encoder, capsys
 def test_resume_only_from_a_matching_checkpoint(mined, encoder, capsys):
     """A checkpoint is only a resume point if it belongs to this exact config."""
     TR.train("C1", 13, smoke=True, encoder=encoder, verbose=False)
-    rd = TR.run_dir("C1", 13)
+    rd = TR.run_dir("C1", 13, smoke=True)
     cfg = json.loads((rd / TR.CONFIG_NAME).read_text())
     ck = torch.load(rd / TR.CHECKPOINT_NAME, weights_only=False)
     fresh = tiny_model()
@@ -212,7 +213,7 @@ def test_interrupted_run_resumes_instead_of_restarting(monkeypatch, mined, encod
     monkeypatch.setattr(S, "SMOKE_EPOCHS", 2)
     full = TR.train("C1", 13, smoke=True, encoder=encoder, verbose=False)
     assert full["epochs"] == 2
-    rd = TR.run_dir("C1", 13)
+    rd = TR.run_dir("C1", 13, smoke=True)
     ck = torch.load(rd / TR.CHECKPOINT_NAME, weights_only=False)
     ck["epoch"], ck["step"] = 1, full["steps"] // 2          # as after epoch 1
     torch.save(ck, rd / TR.CHECKPOINT_NAME)
@@ -269,7 +270,7 @@ def test_evaluate_uses_the_validation_threshold_only(mined):
     assert 0.0 <= m["threshold"] <= 1.0 and m["test_map_at_r"] >= 0.0
 
     # recompute the threshold from the saved validation predictions: identical
-    z = np.load(TR.run_dir("C0", 13) / TR.PREDICTIONS_NAME)
+    z = np.load(TR.run_dir("C0", 13, smoke=True) / TR.PREDICTIONS_NAME)
     sel = EV.best_f1_threshold(z["valid_scores"], z["valid_labels"])
     assert sel["threshold"] == pytest.approx(m["threshold"])
     test = EV.precision_recall_f1(z["test_scores"], z["test_labels"], m["threshold"])
@@ -323,7 +324,7 @@ def test_default_embed_fn_loads_the_checkpoint(monkeypatch, mined, encoder):
     assert np.allclose(np.linalg.norm(vecs, axis=1), 1.0, atol=1e-5)   # L2-normalised
 
     # a checkpoint from another config must not be evaluated as this run
-    ck_path = TR.run_dir("C1", 13) / TR.CHECKPOINT_NAME
+    ck_path = TR.run_dir("C1", 13, smoke=True) / TR.CHECKPOINT_NAME
     ck = torch.load(ck_path, weights_only=False)
     ck["fingerprint"] = "deadbeefdeadbeef"
     torch.save(ck, ck_path)

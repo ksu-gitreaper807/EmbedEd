@@ -49,8 +49,14 @@ LOG_NAME = "train_log.jsonl"
 
 # --------------------------------------------------------------------- plumbing
 
-def run_dir(condition: str, seed: int) -> Path:
-    return S.ARTIFACTS / S.RUNS_SUBDIR / f"{condition}_{seed}"
+def run_dir(condition: str, seed: int, *, smoke: bool = False) -> Path:
+    """Smoke runs get their OWN directory (`runs/smoke_<condition>_<seed>`): a resumed
+    session may legitimately re-run the notebook's smoke cell after pulling finished
+    runs from the HF checkpoint, and a smoke file landing in a real run's directory
+    clobbers its metrics — the fingerprint check then demands a spurious retrain
+    (the 2026-09-28 Phase 3 incident, same class). Smoke can never touch a real run."""
+    name = f"smoke_{condition}_{seed}" if smoke else f"{condition}_{seed}"
+    return S.ARTIFACTS / S.RUNS_SUBDIR / name
 
 
 def set_seed(seed: int) -> None:
@@ -243,7 +249,7 @@ def train(condition: str, seed: int, *, smoke: bool = False, force: bool = False
 
     check_trainable(condition)
     require_training_artifacts(condition)
-    out = run_dir(condition, seed)
+    out = run_dir(condition, seed, smoke=smoke)
     out.mkdir(parents=True, exist_ok=True)
     cfg = run_config(condition, seed, smoke=smoke)
     cfg["fingerprint"] = fingerprint(cfg)
