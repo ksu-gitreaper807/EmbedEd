@@ -253,7 +253,8 @@ def test_smoke_run_writes_the_full_contract(mined, tiny_encoder):
     rc = GZ.main(["--condition", "C1", "--seed", "13",
                   "--holdout-k", str(S.SPRIME_HELDOUT_K), "--smoke"])
     assert rc == 0
-    out = GZ.sprime_run_dir("C1", 13)
+    out = GZ.sprime_run_dir("C1", 13, smoke=True)
+    assert out.name == "sprime_smoke_C1_13", "smoke must live in its own directory"
     for name in (GZ.CONFIG_NAME, GZ.METRICS_NAME, GZ.CHECKPOINT_NAME,
                  GZ.EVAL_METRICS_NAME, GZ.PREDICTIONS_NAME):
         assert (out / name).exists(), f"missing {name}"
@@ -279,7 +280,7 @@ def test_run_resume_and_cache_gating(mined, tiny_encoder):
     argv = ["--condition", "C1", "--seed", "13", "--holdout-k", str(S.SPRIME_HELDOUT_K),
             "--smoke"]
     assert GZ.main(argv) == 0
-    out = GZ.sprime_run_dir("C1", 13)
+    out = GZ.sprime_run_dir("C1", 13, smoke=True)
     first = (out / GZ.METRICS_NAME).read_text()
     assert GZ.main(argv) == 0                       # cached: fingerprint match
     assert (out / GZ.METRICS_NAME).read_text() == first
@@ -318,6 +319,26 @@ def test_transfer_transfer_dirs_never_enter_the_delta_table(mined, tiny_encoder)
     per_seed = block.split("### Transfer", 1)[0]
     assert "| C0 |" not in per_seed, "transfer-kind rows stay out of the Δ table"
     assert "### Transfer readings" in block and "| C0 | 13 |" in block
+
+
+def test_smoke_never_clobbers_a_real_run(mined, tiny_encoder):
+    """Incident 2026-09-28: a resumed VM pulls finished runs, re-runs the §7 smoke
+    cell, and the smoke files landing in sprime_C1_13 clobbered the real run's
+    metrics -> fingerprint mismatch -> spurious retrain. The smoke run must write
+    ONLY into its own directory and leave a real run byte-identical."""
+    real = GZ.sprime_run_dir("C1", 13)
+    real.mkdir(parents=True, exist_ok=True)
+    (real / GZ.METRICS_NAME).write_text(json.dumps({"fingerprint": "real", "steps": 2000}))
+    (real / "run_config.json").write_text(json.dumps({"fingerprint": "real"}))
+    before = {p.name: p.read_bytes() for p in real.iterdir()}
+
+    assert GZ.main(["--condition", "C1", "--seed", "13",
+                    "--holdout-k", str(S.SPRIME_HELDOUT_K), "--smoke"]) == 0
+
+    after = {p.name: p.read_bytes() for p in real.iterdir()}
+    assert after == before, "the smoke run touched the real run's directory"
+    smoke = GZ.sprime_run_dir("C1", 13, smoke=True)
+    assert (smoke / GZ.METRICS_NAME).exists() and (smoke / GZ.EVAL_METRICS_NAME).exists()
 
 
 # ------------------------------------------------------------------ results table

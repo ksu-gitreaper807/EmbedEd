@@ -36,7 +36,9 @@ on s′ with `embeded.hardcheck.evaluate_gap` — one definition, never assumed 
 from CodeXGLUE (PHASE3_PLAN §2 item 4).
 
 Runs land in `artifacts/runs/sprime_<condition>_<seed>/` (transfer readings in
-`sprime_transfer_<condition>_<seed>/`) so they can never collide with Phase 2. torch
+`sprime_transfer_<condition>_<seed>/`, smoke harness-checks in their own
+`sprime_smoke_<condition>_<seed>/` so re-running `--smoke` can never clobber a real
+run) so they can never collide with Phase 2. torch
 is imported lazily, and every encoder entry point is injectable, so the offline test
 suite runs without a GPU (`embeded/tests/test_generalize.py`).
 """
@@ -88,9 +90,15 @@ _CORPUS_NOTE = ("corpus: s′ (Kitsios et al., bcb_v2_sampled_bf, doi:10.5281/ze
 
 # --------------------------------------------------------------------- plumbing
 
-def sprime_run_dir(condition: str, seed: int) -> Path:
-    """Prefixed, so a generalisation run can never collide with a Phase 2 main run."""
-    return S.ARTIFACTS / S.RUNS_SUBDIR / f"sprime_{condition}_{seed}"
+def sprime_run_dir(condition: str, seed: int, *, smoke: bool = False) -> Path:
+    """Prefixed, so a generalisation run can never collide with a Phase 2 main run.
+    Smoke runs land in their OWN `sprime_smoke_*` directory: §7 is the one cell a
+    resumed VM re-runs after pulling finished runs from the HF checkpoint, and when
+    the smoke harness-check shared the real run's directory it clobbered the pulled
+    run's metrics → fingerprint mismatch → a spurious 20-minute retrain (incident
+    2026-09-28). A smoke run must never be able to touch a real run's files."""
+    name = f"sprime_smoke_{condition}_{seed}" if smoke else f"sprime_{condition}_{seed}"
+    return S.ARTIFACTS / S.RUNS_SUBDIR / name
 
 
 def sprime_transfer_dir(condition: str, seed: int) -> Path:
@@ -632,7 +640,7 @@ def train_sprime(condition: str, seed: int, *, holdout: list[str], cap: int,
             hint="mine first: python -m embeded.generalize --mine --holdout-k "
                  f"{S.SPRIME_HELDOUT_K} --k {S.K_NEGATIVES} --cap {cap}"))
     cap = int(summary["_run"]["cap"])
-    out = sprime_run_dir(condition, seed)
+    out = sprime_run_dir(condition, seed, smoke=smoke)
     out.mkdir(parents=True, exist_ok=True)
     cfg = sprime_run_config(condition, seed, holdout, cap=cap, smoke=smoke)
     cfg["fingerprint"] = fingerprint(cfg)
@@ -1068,7 +1076,7 @@ def main(argv=None) -> int:
         pair_frag_rows = pair_frag_rows_of(frame)
         eval_sprime(a.condition, a.seed, holdout=split["holdout"], split=split,
                     pair_frag_rows=pair_frag_rows, frags=frags,
-                    out_dir=sprime_run_dir(a.condition, a.seed),
+                    out_dir=sprime_run_dir(a.condition, a.seed, smoke=a.smoke),
                     kind="generalisation", smoke=a.smoke, force=a.force,
                     device=a.device, verbose=not a.quiet)
         if not a.smoke:
