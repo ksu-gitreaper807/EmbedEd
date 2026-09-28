@@ -29,6 +29,7 @@ up to 48%, average 31%), and no published answer for the strategy question.
 | [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) | The engineering plan: phases, modules, gates, run matrix, and the deck-vs-spec fixes | After the spec, before writing code |
 | [`SCOPE.md`](SCOPE.md) | MUST / SHOULD / optional / out of scope, anti-scope-creep rules, stop condition, fallback | Before week 1; again in week 3 |
 | [`GROUND_TRUTH.md`](GROUND_TRUTH.md) | BigCloneBench's documented ground-truth defects, and what this project does about them | Before week 1, and again before writing the limitations section |
+| [`appendix.md`](appendix.md) | Plain-language glossary of the project's terminology, with one end-to-end Java example | When a term in the specification or code is unfamiliar |
 | [`CLOUD.md`](CLOUD.md) | GPU consolidation runbook: what runs locally (CPU-only) vs the Colab T4, session budget, resume protocol | Before attaching a GPU |
 | [`PROGRESS.md`](PROGRESS.md) | Running log: what has been measured, what was inferred from it, what is frozen and what is still open | Whenever you resume work |
 
