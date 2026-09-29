@@ -32,6 +32,10 @@ Suggested: **BATCH = 8, TRAIN_PAIRS_CAP = 31,268, EPOCHS = 1** (rule: fastest-wi
 
 
 
+
+
+
+
 ## s′ acquisition (Phase 0.7)
 
 **verdict: PASS** — Clones paper replication package release zip/datasets/bcb_v2_sampled_bf/data_bcb_v2_sampled_bf.pickle: 4600 pairs, labels {1: 2300, 0: 2300}, functionality cols {'functionality_id': 23} (+4 duplicate copy/copies: Clones paper replication package release zip/llms/dataset.pickle, Clones paper replication package release zip/astnn/data/java/bcb_v2_sampled_bf/blocks.pickle, Clones paper replication package release zip/astnn/data/java/bcb_v2_sampled_bf/pair_ids.pickle, Clones paper replication package release zip/astnn/data/java/bcb_v2_sampled_bf/pairs.pickle)
@@ -499,6 +503,39 @@ Context recorded at the time: ordering C1 < C2 ≤ C3 holds; the C1→C2 gap is 
 - legacy absolute-margin rule (0.02): FAIL — C1→C2 gap +0.0146 < margin 0.02 (mining produced equally easy negatives) (reported for the record; not the verdict since v6)
 - **verdict: PASS** — order C1 < C2 <= C3 holds (0.9607 < 0.9753 <= 0.9885) and d(C1→C2) = 0.614 >= 0.5 (absolute gap +0.0146)
 
+### run 2026-09-28 16:35 UTC — version `phase01-v6`, rule: D1 scale-aware: C1 < C2 <= C3 and d(C1->C2) >= 0.5
+
+- C1: mean cos(anchor, negative) = 0.96068 (sd 0.026, n = 20000, anchors = 1000)
+- C2: mean cos(anchor, negative) = 0.97526 (sd 0.022, n = 20000, anchors = 1000)
+- C3: mean cos(anchor, negative) = 0.98845 (sd 0.007, n = 20000, anchors = 1000)
+- corpus percentile of the negative in its anchor's similarity ranking, median: C1 50.1 / C2 91.9 / C3 99.8  (50 = random, 100 = nearest); inside the anchor's top-20: C1 0.3% / C2 15.4% / C3 94.8%
+- embeddings: microsoft/graphcodebert-base max_len=512 n=8063 version=phase01-v5
+- d(C1→C2) = 0.614, 95% CI 0.795–1.202 (2000 resamples over anchors, not negatives)
+- legacy absolute-margin rule (0.02): FAIL — C1→C2 gap +0.0146 < margin 0.02 (mining produced equally easy negatives) (reported for the record; not the verdict since v6)
+- **verdict: PASS** — order C1 < C2 <= C3 holds (0.9607 < 0.9753 <= 0.9885) and d(C1→C2) = 0.614 >= 0.5 (absolute gap +0.0146)
+
+### run 2026-09-29 14:57 UTC — version `phase01-v6`, rule: D1 scale-aware: C1 < C2 <= C3 and d(C1->C2) >= 0.5
+
+- C1: mean cos(anchor, negative) = 0.96068 (sd 0.026, n = 20000, anchors = 1000)
+- C2: mean cos(anchor, negative) = 0.97526 (sd 0.022, n = 20000, anchors = 1000)
+- C3: mean cos(anchor, negative) = 0.98845 (sd 0.007, n = 20000, anchors = 1000)
+- corpus percentile of the negative in its anchor's similarity ranking, median: C1 50.1 / C2 91.9 / C3 99.8  (50 = random, 100 = nearest); inside the anchor's top-20: C1 0.3% / C2 15.4% / C3 94.8%
+- embeddings: microsoft/graphcodebert-base max_len=512 n=8063 version=phase01-v5
+- d(C1→C2) = 0.614, 95% CI 0.795–1.202 (2000 resamples over anchors, not negatives)
+- legacy absolute-margin rule (0.02): FAIL — C1→C2 gap +0.0146 < margin 0.02 (mining produced equally easy negatives) (reported for the record; not the verdict since v6)
+- **verdict: PASS** — order C1 < C2 <= C3 holds (0.9607 < 0.9753 <= 0.9885) and d(C1→C2) = 0.614 >= 0.5 (absolute gap +0.0146)
+
+### run 2026-09-29 18:18 UTC — version `phase01-v6`, rule: D1 scale-aware: C1 < C2 <= C3 and d(C1->C2) >= 0.5
+
+- C1: mean cos(anchor, negative) = 0.96068 (sd 0.026, n = 20000, anchors = 1000)
+- C2: mean cos(anchor, negative) = 0.97526 (sd 0.022, n = 20000, anchors = 1000)
+- C3: mean cos(anchor, negative) = 0.98845 (sd 0.007, n = 20000, anchors = 1000)
+- corpus percentile of the negative in its anchor's similarity ranking, median: C1 50.1 / C2 91.9 / C3 99.8  (50 = random, 100 = nearest); inside the anchor's top-20: C1 0.3% / C2 15.4% / C3 94.8%
+- embeddings: microsoft/graphcodebert-base max_len=512 n=8063 version=phase01-v5
+- d(C1→C2) = 0.614, 95% CI 0.795–1.202 (2000 resamples over anchors, not negatives)
+- legacy absolute-margin rule (0.02): FAIL — C1→C2 gap +0.0146 < margin 0.02 (mining produced equally easy negatives) (reported for the record; not the verdict since v6)
+- **verdict: PASS** — order C1 < C2 <= C3 holds (0.9607 < 0.9753 <= 0.9885) and d(C1→C2) = 0.614 >= 0.5 (absolute gap +0.0146)
+
 ## Gate G1 — diagnostics (scale of the space; no verdict)
 
 `python -m scripts.hardness_diagnostics` — version `phase01-v6`, 1600 anchors × k=20, corpus 6451. Percentile = share of corpus fragments less similar to the anchor than the negative (50 = random, 100 = nearest).
@@ -523,6 +560,7 @@ Label-noise floors (correction 5; proxies, not the audit): share of negatives th
 | C2 negatives | 0.00% | 0.04% | 0.37 | 28.0% | 6.6% |
 | C3 negatives | 0.00% | 0.05% | 0.40 | 31.4% | 6.9% |
 | labelled positives | — | — | 0.28 | 5.1% | 0.2% |
+
 
 ## False-negative audit (50 + 50, blind; SCOPE P2-9)
 
@@ -549,3 +587,57 @@ Generated from `artifacts/runs/<condition>_<seed>/eval_metrics.json` by `python 
 - C0 is the untuned baseline (one evaluation, not a trained condition) at mean F1 0.2572.
 - Sanity reference: published CodeXGLUE fine-tuned-CodeBERT F1 ~ 0.95 under a different model/protocol. Observed F1 range 0.2572–0.2572. A large discrepancy is a harness/protocol check (metric implementation, pair order, labels, threshold handling), not a reason to tune against the test split.
 
+## Phase 3 — decisions (recorded before the runs)
+
+**recorded 2026-09-28 12:07 UTC** · version `phase01-v6` · holdout `k = 3` · source `artifacts/phase3_decisions.json`
+
+| id | decision | rationale |
+|---|---|---|
+| D3 | B | Fine-tune on s′ with negatives mined from s′ itself - the only option that keeps negative strategy as the independent variable while training on functionality-labelled data (PHASE3_PLAN §3.3). Option (A) is kept as the free secondary reading in §9; (C) is impossible on the CodeXGLUE file. |
+| D4 | max_pair_count_then_lowest_id | "Best-represented" is measured, not assumed: the census (§5) prints and commits the per-functionality pair counts, takes the k highest and breaks ties by functionality id - before any F1 is computed. |
+| D5 | embeded/ | PHASE3_PLAN header note: matches the tested runner modules and both call sites (CLOUD.md §4, scripts/run_all.sh); IMPLEMENTATION_PLAN §3 is re-pointed from eval/ + demo/. |
+| D6 | 2x2: (C0 decision) x (C_best decision) | "All four outcome modes" (SCOPE P2-21) is never enumerated in the repo; this is the reading PHASE3_PLAN §5 asks to confirm, and the demo check in §12 requires at least one real held-out pair in the picker for each of the four cells. |
+
+## s′ census — measured pair counts and the holdout (D4)
+
+Measured from `data_bcb_v2_sampled_bf.pickle` (md5 `c5495307a422…`, 4600 rows) by `python -m embeded.generalize --census --holdout-k 3` — version `phase01-v6`, recorded before any F1 exists (PHASE3_PLAN §3.2, decision D4).
+
+| functionality | pairs | clone | non-clone |
+|---|---|---|---|
+| 10 | 200 | 100 | 100 |
+| 13 | 200 | 100 | 100 |
+| 14 | 200 | 100 | 100 |
+| 17 | 200 | 100 | 100 |
+| 18 | 200 | 100 | 100 |
+| 19 | 200 | 100 | 100 |
+| 2 | 200 | 100 | 100 |
+| 22 | 200 | 100 | 100 |
+| 25 | 200 | 100 | 100 |
+| 26 | 200 | 100 | 100 |
+| 27 | 200 | 100 | 100 |
+| 28 | 200 | 100 | 100 |
+| 29 | 200 | 100 | 100 |
+| 3 | 200 | 100 | 100 |
+| 30 | 200 | 100 | 100 |
+| 37 | 200 | 100 | 100 |
+| 39 | 200 | 100 | 100 |
+| 4 | 200 | 100 | 100 |
+| 43 | 200 | 100 | 100 |
+| 44 | 200 | 100 | 100 |
+| 45 | 200 | 100 | 100 |
+| 6 | 200 | 100 | 100 |
+| 7 | 200 | 100 | 100 |
+
+**Holdout (k = 3, rule `max_pair_count_then_lowest_id`): `10`, `13`, `14`** — the same three functionalities are held out for every condition and every seed.
+
+## Gate G1s — hardness on s′
+
+### run 2026-09-28T15:32:45Z — version `phase01-v6`, rule: D1 scale-aware: C1 < C2 <= C3 and d(C1->C2) >= 0.5
+
+- C1: mean cos(anchor, negative) = 0.93383 (sd 0.039, n = 16000, anchors = 800)
+- C2: mean cos(anchor, negative) = 0.96355 (sd 0.027, n = 16000, anchors = 800)
+- C3: mean cos(anchor, negative) = 0.98080 (sd 0.011, n = 16000, anchors = 800)
+- embeddings: microsoft/graphcodebert-base max_len=512 n=4140
+- corpus: s′ (bcb_v2_sampled_bf) — the CodeXGLUE verdict must NOT be assumed to transfer; this gate re-measures it (PHASE3_PLAN §2 item 4)
+- 95% CI for d(C1→C2) = 1.337–1.643 (2000 resamples over anchors, not negatives)
+- **verdict: PASS** — order C1 < C2 <= C3 holds (0.9338 < 0.9636 <= 0.9808) and d(C1→C2) = 0.886 >= 0.5 (absolute gap +0.0297)
