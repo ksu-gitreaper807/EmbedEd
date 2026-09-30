@@ -172,6 +172,54 @@ error rate ~10× smaller would still leave C2/C3's signal badly contaminated rel
 ~0%. The qualitative conclusion is robust to wide audit error; the exact floor is not
 load-bearing for the ordering.
 
+### 5.1 The hinge-geometry numbers (computed offline from the recorded distributions)
+
+Monte-Carlo over the recorded per-condition cosine distributions
+(`report/measurements.md` §diagnostics: cos(a, pos) = 0.9651 (sd 0.023); cos(a, neg) per
+condition; `TRIPLET_MARGIN = 0.10`), 400k draws, seed 13 — no GPU artifacts needed:
+
+| condition | P(hinge violated at init) | E[initial hinge loss] | pos − neg at init | recorded P(neg closer than pos) |
+|---|---|---|---|---|
+| C1 random | 99.7% | 0.0956 | +0.0045 | 39.6% |
+| C2 bm25 | ~100% | 0.1104 | −0.0105 | 71.5% |
+| C3 cosine | ~100% | 0.1232 | −0.0232 | 99.2% |
+
+(The MC's closer-than-positive column is *conservative* — a normal approximation understates
+the pile-up of real cosines near 1.0; the recorded percentages in the last column are the
+authoritative ones.)
+
+Four facts fall out, and together they answer "why is C2/C3 accuracy low":
+
+1. **The hinge is unsatisfiable at init for every condition** — expected: the margin (0.10)
+   is ~3.5× the entire usable base cosine range (~0.028). So "C2/C3 failed because their
+   optimisation started harder" is **not** the explanation: every condition was asked to
+   stretch the usable cosine range ~5× (to ≈0.13).
+2. **The initial loss magnitudes are close** (0.096 / 0.110 / 0.123). C2/C3 did not fail to
+   train because their loss was bigger; they trained *equally hard* — on a signal that is
+   30–42% false.
+3. **The discriminator is truth, not difficulty.** C1's demanded relation ("this negative is
+   dissimilar to the anchor") is true for ~all its negatives (valid-labelled clone: 0.02%;
+   audit-consistent), so the model can satisfy the hinge by legitimately re-scaling the
+   space — which it did (optimal threshold 0.98 → 0.44, F1 0.753). For C2/C3, the audit says
+   42%/30% of the demanded-apart pairs are *the same relation the positives demand pulled
+   together* — per triple, since each triple carries one negative, the contamination rate of
+   the training signal **is** the FN rate. The objective and the evaluation's own ground
+   truth conflict on a third to a half of the hard conditions' signal.
+4. **What the poison looks like** (the blind audit's notes, `artifacts/audit/`): mined
+   "negatives" judged clones are same-functionality/different-syntax pairs — copy-file
+   variants (temp+rename vs direct vs forced), the hashing family ("return a digest of this
+   string", SHA-1-hex vs MD5-base64), generic helpers running different SQL behind identical
+   JDBC boilerplate, containment pairs. Exactly the weak-T3/T4 band the BigCloneBench
+   validity literature says is mislabelled at scale — mined *into* the negative set by
+   BM25/cosine ranking because they are lexically/functionally near the anchor.
+
+Consequence for the mechanism: on contaminated triples the gradient pushes pairs apart that
+the evaluation counts as clones; the least-bad solution available to the optimiser is to
+compress the score range so almost nothing clears a separating threshold — observed directly
+as validation-optimal thresholds pinned at 1.0000 (five of six C2/C3 runs) and F1 collapsing
+to the untuned baseline. C1 is the control that makes this reading falsifiable: identical
+optimiser, margin, budget — only the *truthfulness* of the negative signal differs.
+
 ## 6. Mechanistic account (what we believe happened)
 
 Base GraphCodeBERT's space is anisotropic (all cosines ∈ ~[0.960, 0.988]). Random negatives
