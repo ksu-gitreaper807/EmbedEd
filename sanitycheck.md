@@ -242,6 +242,66 @@ poisoned (never-satisfiable) triples fire on every step of the epoch rather than
 had — hence thresholds pinned at 1.0 and F1 ≈ baseline rather than above it. The one place a
 hidden small gain could still live is ranking (MAP@R) — §4's VERIFY-ON-VM decides it.
 
+### 5.3 A closed-form account of both floors (derivation — every input below is a recorded measurement, no new runs)
+
+**Why C0 is where it is (0.2572): the informationless floor.** In the pretrained space the
+label-relevant effect size is d′ = (0.9651 − 0.9603)/√(0.023² + 0.026²) ≈ **0.14** → a
+best-possible ranking AUC ≈ **0.54** (§2.6 measured means/sds; the diagnostics' 39.6% of
+*random* negatives closer to the anchor than its labelled positive is the same fact as a
+percentage). Calibrating the base rate from C0's own operating point (P 0.2075, R 0.3383 at
+thr 0.9779) under this two-Gaussian band model gives π ≈ 0.15–0.20, and the F1 ceiling for a
+*zero-information* scorer at that base rate is 2π/(1+π) ≈ 0.31 [0.26, 0.33] — C0's tuned
+0.2572 sits at/below it. The threshold 0.9779 is not "wrong": with a near-flat ROC, max-F1
+validation has nowhere to go but the extreme overlap tail, and the only structure reachable
+there is lexical near-duplication (median Jaccard of labelled positives 0.28 vs 0.21 for
+random pairs). This is the pre-registered expectation (§2.6 I2: d ≈ 0.2 ⇒ "the C0 baseline
+should be expected near chance") — MLM pretraining never optimises pair margins, and the
+resulting anisotropic cone leaves ~0.028 cosine units for the whole task.
+
+**Why C2/C3 stay exactly at that floor: the poisoned-hinge worked example.** Four steps, all
+constants measured:
+
+1. **The hinge is unsatisfiable at every reachable parameter setting, for every condition.**
+   TRIPLET_MARGIN = 0.10 is 3.6× the entire usable cosine range (0.028); satisfying *any*
+   triple requires stretching the space ~4.6× (§5.1). Consequence: the hinge term stays
+   strictly positive for every triple for the whole epoch — there is no saturation dynamics,
+   so 100% of triples (right or wrong) fire at full strength on every one of the 32k steps.
+   Nothing ever "washes out" of the gradient.
+2. **The mined band is a mixture, and its two components are (nearly) the same set in score
+   space.** Audit: p = 42% [29, 56] (C2) / 30% [19, 44] (C3) of mined negatives are true
+   clones. In the representation the loss acts on, poison and clean nearly coincide: C2's
+   clean not-clone IQR [0.964, 0.984] meets the poison IQR at 0.984, and the best-possible
+   cosine separation of poison from clean is only AUC ≈ 0.68 (C2) / 0.81 (C3)
+   (audit-separability IQRs, two-Gaussian estimate). C3's only real cut (cos ≥ 0.99) removes
+   80% of the poison at the cost of 40% of the condition. So "push the true negatives down"
+   and "push the false negatives down" are not two instructions the optimiser could trade
+   off — they are one instruction on one overlapping distribution, wrong on ~⅓ of its mass.
+3. **The equilibrium is the flat/degenerate optimum, and its fingerprint is the pinned
+   threshold.** With 71.5%/99.2% of mined negatives already closer to the anchor than the
+   labelled positive, the negative band *contains* the positive band; the only uniform
+   loss-decreasing direction is to push the whole band together — positives included. The
+   flat solution (s(a,p) ≈ s(a,n) ≈ const, expected hinge ≈ m on every triple) is exactly
+   the erasure the artifacts show: validation-optimal thresholds at the parameter boundary
+   1.0000 (5/6 C2/C3 runs) and F1 back at C0. The per-step net separation rate under an FN
+   fraction p, (1 − 2p), is 1.00 / 0.40 / 0.16 for C1/C3/C2 — monotone, like the measured
+   Δ vs C0 (+0.496 / +0.016 / −0.003); at p → ½ the label information in the triple stream
+   vanishes, and C2's CI [29, 56] brackets that boundary.
+4. **This is not an evaluation-noise story.** The 415,416 test pairs (and their labels) are
+   shared by all four conditions, so label noise is common-mode and cannot produce a 3×
+   condition gap; and its size is bounded: an oracle encoder under a *test* FN rate q still
+   scores F1 = 2π/(2π + q(1−π)) ≈ **0.52** even at q = 0.42 — far above C2/C3's 0.25–0.27 —
+   while C1's 0.7533 bounds the shared q at ≲ 0.15, consistent with the BCB-label proxies
+   (0.02–0.05%). The mined-band FN rate is a property of the *training signal*; that is
+   where the collapse lives.
+
+One-line synthesis: **C0 is low because the pretrained cosine ruler carries almost no label
+signal (d′ ≈ 0.14); C2/C3 are low because mining harvested exactly the band where the
+benchmark's labels are least truthful, and a fixed, never-saturating margin passes that
+untruth to the optimiser at full strength on every step — to which the only available answer
+is to erase the distinction, with the threshold pinned at the boundary as the fingerprint.**
+Literature anchors in §7 (RocketQA's denoising result; debiased-contrastive FN-bias
+amplification; semi-hard mining's reason to exist; hinge noise-tolerance at ρ < ½).
+
 ## 6. Mechanistic account (what we believe happened)
 
 Base GraphCodeBERT's space is anisotropic (all cosines ∈ ~[0.960, 0.988]). Random negatives
