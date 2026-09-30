@@ -259,13 +259,17 @@ def write_results_table(runs_root: Path | None = None, *, report_md: Path | None
     files: per-seed rows plus mean/spread per condition, C0 kept visibly
     separate from the trained conditions (PHASE2_PLAN §4 item 3)."""
     root = runs_root or (S.ARTIFACTS / S.RUNS_SUBDIR)
-    rows, smoke = [], []
+    rows, smoke, foreign = [], [], []
     for p in sorted(root.glob("*/" + EVAL_METRICS_NAME)):
         m = json.loads(p.read_text())
         if m.get("smoke"):
             smoke.append(m)
-            continue
-        rows.append(m)
+        elif m.get("condition") in CONDITIONS:
+            rows.append(m)
+        else:
+            # Phase 3 sprime/generalisation result files share the runs root but
+            # have a different schema (no test_f1) — they get their own table.
+            foreign.append(m)
     by_cond: dict[str, list[dict]] = {}
     for m in rows:
         by_cond.setdefault(m["condition"], []).append(m)
@@ -316,6 +320,10 @@ def write_results_table(runs_root: Path | None = None, *, report_md: Path | None
     if smoke:
         notes.append(f"{len(smoke)} smoke-run result(s) are excluded from this table "
                      "(harness checks, not measurements).")
+    if foreign:
+        notes.append(f"{len(foreign)} result file(s) with conditions outside "
+                     f"{list(CONDITIONS)} (Phase 3 sprime runs) are excluded from "
+                     "this table.")
     if not rows:
         notes.append("No completed runs yet — this table is a placeholder.")
     lines += [""] + [f"- {n}" for n in notes] + [""]
@@ -333,7 +341,8 @@ def write_results_table(runs_root: Path | None = None, *, report_md: Path | None
         rep.write_text(old)
     else:
         rep.write_text("# Measurements\n\n" + block + "\n")
-    print(f"wrote {rep} ({len(rows)} runs, {len(smoke)} smoke excluded)")
+    print(f"wrote {rep} ({len(rows)} runs, {len(smoke)} smoke, "
+          f"{len(foreign)} other-condition excluded)")
     return {"runs": len(rows), "aggregate": agg}
 
 

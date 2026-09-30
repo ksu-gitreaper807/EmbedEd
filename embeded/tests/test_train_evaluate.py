@@ -351,6 +351,24 @@ def test_results_table_aggregates_and_excludes_smoke(mined):
     assert S.REPORT_MD.read_text().count(EV.SECTION) == 1
 
 
+def test_results_table_ignores_non_phase2_conditions(mined):
+    """Regression (2026-09-30): once Phase 3 sprime runs share the runs root,
+    their eval_metrics.json (different schema, no `test_f1`) must be excluded
+    from the Phase 2 table — not KeyError the rebuild."""
+    for cond, seed in (("C0", 13), ("C1", 13)):
+        EV.evaluate(cond, seed, smoke=False, embed_fn=fake_embed_fn(seed=seed),
+                    verbose=False)
+    foreign_dir = S.ARTIFACTS / S.RUNS_SUBDIR / "sprime_C1_13"
+    foreign_dir.mkdir(parents=True, exist_ok=True)
+    (foreign_dir / EV.EVAL_METRICS_NAME).write_text(json.dumps(
+        {"condition": "sprime_C1_13", "seed": 13, "F1_seen": 0.5, "F1_unseen": 0.4}))
+    res = EV.write_results_table()                    # must not raise KeyError
+    assert res["runs"] == 2
+    text = S.REPORT_MD.read_text()
+    assert "| sprime" not in text                     # no foreign rows in the table
+    assert "outside" in text and "excluded" in text   # exclusion is called out
+
+
 def test_cli_entrypoints(monkeypatch, mined, encoder, capsys):
     import embeded.encoder as ENC
     monkeypatch.setattr(ENC, "load_encoder", lambda *a, **k: encoder)
