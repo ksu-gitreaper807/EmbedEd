@@ -220,6 +220,28 @@ as validation-optimal thresholds pinned at 1.0000 (five of six C2/C3 runs) and F
 to the untuned baseline. C1 is the control that makes this reading falsifiable: identical
 optimiser, margin, budget — only the *truthfulness* of the negative signal differs.
 
+### 5.2 The improvement is monotone in the measured poison rate — "a little gain" is exactly what the data shows
+
+ΔF1 vs C0, against the blind audit's per-condition false-negative floor:
+
+| condition | FN floor | mean F1 | Δ vs C0 (0.2572) |
+|---|---|---|---|
+| C1 random | ~0% | 0.7533 | **+0.496** |
+| C3 cosine | 30% [19, 44] | 0.2728 | **+0.016** (~2 sd of the seed mean) |
+| C2 bm25 | 42% [29, 56] | 0.2542 | **−0.003** (flat within noise) |
+
+The improvement decays monotonically through zero as contamination rises, with the break-even
+between 30% and 42%. So the intuition "hard negatives should help *a little*" is not refuted
+by the table — it is confirmed at C3 and extinguished exactly where the audit says the signal
+crosses half-corrupted. Why "a little" is also the *ceiling* under this recipe: (i) the poison
+sits on the discriminative band itself, attached to inputs statistically interchangeable with
+the true hard negatives, so it deletes the boundary instead of diluting it; (ii) a fixed-margin
+hinge keeps applying full-strength gradient to every violated triple with no saturation, so
+poisoned (never-satisfiable) triples fire on every step of the epoch rather than washing out;
+(iii) the surviving separable structure is the near-exact-duplicate tail the base model already
+had — hence thresholds pinned at 1.0 and F1 ≈ baseline rather than above it. The one place a
+hidden small gain could still live is ranking (MAP@R) — §4's VERIFY-ON-VM decides it.
+
 ## 6. Mechanistic account (what we believe happened)
 
 Base GraphCodeBERT's space is anisotropic (all cosines ∈ ~[0.960, 0.988]). Random negatives
