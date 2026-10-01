@@ -32,8 +32,10 @@ import argparse
 import csv
 import json
 import math
+import os
 import random
 import re
+from pathlib import Path
 
 from embeded import settings as S
 
@@ -42,7 +44,8 @@ LABELS = ("clone", "not_clone", "unsure")
 
 
 def audit_dir():
-    d = S.ARTIFACTS / "audit"
+    override = os.environ.get("EMBEDED_AUDIT_DIR")
+    d = Path(override) if override else S.ARTIFACTS / "audit"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
@@ -133,7 +136,8 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
 
 def score_rows(labels: dict[str, str], key: list[dict]) -> dict:
     out = {}
-    for cond in CONDS:
+    conds = sorted({r["condition"] for r in key})   # the sheet decides (C4 audits are C4-only)
+    for cond in conds:
         ids = [r["id"] for r in key if r["condition"] == cond]
         got = {i: labels.get(i, "").strip().lower() for i in ids}
         bad = sorted(i for i, v in got.items() if v not in LABELS)
@@ -158,7 +162,7 @@ def write_section(res: dict) -> None:
              "to be clones (functional equivalence). Headline counts `unsure` as not_clone; the upper bound counts it as clone.",
              "", "| condition | n | clone | not_clone | unsure | FN rate [95% CI] | upper bound incl. unsure |",
              "|---|---|---|---|---|---|---|"]
-    for cond in CONDS:
+    for cond in (c for c in res if not c.startswith("_")):
         m = res[cond]
         lines.append(f"| {cond} | {m['n']} | {m['clone']} | {m['not_clone']} | {m['unsure']} | "
                      f"**{m['fn_rate']:.0%}** [{m['fn_rate_ci95'][0]:.0%}, {m['fn_rate_ci95'][1]:.0%}] | "
@@ -185,7 +189,8 @@ def check_key_matches_triples(key: list[dict]) -> dict:
     describe pairs that no longer exist — scoring them would report a
     false-negative rate for a mining run nobody trained on."""
     out = {}
-    for cond in CONDS:
+    conds = sorted({r["condition"] for r in key})   # the sheet decides
+    for cond in conds:
         by_anchor = _triples(cond)
         pairs = {(a, x) for a, negs in by_anchor.items() for x in negs}
         want = [(int(r["anchor"]), int(r["negative"]))
@@ -218,7 +223,7 @@ def score() -> dict:
             "(`python -m scripts.hf_artifacts pull --if-configured`), or re-sample "
             "and re-label (`make ... --force`).")
     print("audit key matches the current triples: "
-          + ", ".join(f"{c} {drift[c]['n']}/{drift[c]['n']}" for c in CONDS))
+          + ", ".join(f"{c} {drift[c]['n']}/{drift[c]['n']}" for c in drift))
     with open(d / "audit_labels.csv", encoding="utf-8") as fh:
         labels = {r["id"]: r["label"] for r in csv.DictReader(fh)}
     res = score_rows(labels, key)
