@@ -111,3 +111,31 @@ enough to separate "the mining is clean" from "about a third is contaminated", n
 to compare C2 with C3 (that needs ~272–652 per condition, per the power table in
 `PROGRESS.md`). Any per-condition conclusion needs a larger stratified sample with `rank` in
 the key.
+
+## Second-pass recheck (2026-10-01, same judge/sandbox)
+
+All 100 pairs were re-read from `audit_pairs.md` and re-adjudicated against the same four-rule
+rubric, blind to the key (still VM-only). **Result: 100/100 agreement, 0 flips, 0 rubric
+inconsistencies found.** Mechanical checks re-verified: ids `P001..P100` in sheet order, one
+label per id, vocabulary {clone, not_clone, unsure}, counts 36/63/1, unsure = P036, every row
+carries a note.
+
+- The seven disclosed-flippable calls were each re-examined and **maintained**, with the
+  original granularity reasoning: P005 (batch-copy vs single backup = same copy functionality,
+  consistent with P060/P067), P008 (cipher construction vs digest string), P017
+  (proxy-download granularity), P035 (whole-file integrity vs per-contig digest map), P089
+  (encode+upload vs ingest+thumbnail+record).
+- The rubric's family structure held up under re-reading: GUID-generation pairs (P056, P080)
+  are clones while a password-hash main vs GUID generation (P078) is not; string→digest-string
+  pairs (P039/P040/P052/P057/P062/P074/P075/P086/P100) are uniformly clones; same-boilerplate-
+  different-SQL (P021/P043/P065/P072/P093) uniformly not_clone; the generic-SQL-helper
+  exception (P090) is clone. Consistency, not per-pair mood, drove the original labels.
+- The 13 truncated-fragment (80-line cap) pairs were re-checked from the heads: all 13
+  not_clone calls are head-decisive (different functionality visible without the tails). The
+  one-directional floor caveat stands unchanged: 36 clones is a floor, so 42%/30% are FN
+  *floors*.
+
+**Caveat:** this was an *intra-judge* recheck (same judge, ~4 days apart). It catches
+processing errors and rubric drift; it cannot cure the disclosed judge-orientation bias. An
+independent second judge remains the real reliability check. Headline numbers unchanged:
+C2 FN floor 42% [29, 56], C3 30% [19, 44], pooled 36% [27, 46].
