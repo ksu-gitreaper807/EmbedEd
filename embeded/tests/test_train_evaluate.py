@@ -368,6 +368,20 @@ def test_results_table_ignores_non_phase2_conditions(mined):
     assert "| sprime" not in text                     # no foreign rows in the table
     assert "outside" in text and "excluded" in text   # exclusion is called out
 
+    # a C-labelled file over a different test split (the s' unseen eval reuses
+    # condition "C1", 600 pairs = holdout {10,13,14} x 200) must ALSO be excluded
+    leak_dir = S.ARTIFACTS / S.RUNS_SUBDIR / "sprime_C1_14"
+    leak_dir.mkdir(parents=True, exist_ok=True)
+    (leak_dir / EV.EVAL_METRICS_NAME).write_text(json.dumps(
+        {"condition": "C1", "seed": 14, "test_f1": 0.9, "test_precision": 0.9,
+         "test_recall": 0.9, "test_map_at_r": 0.9, "threshold": 0.5,
+         "test": {"n": 600}, "n_pairs": {"test": 600}}))
+    res = EV.write_results_table()
+    assert res["runs"] == 2                           # still only the real runs
+    text = S.REPORT_MD.read_text()
+    assert text.count("| C1 | 13 |") == 1             # no polluted/duplicate C1 row
+    assert "| C1 | 14 |" not in text                  # the 600-pair leak is excluded
+
 
 def test_cli_entrypoints(monkeypatch, mined, encoder, capsys):
     import embeded.encoder as ENC

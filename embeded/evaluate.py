@@ -264,6 +264,11 @@ def write_results_table(runs_root: Path | None = None, *, report_md: Path | None
         m = json.loads(p.read_text())
         if m.get("smoke"):
             smoke.append(m)
+        elif "sprime" in p.parent.name:
+            # Phase 3 s' run dirs may reuse C-condition labels in their metrics
+            # (observed 2026-10-01: sprime_C1_14 wrote condition "C1", 600-pair
+            # unseen split) — the run-dir namespace decides, not the field.
+            foreign.append(m)
         elif m.get("condition") in CONDITIONS:
             rows.append(m)
         else:

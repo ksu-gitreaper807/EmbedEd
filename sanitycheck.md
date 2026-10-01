@@ -348,7 +348,7 @@ geometry, audit floors) plus the literature. The defensible statement of the fin
 > (42%/30%) are the leading mechanism and a stated confound on C2-vs-C3.
 
 **Would change this verdict:** (i) MAP@R(C2/C3) ≫ C0 with low F1 (→ reframe as thresholding
-failure, upgrade C2/C3); (ii) NaN/loss spikes in C2/C3 train logs (→ fp16 instability);
+failure, upgrade C2/C3) — **resolved 2026-10-01: REFUTED, see §9.1 (C2/C3 below C0)**; (ii) NaN/loss spikes in C2/C3 train logs (→ fp16 instability);
 (iii) a reproducible F1-identical rerun with shuffled pair labels (→ metric bug). None
 expected; all three are checkable from existing artifacts.
 
@@ -590,3 +590,52 @@ the §8 statement — the defensible claim is now backed by six seeds per condit
 exact base rate. Wording upgrade for the write-up: "robust across six training seeds"
 replaces "three seeds"; the collapse is characterised as fp32-saturation erasure with
 27–67% of test pairs at cosine 1.0, not "everything predicted positive".
+
+### 9.1 The report rebuild answers §4 — falsifier (i) is REFUTED (2026-10-01, consolidator push `0ce5bf4`)
+
+The rebuilt report table includes MAP@R for all 19 runs. Expected reading confirmed exactly:
+
+| | C0 | C1 (n=6) | C2 (n=6) | C3 (n=6) |
+|---|---|---|---|---|
+| mean MAP@R | 0.1024 | **0.667** ± 0.033 | **0.047** ± 0.024 | **0.077** ± 0.005 |
+
+C2/C3 rank clones **worse than the untuned baseline** (C2 at less than half of C0). The
+§8 rescue condition ("MAP@R(C2/C3) ≫ C0 with low F1 → thresholding failure") did not fire:
+the collapse is representation-level, and training on poisoned hard negatives actively
+degraded ranking. §4's decisive check is closed; §5's account needs no reframe.
+
+### 9.2 npz ↔ metrics mismatch on 9 of 18 trained runs — OPEN, VM-side investigation
+
+Comparing the rebuilt report (stored `eval_metrics.json`) with the board's npz-recomputed
+rows: **all six C1 runs match to 4 decimals; 9 C2/C3 runs disagree** (largest: C2_13 stored
+F1 0.2438 vs npz 0.2165 — stored R 0.90 vs npz R 0.43 at the same claimed threshold 1.0;
+smallest Δ 0.0005). `evaluate` writes metrics and `predictions.npz` from the same scores in
+one process, so a single pass cannot produce both. The HF run dirs for those nine runs
+therefore mix files from different passes/pushes. Leading hypothesis: pushes stage the FULL
+artifacts tree, so a VM that pulled mid-campaign and pushed later can re-upload a **stale
+copy** of another VM's run dir over the fresh one. Both readings sit in the same degenerate
+band and C1 is exact, so **no conclusion changes** — but the provenance must be repaired:
+
+1. Decisive check (no GPU): per-file HF commit SHAs for the nine runs
+   (`HfApi.list_repo_commits` / web UI file history) — do `eval_metrics.json` and
+   `predictions.npz` come from the same commit? A difference confirms the stale-overwrite.
+2. Repair: `evaluate --force` on the nine runs (full pull needed — checkpoints), re-push.
+   Eval-only, deterministic given the checkpoint; expected to land in the same bands.
+3. Rule going forward: trainers pull once, before training; a push after a later pull may
+   carry stale neighbour dirs (the consolidator's `--include-report` pushes are the ones to
+   watch, since their trees span days).
+
+### 9.3 Two 600-pair rows leaked into the Phase 2 table — fixed, and they are Phase 3's first result
+
+The rebuilt table contained `C1 13` and `C1 14` rows with n = 600: the **s′ unseen evals**
+(holdout {10,13,14} × 200) written by `sprime_C1_13`/`sprime_C1_14`, whose metrics reuse the
+condition label "C1". They polluted the C1 aggregate (8 rows, mean 0.7447). Fixed in
+`embeded.evaluate` — the sprime run-dir namespace now decides exclusion, not the condition
+field (regression-tested) — rebuild the table VM-side.
+
+Substance, flagged as preliminary (n = 2, read through the leak): **C1 transfers to unseen
+functionality almost losslessly** — F1_unseen 0.7230 vs seen 0.7454 (−0.022, −3%) for seed
+13, and 0.7564 vs 0.7546 (+0.002) for seed 14. Against Kitsios et al.'s task-specific
+average drop of ~31%, that is LLM-scale robustness from a 32k-triple bi-encoder — the
+single most encouraging number in the project so far, and the healthy-scorer transfer
+quantity §6 predicted would be the informative Phase 3 measurement.
