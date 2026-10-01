@@ -175,6 +175,45 @@ def test_stage_upload_tree_skips_redownloadable_data(tmp_path: Path, capsys):
     assert not [f for f in staged if "triples" in f] and any("sprime" in f for f in staged)
 
 
+def test_pull_light_skips_checkpoints(monkeypatch, tmp_path: Path):
+    """--light must translate to ignore_patterns=["*.pt"] on snapshot_download;
+    a normal pull passes no ignore list (checkpoints included)."""
+    import huggingface_hub
+
+    captured: dict = {}
+    snap = tmp_path / "snap"
+
+    def fake_download(**kw):
+        captured.update(kw)
+        (snap / "artifacts" / "runs" / "C1_13").mkdir(parents=True, exist_ok=True)
+        (snap / "artifacts" / "runs" / "C1_13" / "predictions.npz").write_bytes(b"x")
+        (snap / "artifacts" / "runs" / "C1_13" / "eval_metrics.json").write_text("{}")
+        return str(snap)
+
+    class FakeApi:
+        def __init__(self, token=None):
+            pass
+
+        def list_repo_files(self, **kw):
+            return ["artifacts/runs/C1_13/checkpoint.pt",
+                    "artifacts/runs/C1_13/predictions.npz",
+                    "artifacts/runs/C1_13/eval_metrics.json"]
+
+    monkeypatch.setattr(huggingface_hub, "snapshot_download", fake_download)
+    monkeypatch.setattr(huggingface_hub, "HfApi", FakeApi)
+    cfg = H.RepoConfig(repo_id="user/embeded-artifacts")
+    art = tmp_path / "artifacts"
+    rep = tmp_path / "report" / "measurements.md"
+
+    restored = H.pull_from_hf(cfg, art, rep, light=True)
+    assert captured["ignore_patterns"] == ["*.pt"]
+    assert "artifacts/runs/C1_13/predictions.npz" in restored
+    assert not (art / "runs" / "C1_13" / "checkpoint.pt").exists()
+
+    restored = H.pull_from_hf(cfg, art, rep)          # default: everything
+    assert captured["ignore_patterns"] is None
+
+
 def test_exclude_patterns_env_override(monkeypatch):
     assert H.exclude_patterns() == H.DEFAULT_EXCLUDE
     monkeypatch.setenv("EMBEDED_HF_EXCLUDE", "sprime/*, runs/*/checkpoint.pt")

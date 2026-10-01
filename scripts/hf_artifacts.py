@@ -5,6 +5,11 @@ This replaces the old Colab+Drive pattern with an optional HF Hub checkpoint:
     # download the latest checkpoint into EMBEDED_ARTIFACTS / EMBEDED_REPORT
     python -m scripts.hf_artifacts pull --if-configured
 
+    # same, but skip the per-run model checkpoints (*.pt) — a few hundred MB
+    # instead of ~5 GB; enough for eval_metrics/predictions.npz/train_log, i.e.
+    # the results table, the confusion-matrix board and every verification block
+    python -m scripts.hf_artifacts pull --if-configured --light
+
     # upload the current checkpoint (creates the dataset repo if needed)
     python -m scripts.hf_artifacts push --if-configured --include-report
 
@@ -180,7 +185,8 @@ def restore_download_tree(snapshot_root: Path, artifacts_root: Path, report_md: 
     return restored
 
 
-def pull_from_hf(cfg: RepoConfig, artifacts_root: Path, report_md: Path) -> list[str]:
+def pull_from_hf(cfg: RepoConfig, artifacts_root: Path, report_md: Path,
+                 *, light: bool = False) -> list[str]:
     from huggingface_hub import HfApi, snapshot_download
     try:  # huggingface_hub moved the exception between releases
         from huggingface_hub.errors import RepositoryNotFoundError
@@ -208,12 +214,14 @@ def pull_from_hf(cfg: RepoConfig, artifacts_root: Path, report_md: Path) -> list
         repo_type=cfg.repo_type,
         revision=cfg.revision,
         allow_patterns=allow_patterns(cfg.subdir),
+        ignore_patterns=["*.pt"] if light else None,
         token=cfg.token,
     ))
     root = snap / cfg.subdir if cfg.subdir else snap
     restored = restore_download_tree(root, artifacts_root, report_md)
     loc = f"/{cfg.subdir}" if cfg.subdir else ""
-    print(f"[hf] pulled {len(restored)} files from {cfg.repo_type}:{cfg.repo_id}@{cfg.revision}{loc}")
+    note = " (light — checkpoints *.pt skipped)" if light else ""
+    print(f"[hf] pulled {len(restored)} files from {cfg.repo_type}:{cfg.repo_id}@{cfg.revision}{loc}{note}")
     return restored
 
 
@@ -298,6 +306,9 @@ def main(argv=None):
     ap.add_argument("--repo-type")
     ap.add_argument("--revision")
     ap.add_argument("--subdir")
+    ap.add_argument("--light", action="store_true",
+                    help="when pulling, skip per-run model checkpoints (*.pt) — "
+                         "keeps metrics/logs/predictions.npz (table, board, audit blocks)")
     a = ap.parse_args(argv)
 
     cfg = load_repo_config(required=not a.if_configured, repo_id=a.repo_id,
@@ -308,7 +319,8 @@ def main(argv=None):
         return
 
     if a.action == "pull":
-        run_with_retries(pull_from_hf, cfg, S.ARTIFACTS, S.REPORT_MD, label="pull")
+        run_with_retries(pull_from_hf, cfg, S.ARTIFACTS, S.REPORT_MD, label="pull",
+                         light=a.light)
     else:
         run_with_retries(push_to_hf, cfg, S.ARTIFACTS, S.REPORT_MD, label="push",
                          include_report=a.include_report)
