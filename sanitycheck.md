@@ -516,3 +516,77 @@ fraction; C2/C3 at threshold 1.0000 reveal which degenerate mode they took. Note
 everything" predictor would score 2p/(1+p), so an observed shortfall is itself informative
 (band compression with wrong-side ordering), exactly the distinction this block settles.
 The base rate p also replaces §5.3's model-calibrated π ≈ 0.15–0.20 with an exact number.
+
+---
+
+## 9. Phase 2V2 — seed-extension campaign (consolidator board output, 19/19 runs)
+
+**Design:** seeds 16/17/18 trained per condition on the FROZEN seed-13 triples (same
+manipulation, same FN floors); C0 reused (never re-trained); recipe untouched. Purpose:
+upgrade every per-condition estimate n=3 → n=6 and test seed-robustness of the inversion.
+Run on five parallel VMs + one consolidator (`Phase2V2_Colab.ipynb`); the confusion board
+below is the consolidator's stdout over all 19 run dirs.
+
+```
+      run |      TP      FP      FN      TN |      P      R     F1    thr n_pred_pos
+C0_   13 |  19,220  73,400  37,600 285,196 | 0.2075 0.3383 0.2572 0.9779     92,620
+C1_   13 |  43,195  15,875  13,625 342,721 | 0.7313 0.7602 0.7454 0.4358     59,070
+C1_   14 |  43,731  15,350  13,089 343,246 | 0.7402 0.7696 0.7546 0.4357     59,081
+C1_   15 |  44,404  15,650  12,416 342,946 | 0.7394 0.7815 0.7599 0.4492     60,054
+C1_   16 |  43,157  14,417  13,663 344,179 | 0.7496 0.7595 0.7545 0.4396     57,574
+C1_   17 |  42,613  20,292  14,207 338,304 | 0.6774 0.7500 0.7118 0.4622     62,905
+C1_   18 |  41,513  12,046  15,307 346,550 | 0.7751 0.7306 0.7522 0.4581     53,559
+C2_   13 |  24,410 144,239  32,410 214,357 | 0.1447 0.4296 0.2165 1.0000    168,649
+C2_   14 |  40,677 222,906  16,143 135,690 | 0.1543 0.7159 0.2539 1.0000    263,583
+C2_   15 |  34,028 165,655  22,792 192,941 | 0.1704 0.5989 0.2653 0.8355    199,683
+C2_   16 |  36,790 193,750  20,030 164,846 | 0.1596 0.6475 0.2561 1.0000    230,540
+C2_   17 |  34,667 220,569  22,153 138,027 | 0.1358 0.6101 0.2222 1.0000    255,236
+C2_   18 |  45,749 232,809  11,071 125,787 | 0.1642 0.8052 0.2728 0.9793    278,558
+C3_   13 |  26,847 125,289  29,973 233,307 | 0.1765 0.4725 0.2570 1.0000    152,136
+C3_   14 |  27,058 105,357  29,762 253,239 | 0.2043 0.4762 0.2860 1.0000    132,415
+C3_   15 |  25,612 108,250  31,208 250,346 | 0.1913 0.4508 0.2686 1.0000    133,862
+C3_   16 |  22,866  90,921  33,954 267,675 | 0.2010 0.4024 0.2681 1.0000    113,787
+C3_   17 |  29,009 129,298  27,811 229,298 | 0.1832 0.5105 0.2697 1.0000    158,307
+C3_   18 |  38,657 186,014  18,163 172,582 | 0.1721 0.6803 0.2747 1.0000    224,671
+```
+
+All 19 rows verified internally consistent (TP+FN = 56,820, FP+TN = 358,596, n = 415,416;
+P/R/F1 recomputed from counts). **Headline at n=6** (seed sd over six runs):
+
+| condition | F1 (n=6) | seeds 13–15 | seeds 16–18 | Δ vs C0 | FN floor |
+|---|---|---|---|---|---|
+| C0 | 0.2572 | — | — | — | — |
+| C1 | **0.7464 ± 0.0176** | 0.7533 | 0.7395 | **+0.489** | ~0% |
+| C2 | **0.2478 ± 0.0231** | 0.2452 | 0.2504 | **−0.009** | 42% |
+| C3 | **0.2707 ± 0.0095** | 0.2705 | 0.2708 | **+0.013** | 30% |
+
+Five conclusions, each closing an item this document had open:
+
+1. **The inversion is seed-robust.** C1 stays ≈ 2.9× every other condition; C2/C3 straddle
+   C0 within ~1 seed-sd (C2 now marginally *below* C0). The n=3 result was not a lucky draw.
+   Δ vs C0 remains monotone in the measured FN floors (+0.489 / +0.013 / −0.009 for
+   ~0%/30%/42%) — §5.2's break-even story strengthens: the point where "hard negatives stop
+   helping" now sits more precisely between C3's and C2's contamination rates.
+2. **Exact test base rate (appendix Part 3, first input): p = 56,820/415,416 = 0.13678**, so
+   the all-positive ceiling is 2p/(1+p) = **0.2406**. This replaces §5.3's model-calibrated
+   π ≈ 0.15–0.20. C0's 0.2572 sits ABOVE the ceiling → C0 is confirmed a weak-but-real
+   separator, not a degenerate all-positive predictor (exactly the predicted "partial" mode).
+3. **The C2/C3 collapse mode is saturation-erasure, not all-positive collapse.** 10/12 C2/C3
+   validation thresholds are pinned at exactly 1.0000; for those runs `n_pred_pos` at thr 1.0
+   counts pairs at fp32 cosine == 1.0 — i.e. **27–67% of the entire test split saturates at
+   the ceiling** (C3: 27–54%, C2: 41–67%). F1 scatters around the 0.2406 ceiling (C2
+   0.217–0.273, C3 0.257–0.286): the band is compressed into the fp32 rounding point with
+   wrong-side ordering, which is §5.3's erasure mode, now observed directly.
+4. **Cross-checks pass on the consolidator:** the C0 row reproduces the stored eval metrics
+   exactly (0.2075/0.3383/0.2572 @ 0.9779 — npz↔metrics consistency); C1_17 (0.7118) is the
+   n=6 low seed at ≈ −2σ but far above baseline; the §8 stop-conditions (C1 ext seed < 0.70;
+   C2/C3 ext seed > 0.35) did not trip.
+5. **Still open (unchanged):** MAP@R per run (falsifier (i) — the one ranking-level check)
+   and the full appendix Parts 1–2 paste; the `--results-table` rebuild for
+   `report/measurements.md` happens VM-side per the standing rule.
+
+**Verdict impact:** none of the three §8 falsifiers fired; the seed-extension *strengthens*
+the §8 statement — the defensible claim is now backed by six seeds per condition and an
+exact base rate. Wording upgrade for the write-up: "robust across six training seeds"
+replaces "three seeds"; the collapse is characterised as fp32-saturation erasure with
+27–67% of test pairs at cosine 1.0, not "everything predicted positive".
