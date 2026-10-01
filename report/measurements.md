@@ -36,6 +36,8 @@ Suggested: **BATCH = 8, TRAIN_PAIRS_CAP = 31,268, EPOCHS = 1** (rule: fastest-wi
 
 
 
+
+
 ## s′ acquisition (Phase 0.7)
 
 **verdict: PASS** — Clones paper replication package release zip/datasets/bcb_v2_sampled_bf/data_bcb_v2_sampled_bf.pickle: 4600 pairs, labels {1: 2300, 0: 2300}, functionality cols {'functionality_id': 23} (+4 duplicate copy/copies: Clones paper replication package release zip/llms/dataset.pickle, Clones paper replication package release zip/astnn/data/java/bcb_v2_sampled_bf/blocks.pickle, Clones paper replication package release zip/astnn/data/java/bcb_v2_sampled_bf/pair_ids.pickle, Clones paper replication package release zip/astnn/data/java/bcb_v2_sampled_bf/pairs.pickle)
@@ -579,13 +581,38 @@ Generated from `artifacts/runs/<condition>_<seed>/eval_metrics.json` by `python 
 | condition | seed | F1 | precision | recall | MAP@R | valid threshold | n test pairs |
 |---|---|---|---|---|---|---|---|
 | C0 | 13 | 0.2572 | 0.2075 | 0.3383 | 0.1024 | 0.9779 | 415416 |
+| C1 | 13 | 0.7454 | 0.7313 | 0.7602 | 0.6672 | 0.4358 | 415416 |
+| C1 | 13 | 0.7230 | 0.6814 | 0.7700 | 0.5804 | 0.7165 | 600 |
+| C1 | 14 | 0.7546 | 0.7402 | 0.7696 | 0.6802 | 0.4357 | 415416 |
+| C1 | 14 | 0.7564 | 0.6576 | 0.8900 | 0.6225 | 0.6022 | 600 |
+| C1 | 15 | 0.7599 | 0.7394 | 0.7815 | 0.6862 | 0.4492 | 415416 |
+| C1 | 16 | 0.7545 | 0.7496 | 0.7595 | 0.6774 | 0.4396 | 415416 |
+| C1 | 17 | 0.7118 | 0.6774 | 0.7500 | 0.6026 | 0.4622 | 415416 |
+| C1 | 18 | 0.7522 | 0.7751 | 0.7306 | 0.6906 | 0.4581 | 415416 |
+| C2 | 13 | 0.2438 | 0.1410 | 0.8997 | 0.0210 | 1.0000 | 415416 |
+| C2 | 14 | 0.2534 | 0.1573 | 0.6510 | 0.0648 | 1.0000 | 415416 |
+| C2 | 15 | 0.2653 | 0.1704 | 0.5989 | 0.0758 | 0.8355 | 415416 |
+| C2 | 16 | 0.2572 | 0.1584 | 0.6826 | 0.0479 | 1.0000 | 415416 |
+| C2 | 17 | 0.2408 | 0.1370 | 0.9907 | 0.0172 | 1.0000 | 415416 |
+| C2 | 18 | 0.2728 | 0.1642 | 0.8052 | 0.0580 | 0.9793 | 415416 |
+| C3 | 13 | 0.2594 | 0.1712 | 0.5348 | 0.0776 | 1.0000 | 415416 |
+| C3 | 14 | 0.2865 | 0.2015 | 0.4952 | 0.0834 | 1.0000 | 415416 |
+| C3 | 15 | 0.2726 | 0.1807 | 0.5542 | 0.0699 | 1.0000 | 415416 |
+| C3 | 16 | 0.2727 | 0.1875 | 0.4994 | 0.0790 | 1.0000 | 415416 |
+| C3 | 17 | 0.2697 | 0.1877 | 0.4792 | 0.0722 | 1.0000 | 415416 |
+| C3 | 18 | 0.2789 | 0.1839 | 0.5774 | 0.0813 | 1.0000 | 415416 |
 
 | condition | runs | mean F1 | sd F1 | mean P | mean R | mean MAP@R |
 |---|---|---|---|---|---|---|
 | C0 | 1 | 0.2572 | 0.0000 | 0.2075 | 0.3383 | 0.1024 |
+| C1 | 8 | 0.7447 | 0.0176 | 0.7190 | 0.7764 | 0.6509 |
+| C2 | 6 | 0.2555 | 0.0123 | 0.1547 | 0.7713 | 0.0474 |
+| C3 | 6 | 0.2733 | 0.0091 | 0.1854 | 0.5234 | 0.0772 |
 
 - C0 is the untuned baseline (one evaluation, not a trained condition) at mean F1 0.2572.
-- Sanity reference: published CodeXGLUE fine-tuned-CodeBERT F1 ~ 0.95 under a different model/protocol. Observed F1 range 0.2572–0.2572. A large discrepancy is a harness/protocol check (metric implementation, pair order, labels, threshold handling), not a reason to tune against the test split.
+- Among the trained conditions the highest mean F1 is C1 (0.7447); per-seed values above, not the best seed.
+- Sanity reference: published CodeXGLUE fine-tuned-CodeBERT F1 ~ 0.95 under a different model/protocol. Observed F1 range 0.2408–0.7599. A large discrepancy is a harness/protocol check (metric implementation, pair order, labels, threshold handling), not a reason to tune against the test split.
+- 1 smoke-run result(s) are excluded from this table (harness checks, not measurements).
 
 ## Phase 3 — decisions (recorded before the runs)
 
