@@ -82,7 +82,7 @@ def filled_labels(labels_csv) -> list[str]:
                 if (r.get("label") or "").strip()]
 
 
-def make(n: int, seed: int, force: bool = False) -> dict:
+def make(n: int, seed: int, force: bool = False, conds=None) -> dict:
     from embeded.data.prepare_data import load_fragments
     frags = load_fragments()
     d = audit_dir()
@@ -94,7 +94,7 @@ def make(n: int, seed: int, force: bool = False) -> dict:
             "  Score what you have:      python -m scripts.audit_sample score\n"
             "  Or start a new sample:   python -m scripts.audit_sample make "
             f"--n {n} --seed {seed} --force   (the old labels become meaningless)")
-    pairs = sample_pairs(n, seed)
+    pairs = sample_pairs(n, seed, conds=conds)
 
     with open(d / "audit_key.csv", "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=["id", "condition", "anchor", "negative"])
@@ -237,9 +237,14 @@ def main(argv=None):
     ap.add_argument("--seed", type=int, default=S.SEED)
     ap.add_argument("--force", action="store_true",
                     help="make: overwrite an audit sheet that already has labels")
+    ap.add_argument("--conditions", default=None,
+                    help="make: comma-separated condition filter, e.g. C4 "
+                         "(default: every COND with mined triples)")
     a = ap.parse_args(argv)
     if a.action == "make":
-        info = make(a.n, a.seed, force=a.force)
+        conds = tuple(c.strip().upper() for c in a.conditions.split(",")) \
+            if a.conditions else None
+        info = make(a.n, a.seed, force=a.force, conds=conds)
         print(json.dumps(info, indent=2))
         print(f"read  {info['dir']}/audit_pairs.md\nfill  {info['dir']}/audit_labels.csv\nthen  python -m scripts.audit_sample score")
     else:
