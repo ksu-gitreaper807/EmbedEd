@@ -362,9 +362,15 @@ import numpy as np
 from embeded import settings as S
 from embeded.train import run_dir, METRICS_NAME, EVAL_METRICS_NAME, LOG_NAME
 
-print("== per-run metrics (P / R / MAP@R) ==")
-for c in ("C0", "C1", "C2", "C3"):
-    for s in (13, 14, 15):
+import re
+RUNS = sorted(
+    ((m.group(1), int(m.group(2)))
+     for d in (S.ARTIFACTS / S.RUNS_SUBDIR).glob("C[0-3]_*")
+     if (m := re.fullmatch(r"(C[0-3])_(\d+)", d.name))),
+    key=lambda t: ("C0 C1 C2 C3".split().index(t[0]), t[1]),
+)  # auto-discovers every condition/seed with a run dir (smoke_/sprime_ never match)
+print("== per-run metrics (P / R / MAP@R) ==", f"({len(RUNS)} run dirs discovered)")
+for c, s in RUNS:
         p = run_dir(c, s) / EVAL_METRICS_NAME
         if p.exists():
             m = json.loads(p.read_text())
@@ -395,13 +401,14 @@ for c in ("C0", "C1", "C2", "C3"):
           f"gap={(sc[lab==1].mean()-sc[lab==0].mean()):+.4f}")
 
 print("== training-loss trajectory (first -> last quarter mean) ==")
-for c in ("C1", "C2", "C3"):
-    for s in (13, 14, 15):
-        rows = [json.loads(l) for l in open(run_dir(c, s) / LOG_NAME, encoding="utf-8")]
-        q = max(1, len(rows) // 4)
-        losses = [r["loss"] for r in rows]
-        print(f"  {c}_{s}: steps={len(rows)} loss {np.mean(losses[:q]):.4f} -> "
-              f"{np.mean(losses[-q:]):.4f}  (nan={any(x != x for x in losses)})")
+for c, s in RUNS:
+    if c == "C0" or not (run_dir(c, s) / LOG_NAME).exists():
+        continue
+    rows = [json.loads(l) for l in open(run_dir(c, s) / LOG_NAME, encoding="utf-8")]
+    q = max(1, len(rows) // 4)
+    losses = [r["loss"] for r in rows]
+    print(f"  {c}_{s}: steps={len(rows)} loss {np.mean(losses[:q]):.4f} -> "
+          f"{np.mean(losses[-q:]):.4f}  (nan={any(x != x for x in losses)})")
 ```
 
 Expected readings if §5's account holds: MAP@R ordering follows F1 (C1 ≫ C0 ≈ C2 ≈ C3);
@@ -419,10 +426,16 @@ import json, os
 import numpy as np
 from embeded.train import run_config, fingerprint, run_dir, METRICS_NAME, EVAL_METRICS_NAME, EVAL_CONFIG_NAME
 
+import re
+RUNS = sorted(
+    ((m.group(1), int(m.group(2)))
+     for d in (S.ARTIFACTS / S.RUNS_SUBDIR).glob("C[0-3]_*")
+     if (m := re.fullmatch(r"(C[0-3])_(\d+)", d.name))),
+    key=lambda t: ("C0 C1 C2 C3".split().index(t[0]), t[1]),
+)  # auto-discovers every condition/seed with a run dir (smoke_/sprime_ never match)
 print("== config/fingerprint audit (every row must say OK) ==")
 hash_sets = set()
-for c in ("C0", "C1", "C2", "C3"):
-    for s in (13, 14, 15):
+for c, s in RUNS:
         d = run_dir(c, s)
         if not (d / EVAL_METRICS_NAME).exists():
             continue
@@ -442,8 +455,7 @@ for c in ("C0", "C1", "C2", "C3"):
 print(f"distinct artifact hash-sets across all runs: {len(hash_sets)}  (expected 1)")
 
 print("== run-directory completeness (7 files per trained run, 3 for C0) ==")
-for c in ("C0", "C1", "C2", "C3"):
-    for s in (13, 14, 15):
+for c, s in RUNS:
         d = run_dir(c, s)
         exp = 3 if c == "C0" else 7
         n = len([f for f in os.listdir(d) if not f.startswith(".")]) if d.exists() else 0
@@ -472,9 +484,15 @@ p = float(z0["test_labels"].mean())
 print(f"exact test base rate p = {p:.4f} ({int(z0['test_labels'].sum()):,} positives "
       f"/ {len(z0['test_labels']):,})")
 print(f"all-positive F1 = 2p/(1+p) = {2*p/(1+p):.4f};  all-negative F1 = 0.0000")
+import re
+RUNS = sorted(
+    ((m.group(1), int(m.group(2)))
+     for d in (S.ARTIFACTS / S.RUNS_SUBDIR).glob("C[0-3]_*")
+     if (m := re.fullmatch(r"(C[0-3])_(\d+)", d.name))),
+    key=lambda t: ("C0 C1 C2 C3".split().index(t[0]), t[1]),
+)  # auto-discovers every condition/seed with a run dir (smoke_/sprime_ never match)
 print("== per-run behaviour at the stored threshold ==")
-for c in ("C0", "C1", "C2", "C3"):
-    for s in (13, 14, 15):
+for c, s in RUNS:
         d = run_dir(c, s)
         if not (d / EVAL_METRICS_NAME).exists():
             continue

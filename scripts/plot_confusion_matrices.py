@@ -1,10 +1,13 @@
-"""Stylized confusion-matrix board for the ten Phase 2 models (2 x 5 grid).
+"""Stylized confusion-matrix board for every Phase 2 model found on disk.
 
 Rows = actual label, columns = model prediction at the run's validation-chosen
 threshold (`max_f1_on_valid`, applied to the shared test split unchanged).
-Cells show row-% (large) and raw pair counts (small). C0 is the untrained
-baseline panel. Reads ONLY `artifacts/runs/<condition>_<seed>/predictions.npz`
-— no model, no GPU — so it runs on any VM or local pull that has the run dirs:
+Cells show row-% (large) and raw pair counts (small). Panels are
+auto-discovered: every `artifacts/runs/C{0,1,2,3}_<seed>/` directory that has a
+`predictions.npz` gets a panel (so extension campaigns — e.g. seeds 16/17/18 —
+appear automatically after a pull; smoke and sprime dirs are ignored). Reads
+ONLY `predictions.npz` — no model, no GPU — so it runs on any VM or local pull
+that has the run dirs:
 
     python -m scripts.plot_confusion_matrices [--runs-dir DIR] [--out PNG] [--dpi N]
 
@@ -15,6 +18,8 @@ check, same arithmetic as embeded.evaluate.precision_recall_f1).
 from __future__ import annotations
 
 import argparse
+import math
+from pathlib import Path
 
 import numpy as np
 import matplotlib
@@ -24,10 +29,22 @@ from matplotlib.colors import LinearSegmentedColormap
 
 from embeded import settings as S
 
-MODELS = [("C0", 13)] + [(c, s) for c in ("C1", "C2", "C3") for s in (13, 14, 15)]
+CONDITIONS = ("C0", "C1", "C2", "C3")
 COND_COLOR = {"C0": "#64748b", "C1": "#0e7490", "C2": "#b45309", "C3": "#6d28d9"}
 CELL_TAG = (("TP", "FN"), ("FP", "TN"))     # [actual][predicted]; positive = clone
 INK = "#0f172a"
+
+
+def discover_models(runs_dir: str | Path) -> list[tuple[str, int]]:
+    """Every (condition, seed) with a predictions.npz, C0 first, seeds ascending.
+    Only dirs named C{0..3}_<seed> qualify — smoke_/sprime_ dirs never match."""
+    found: set[tuple[str, int]] = set()
+    for d in Path(runs_dir).glob("C[0-3]_*"):
+        cond, _, seed = d.name.rpartition("_")
+        if cond in CONDITIONS:
+            if (d / "predictions.npz").exists():
+                found.add((cond, int(seed)))
+    return sorted(found, key=lambda t: (CONDITIONS.index(t[0]), t[1]))
 
 
 def confusion(scores: np.ndarray, labels: np.ndarray, thr: float) -> np.ndarray:
@@ -94,12 +111,18 @@ def main(argv=None) -> int:
     runs = a.runs_dir or str(S.ARTIFACTS / S.RUNS_SUBDIR)
     out = a.out or str(S.REPORT_MD.parent / "figures" / "phase2_confusion_matrices.png")
 
-    fig, axes = plt.subplots(2, 5, figsize=(24, 9.2), facecolor="white")
-    print(f"== confusion matrices from {runs} ==")
+    models = discover_models(runs)
+    if not models:
+        print(f"no C0..C3 run dirs with predictions.npz under {runs} — pull artifacts first")
+        return 1
+    n_rows = max(1, math.ceil(len(models) / 5))
+    fig, axes = plt.subplots(n_rows, 5, figsize=(24, 4.6 * n_rows + 0.6), facecolor="white",
+                             squeeze=False)
+    print(f"== confusion matrices from {runs} ({len(models)} runs) ==")
     print(f"{'run':>9} | {'TP':>7} {'FP':>7} {'FN':>7} {'TN':>7} | "
           f"{'P':>6} {'R':>6} {'F1':>6} {'thr':>6} {'n_pred_pos':>10}")
     k = 0
-    for ax, (cond, seed) in zip(axes.flat, MODELS):
+    for ax, (cond, seed) in zip(axes.flat, models):
         m = thr = None
         npz = f"{runs}/{cond}_{seed}/predictions.npz"
         try:
@@ -118,20 +141,19 @@ def main(argv=None) -> int:
         draw_panel(ax, cond, seed, m, thr)
         k += bool(m is not None)
 
-    for ax in axes.flat[10:]:
+    for ax in axes.flat[len(models):]:
         ax.axis("off")
-    fig.suptitle("Phase 2 — test-split confusion matrices, ten models",
+    fig.suptitle(f"Phase 2 — test-split confusion matrices, {len(models)} models",
                  fontsize=17, fontweight="bold", color=INK, y=0.99)
     fig.text(0.012, 0.005,
              f"n = {S.EXPECTED_SPLIT_ROWS['test']:,} shared test pairs per panel · "
              "threshold chosen on validation (max_f1_on_valid), applied unchanged · "
              "cell colour = row share · C0 = untuned baseline",
              fontsize=9, color="#64748b")
-    fig.tight_layout(rect=(0, 0.015, 1, 0.96))
-    from pathlib import Path
+    fig.tight_layout(rect=(0, 0.015, 1, 0.96), h_pad=3.2)
     Path(out).parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=a.dpi, facecolor="white")
-    print(f"wrote {out} ({k}/{len(MODELS)} runs found)")
+    print(f"wrote {out} ({k}/{len(models)} runs found)")
     return 0
 
 
