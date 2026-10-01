@@ -29,17 +29,17 @@ from matplotlib.colors import LinearSegmentedColormap
 
 from embeded import settings as S
 
-CONDITIONS = ("C0", "C1", "C2", "C3")
-COND_COLOR = {"C0": "#64748b", "C1": "#0e7490", "C2": "#b45309", "C3": "#6d28d9"}
+CONDITIONS = ("C0", "C1", "C2", "C3", "C4")
+COND_COLOR = {"C0": "#64748b", "C1": "#0e7490", "C2": "#b45309", "C3": "#6d28d9", "C4": "#15803d"}
 CELL_TAG = (("TP", "FN"), ("FP", "TN"))     # [actual][predicted]; positive = clone
 INK = "#0f172a"
 
 
 def discover_models(runs_dir: str | Path) -> list[tuple[str, int]]:
     """Every (condition, seed) with a predictions.npz, C0 first, seeds ascending.
-    Only dirs named C{0..3}_<seed> qualify — smoke_/sprime_ dirs never match."""
+    Only dirs named C{0..4}_<seed> qualify — smoke_/sprime_ dirs never match."""
     found: set[tuple[str, int]] = set()
-    for d in Path(runs_dir).glob("C[0-3]_*"):
+    for d in Path(runs_dir).glob("C[0-4]_*"):
         cond, _, seed = d.name.rpartition("_")
         if cond in CONDITIONS:
             if (d / "predictions.npz").exists():

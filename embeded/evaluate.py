@@ -38,7 +38,7 @@ from .train import (CHECKPOINT_NAME, EVAL_CONFIG_NAME, EVAL_METRICS_NAME,
                     PREDICTIONS_NAME, fingerprint, load_checkpoint, run_config,
                     run_dir, set_seed)
 
-CONDITIONS = ("C0", "C1", "C2", "C3")
+CONDITIONS = ("C0", "C1", "C2", "C3", "C4")
 SECTION = "## Phase 2 — main results"
 # Published CodeXGLUE fine-tuned-CodeBERT reference for the sanity check
 # (SCOPE P2-16, PHASE2_PLAN §3.3): approximate, and measured under a different
@@ -310,7 +310,7 @@ def write_results_table(runs_root: Path | None = None, *, report_md: Path | None
     if "C0" in agg:
         notes.append(f"C0 is the untuned baseline (one evaluation, not a trained condition) "
                      f"at mean F1 {agg['C0']['mean_f1']:.4f}.")
-    trained = [c for c in ("C1", "C2", "C3") if c in agg]
+    trained = [c for c in ("C1", "C2", "C3", "C4") if c in agg]
     if trained:
         best = max(trained, key=lambda c: agg[c]["mean_f1"])
         notes.append(f"Among the trained conditions the highest mean F1 is {best} "

@@ -23,7 +23,7 @@ from .data.prepare_data import corpus_ids, labeled_clones, load_fragments, posit
 from .mining.exclude import exclude_labeled_clones
 
 OVERFETCH = 4  # ranked candidates fetched before filtering = OVERFETCH * k
-COND = {"random": "C1", "bm25": "C2", "semantic": "C3"}
+COND = {"random": "C1", "bm25": "C2", "semantic": "C3", "filtered": "C4"}
 
 
 def clean_candidates(anchor, ranked, clone_sets, corpus_set, corpus_list,
@@ -32,13 +32,72 @@ def clean_candidates(anchor, ranked, clone_sets, corpus_set, corpus_list,
     filter (Rule 1), then exclusion-clean deterministic top-up to k."""
     ok = [c for c in exclude_labeled_clones(anchor, ranked, clone_sets) if c in corpus_set]
     if len(ok) < k:
+        # Last-resort top-up (shared pad convention), counted -- but the pad
+        # still honours the Jaccard cut: a denoiser that lets filtered dups
+        # back in through the back door is not a denoiser. Only the head skip
+        # is relaxed (when supply is short there is nothing denser left).
         banned = clone_sets.get(anchor, frozenset()) | {anchor} | set(ok)
         for c in corpus_list:
             if len(ok) >= k:
                 break
-            if c not in banned:
-                ok.append(c)
-                stats["padded"] += 1
+            if c in banned:
+                continue
+            if _jaccard(frags[c], frags[anchor]) >= S.C4_JACCARD_MAX:
+                stats["jaccard_filtered"] += 1
+                continue
+            ok.append(c)
+            stats["padded"] += 1
+    return ok[:k]
+
+
+def _jaccard(a_text: str, b_text: str) -> float:
+    """Token-set Jaccard, same tokenizer as scripts/hardness_diagnostics.py
+    (the diagnostics that measured the 0.40 cut) — one definition everywhere."""
+    from .mining.bm25_index import tokenize_code
+    a, b = set(tokenize_code(a_text)), set(tokenize_code(b_text))
+    return len(a & b) / len(a | b) if (a or b) else 0.0
+
+
+def clean_candidates_filtered(anchor, ranked, clone_sets, corpus_set,
+                              corpus_list, k, stats, frags):
+    """C4: labelled-clone + corpus exclusion first (identical to every other
+    strategy), then the two denoisers — drop candidates at
+    Jaccard >= S.C4_JACCARD_MAX, skip the first S.C4_SKIP_HEAD survivors —
+    then take k. Deterministic; no sampling. Padding to k from the corpus tail
+    follows the shared convention and is counted (a heavily-padded C4 is C1 in
+    disguise — the audit, not the pad count, is what judges it)."""
+    ranked = exclude_labeled_clones(anchor, ranked, clone_sets)
+    head = S.C4_SKIP_HEAD
+    ok = []
+    for c in ranked:
+        if c not in corpus_set:
+            continue
+        if _jaccard(frags[c], frags[anchor]) >= S.C4_JACCARD_MAX:
+            stats["jaccard_filtered"] += 1
+            continue
+        if head > 0:
+            head -= 1
+            stats["head_skipped"] += 1
+            continue
+        ok.append(c)
+        if len(ok) >= k:
+            break
+    if len(ok) < k:
+        banned = clone_sets.get(anchor, frozenset()) | {anchor} | set(ok)
+        # Last-resort top-up (shared pad convention), counted -- but the pad
+        # still honours the Jaccard cut: a denoiser that lets filtered dups
+        # back in through the back door is not a denoiser. Only the head skip
+        # is relaxed (when supply is short there is nothing denser left).
+        for c in corpus_list:
+            if len(ok) >= k:
+                break
+            if c in banned:
+                continue
+            if _jaccard(frags[c], frags[anchor]) >= S.C4_JACCARD_MAX:
+                stats["jaccard_filtered"] += 1
+                continue
+            ok.append(c)
+            stats["padded"] += 1
     return ok[:k]
 
 
@@ -56,7 +115,7 @@ def anchor_stream(k, cap=None):
 
 
 def mine(strategy, *, stream, corpus_list, clone_sets, k, all_ids,
-         bm25=None, semantic=None, seed=None):
+         bm25=None, semantic=None, seed=None, frags=None):
     rng = random.Random(seed if seed is not None else S.SEED)
     corpus_set = set(corpus_list)
     depth = k * OVERFETCH
@@ -69,6 +128,14 @@ def mine(strategy, *, stream, corpus_list, clone_sets, k, all_ids,
             ranked = [i for i, _ in bm25.topk(anchor, depth)]
         elif strategy == "semantic":
             ranked = [i for i, _ in semantic.topk_for_fragment(anchor, depth)]
+        elif strategy == "filtered":
+            ranked = [i for i, _ in bm25.topk(anchor, k * S.C4_OVERFETCH)]
+            negs = clean_candidates_filtered(anchor, ranked, clone_sets,
+                                             corpus_set, corpus_list, k, stats,
+                                             frags)
+            stats["anchors_short"] += int(len(negs) < k)
+            triples.extend((anchor, positive, n) for n in negs)
+            continue
         else:
             raise ValueError(strategy)
         negs = clean_candidates(anchor, ranked, clone_sets, corpus_set,
@@ -125,7 +192,7 @@ def main(argv=None):
             return
 
     bm25 = semantic = None
-    if "bm25" in strategies:
+    if "bm25" in strategies or "filtered" in strategies:
         from .mining.bm25_index import BM25Index
         bm25 = BM25Index([frags[i] for i in all_ids])
     if "semantic" in strategies:
@@ -146,7 +213,7 @@ def main(argv=None):
     for st in strategies:
         triples, stats = mine(st, stream=stream, corpus_list=corpus_list,
                               clone_sets=clone_sets, k=a.k, all_ids=all_ids,
-                              bm25=bm25, semantic=semantic)
+                              bm25=bm25, semantic=semantic, frags=frags)
         out = S.artifact(f"triples_{COND[st]}.jsonl")
         with open(out, "w", encoding="utf-8") as fh:
             for an, po, ne in triples:

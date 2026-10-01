@@ -6,7 +6,7 @@ bump VERSION so artifact hashes make staleness obvious.
 import os
 from pathlib import Path
 
-VERSION = "phase01-v6"   # v6: gate G1 re-operationalised (decision D1, 2026-09-27) — the verdict is now the scale-aware rule C1 < C2 <= C3 AND standardised gap d(C1->C2) >= HARDNESS_D_MIN; HARDNESS_MARGIN is kept and REPORTED but is no longer the verdict. No mining or encoding input changed, so artifacts regenerate bit-identically; the bump makes every recorded run say which rule judged it. v5: MAX_LEN 256 -> 512 from the measured Phase 0.4 token lengths (p50=474, p99=5944); training sizing measured on the T4 (BATCH 8, TRAIN_PAIRS_CAP 32k, fp16 AMP — fp32 OOMs); v4: torch policy = Colab platform build (no torch pin); v3: env refresh for Colab py3.13 (transformers 4.46.3 / scikit-learn 1.6.1 / gradio 5.49.1); v2: canonical data.jsonl fragment ids (8,063 unique texts); v1 derived ids from pairs
+VERSION = "phase01-v7"   # v7: C4 "filtered" negative strategy (BM25 + token-Jaccard denoise + head skip); C1-C3 mining inputs and code paths are unchanged, so the existing triples and the audit key regenerate/stay valid bit-identically - the bump only marks which mining generation a run consumed. # v6: gate G1 re-operationalised (decision D1, 2026-09-27) — the verdict is now the scale-aware rule C1 < C2 <= C3 AND standardised gap d(C1->C2) >= HARDNESS_D_MIN; HARDNESS_MARGIN is kept and REPORTED but is no longer the verdict. No mining or encoding input changed, so artifacts regenerate bit-identically; the bump makes every recorded run say which rule judged it. v5: MAX_LEN 256 -> 512 from the measured Phase 0.4 token lengths (p50=474, p99=5944); training sizing measured on the T4 (BATCH 8, TRAIN_PAIRS_CAP 32k, fp16 AMP — fp32 OOMs); v4: torch policy = Colab platform build (no torch pin); v3: env refresh for Colab py3.13 (transformers 4.46.3 / scikit-learn 1.6.1 / gradio 5.49.1); v2: canonical data.jsonl fragment ids (8,063 unique texts); v1 derived ids from pairs
 
 ROOT = Path(__file__).resolve().parent.parent
 # env overrides let tests and Colab/HF sync relocate artifacts/report
@@ -108,6 +108,17 @@ GRAD_CHECKPOINT = False            # recompute activations in backward: far less
 # Evaluated with the same mean-pooled cosine as C0, so training and scoring
 # share one similarity definition (PHASE2_PLAN §3.2).
 LOSS = "triplet"
+# --- C4 "filtered" hard negatives (pre-registered 2026-10-01, Phase2C4 notebook) ---
+# C4 = C2's BM25 ranking + two denoisers, nothing else: (1) candidates whose
+# token-Jaccard with the anchor is >= C4_JACCARD_MAX are dropped (the audit
+# separability cut: in-sample it removed ~40% of C2's contamination while
+# keeping every audited clean pair - C2 clean max 0.345, clone median 0.418);
+# (2) the first C4_SKIP_HEAD surviving candidates are skipped (the densest
+# head). BM25 depth = C4_OVERFETCH * k so the filters cannot starve k.
+C4_JACCARD_MAX = 0.40
+C4_SKIP_HEAD = 10
+C4_OVERFETCH = 20
+
 TRIPLET_MARGIN = 0.10              # cosine hinge: max(0, margin + cos(a,n) - cos(a,p))
 WEIGHT_DECAY = 0.01
 WARMUP_STEPS = 100                 # linear warmup then linear decay to 0 over the run

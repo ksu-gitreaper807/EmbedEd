@@ -449,6 +449,8 @@ def mine(holdout_k: int, k: int, cap: int, *, embed_fn=None, force: bool = False
     summary: dict = {}
     corpus_list = pool
     for strategy, cond in NG.COND.items():
+        if cond not in CONDS:   # C4 is Phase-2-only; s' mining stays C1-C3
+            continue
         triples, stats = NG.mine(strategy, stream=stream, corpus_list=corpus_list,
                                  clone_sets=clone_sets, k=k, all_ids=all_ids,
                                  bm25=bm25, semantic=semantic, seed=S.SEED)

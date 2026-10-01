@@ -55,12 +55,12 @@ def _triples(cond):
     return by_anchor
 
 
-def sample_pairs(n: int, seed: int) -> list[dict]:
+def sample_pairs(n: int, seed: int, conds=None) -> list[dict]:
     """n pairs per condition, distinct anchors within a condition, one random
     negative per anchor, then a seeded shuffle across conditions."""
     rng = random.Random(seed)
     out = []
-    for cond in CONDS:
+    for cond in (conds or CONDS):
         by_anchor = _triples(cond)
         anchors = sorted(by_anchor)
         if len(anchors) < n:
