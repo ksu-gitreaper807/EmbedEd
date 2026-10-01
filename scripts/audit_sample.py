@@ -157,9 +157,14 @@ def score_rows(labels: dict[str, str], key: list[dict]) -> dict:
 
 
 def write_section(res: dict) -> None:
-    lines = ["## False-negative audit (50 + 50, blind; SCOPE P2-9)", "",
-             f"`python -m scripts.audit_sample score` — version `{S.VERSION}`. Share of mined negatives judged "
-             "to be clones (functional equivalence). Headline counts `unsure` as not_clone; the upper bound counts it as clone.",
+    conds_tag = "/".join(c for c in res if not c.startswith("_"))
+    heading = f"## False-negative audit — {conds_tag} (blind; SCOPE P2-9)"
+    # the heading carries the sheet's conditions so a later C4 score APPENDS its
+    # own section instead of overwriting the scored C2/C3 one (regex is tag-anchored)
+    lines = [heading, "",
+             f"`python -m scripts.audit_sample score` — version `{S.VERSION}`, conditions {conds_tag}. "
+             "Share of mined negatives judged to be clones (functional equivalence). Headline counts "
+             "`unsure` as not_clone; the upper bound counts it as clone.",
              "", "| condition | n | clone | not_clone | unsure | FN rate [95% CI] | upper bound incl. unsure |",
              "|---|---|---|---|---|---|---|"]
     for cond in (c for c in res if not c.startswith("_")):
@@ -172,8 +177,9 @@ def write_section(res: dict) -> None:
     S.REPORT_MD.parent.mkdir(parents=True, exist_ok=True)
     if S.REPORT_MD.exists():
         old = S.REPORT_MD.read_text()
-        if "## False-negative audit" in old:
-            old = re.sub(r"## False-negative audit.*?(?=\n## |\Z)", lambda _m: block + "\n", old, flags=re.S)
+        pat = re.compile("## False-negative audit — " + re.escape(conds_tag) + r".*?(?=\n## |\Z)", re.S)
+        if pat.search(old):
+            old = pat.sub(lambda _m: block + "\n", old)
         else:
             old = old.rstrip("\n") + "\n\n" + block + "\n"
         S.REPORT_MD.write_text(old)

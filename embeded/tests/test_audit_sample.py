@@ -116,3 +116,41 @@ def test_score_refuses_a_key_that_no_longer_matches_the_triples(fx, capsys):
         raise AssertionError("expected SystemExit on a stale key")
     except SystemExit as e:
         assert "does not match the triples on disk" in str(e) and "C3" in str(e)
+
+
+def test_c4_sheet_is_separate_and_coexists_in_report(fx, capsys, monkeypatch):
+    """A C4-only audit lives in its own directory (EMBEDED_AUDIT_DIR), never
+    touches the scored Phase-2 sheet, and its report section is tagged so it
+    APPENDS beside the C2/C3 section instead of overwriting it."""
+    _mine(fx)
+    NG.main(["--strategies", "filtered", "--k", "3"])          # mine C4 on the fixture
+    c4dir = S.ARTIFACTS / "audit_c4"
+    monkeypatch.setenv("EMBEDED_AUDIT_DIR", str(c4dir))
+    A.make(2, 7, conds=("C4",))
+    key = list(csv.DictReader(open(c4dir / "audit_key.csv")))
+    assert {r["condition"] for r in key} == {"C4"}
+    assert not (S.ARTIFACTS / "audit" / "audit_key.csv").exists()   # Phase-2 sheet untouched
+    with open(c4dir / "audit_labels.csv", "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=["id", "label", "note"]); w.writeheader()
+        for r in key:
+            w.writerow({"id": r["id"], "label": "clone", "note": ""})
+    res = A.score()
+    assert {k for k in res if not k.startswith("_")} == {"C4"}      # the sheet decides
+    assert res["C4"]["fn_rate"] == 1.0
+    report = S.REPORT_MD.read_text()
+    assert "## False-negative audit — C4" in report
+    # a later C2/C3 score adds its own tagged section; both survive
+    monkeypatch.delenv("EMBEDED_AUDIT_DIR")
+    A.make(2, 7)
+    d = S.ARTIFACTS / "audit"
+    key = list(csv.DictReader(open(d / "audit_key.csv")))
+    with open(d / "audit_labels.csv", "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=["id", "label", "note"]); w.writeheader()
+        for r in key:
+            w.writerow({"id": r["id"], "label": "not_clone", "note": ""})
+    A.score()
+    report = S.REPORT_MD.read_text()
+    assert "## False-negative audit — C4" in report
+    assert "## False-negative audit — C2/C3" in report
+    A.score()                                                    # rerun replaces only its own tag
+    assert S.REPORT_MD.read_text().count("## False-negative audit") == 2
