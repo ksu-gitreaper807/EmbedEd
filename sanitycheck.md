@@ -402,3 +402,51 @@ recomputed F1s match stored; C1's pos–neg gap clearly positive and largest; C2
 negative; C1 losses fall well below the 0.10 margin while C2/C3 flatten near it with no NaNs.
 Deviations from these readings are exactly the three falsifiers in §8 — record them before any
 write-up.
+
+**Part 2 — config / VM-split audit** (added 2026-10-01, after the parallel-VM execution
+topology question: VM1 = C1 13/14/15 + C2 13/14; four further VMs = C2 15 + C3 13/14/15 +
+C0). Paste this alongside part 1:
+
+```python
+import json, os
+import numpy as np
+from embeded.train import run_config, fingerprint, run_dir, METRICS_NAME, EVAL_METRICS_NAME, EVAL_CONFIG_NAME
+
+print("== config/fingerprint audit (every row must say OK) ==")
+hash_sets = set()
+for c in ("C0", "C1", "C2", "C3"):
+    for s in (13, 14, 15):
+        d = run_dir(c, s)
+        if not (d / EVAL_METRICS_NAME).exists():
+            continue
+        ec = json.loads((d / EVAL_CONFIG_NAME).read_text())   # frozen config the run consumed
+        em = json.loads((d / EVAL_METRICS_NAME).read_text())
+        tm = json.loads((d / METRICS_NAME).read_text()) if (d / METRICS_NAME).exists() else None
+        fp_now = fingerprint(run_config(c, s))                # recomputed from today's settings
+        ok_eval = fp_now == ec["fingerprint"] == em["fingerprint"]
+        ok_train = True if tm is None else fp_now == tm["fingerprint"]
+        hash_sets.add(json.dumps(ec["artifacts"], sort_keys=True))
+        dev = em.get("device") or (tm["device"] if tm else "?")
+        steps = tm["steps"] if tm else "-"
+        print(f"  {c}_{s}: fingerprint {'OK' if ok_eval and ok_train else 'MISMATCH'} | "
+              f"device={dev} | train_steps={steps} "
+              f"(expected {ec['train_pairs_cap'] // ec['batch']}) | "
+              f"finished={tm['finished_utc'] if tm else em['evaluated_utc']}")
+print(f"distinct artifact hash-sets across all runs: {len(hash_sets)}  (expected 1)")
+
+print("== run-directory completeness (7 files per trained run, 3 for C0) ==")
+for c in ("C0", "C1", "C2", "C3"):
+    for s in (13, 14, 15):
+        d = run_dir(c, s)
+        exp = 3 if c == "C0" else 7
+        n = len([f for f in os.listdir(d) if not f.startswith(".")]) if d.exists() else 0
+        print(f"  {c}_{s}: {n}/{exp} files {'OK' if n >= exp else 'INCOMPLETE'}")
+```
+
+What each line catches: a **fingerprint MISMATCH** means that run consumed a different
+config/data than the frozen recipe (the one real cross-VM failure mode — stale clone,
+re-mined triples, edited settings); `hash-sets > 1` means the VMs did not train on
+byte-identical triples; `train_steps` off from expected means an interruption/resume
+actually changed the run (check that run's `train_log.jsonl` for a mid-log loss jump);
+`INCOMPLETE` means a partial HF upload or an interrupted evaluation — re-pull before
+believing anything from that run.
