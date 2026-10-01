@@ -639,3 +639,44 @@ functionality almost losslessly** — F1_unseen 0.7230 vs seen 0.7454 (−0.022,
 average drop of ~31%, that is LLM-scale robustness from a 32k-triple bi-encoder — the
 single most encouraging number in the project so far, and the healthy-scorer transfer
 quantity §6 predicted would be the informative Phase 3 measurement.
+### 9.4 C4 "filtered" — pre-registration (written BEFORE any C4 run exists; commit `56822ba`)
+
+The one strategy the campaign left untested: **denoised hard negatives**. C2/C3 collapsed
+because undenoised hard mining is dominated by false negatives (§6: FN rates 42%/30%, the
+cause; margin the amplifier). The literature position (RocketQA; debiased contrastive;
+NV-Retriever) is that hard negatives help **only after denoising**. C4 is that claim made
+testable inside the frozen recipe. The denoiser is not invented ad hoc — it is the audit's
+own separability cut, lifted from the 100-pair blind audit:
+
+- **C4 = C2's BM25 ranking** (same ranker, depth k×20 instead of k×4 to feed the filters)
+- **drop** every candidate with token-Jaccard(anchor, candidate) ≥ **0.40** — the audit's
+  separating threshold: removed ~40% of C2's contamination in-sample while keeping every
+  audited clean pair (C2 clean max 0.345; clone median 0.418). Tokenizer = the diagnostics
+  tokenizer (`bm25_index.tokenize_code`), one definition everywhere.
+- **skip the first 10 survivors** (the densest head — rank-skip per the external review;
+  helps the C3-like regime, median rank ~13)
+- everything else identical to C1–C3: exclusion pass, corpus filter, shared anchor/positive
+  stream, margin 0.10, cap, seeds. Padding to k from the corpus tail survives but is counted,
+  and the pad itself honours the Jaccard cut. Implementation: `clean_candidates_filtered`,
+  commit `56822ba`, 6 unit tests, suite 124/124.
+
+**Expected outcome, pre-registered: F1(C4) ≈ F1(C1)**, i.e. the denoisers remove enough
+contamination that C4 behaves like the clean-easy control rather than like C2. The
+informative comparisons, in order of interest:
+- C4 ≈ C1 → denoising rescues hard mining **to the clean baseline** (consistent with the
+  FN-cause account; the residual question becomes whether ANY denoised-hard signal remains).
+- C1 < C4 → denoised hard negatives add real signal on top of clean-easy (the RocketQA-style
+  best case; would be the first positive hard-mining result in this recipe).
+- C4 ≈ C2 → the Jaccard cut does not capture the poison (the remaining FN mass is
+  semantically-but-not-lexically duplicated); strengthens "functionality-blind mining is
+  unfixable at the lexical layer" (§6, external review).
+
+**MANDATORY before any C4 number is compared to anything: a fresh 50-pair blind audit of
+the C4 triples** (`audit_sample --conditions C4` — flag added in `56822ba`), same
+50/50 clone/not_clone design, judged without knowing which strategy produced the pair.
+Acceptance gate: C4's audited clone-contamination rate must be **≤ C2's measured floor
+(42%)** and ideally within noise of C1's (~0%). If the audit fails the gate, C4 is reported
+as "denoising attempted, contamination persists" and the F1 comparison is footnoted, not
+headlined. Mining is CPU-only (BM25); v7 bumps VERSION, so the `[cache]` is invalidated —
+the re-mined C1–C3 triples are deterministic and bit-identical (same seeds, same code paths),
+only C4's triples are new bytes.
