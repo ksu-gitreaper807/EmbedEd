@@ -317,6 +317,13 @@ The s′ gate (G1s, d = 0.886, PASS) shows the same manipulation is even *strong
 corpus — so Phase 3 inherits this whole account, and C2/C3's Δ on s′ may be mechanically
 degenerate; C1's healthy scorer meeting unseen functionality is the informative measurement.
 
+Causal hierarchy, stated explicitly because the same-margin C1 control invites the question:
+the **false-negative rate is the cause**; the **margin is the amplifier** — it fixes the dose
+(a never-saturating hinge fires every violated triple at full strength, every step, with no
+wash-out) that turns a 30–42% false signal into collapse. C1 sharing the margin and succeeding
+is precisely what separates the two, which is why B3 is adjudicated as co-mechanism (§5), not
+root cause.
+
 ## 7. Literature alignment (details in the PR discussion of 2026-09-30)
 
 Consistent with: RocketQA's measured result that undenoised hard negatives **decrease**
@@ -450,3 +457,44 @@ byte-identical triples; `train_steps` off from expected means an interruption/re
 actually changed the run (check that run's `train_log.jsonl` for a mid-log loss jump);
 `INCOMPLETE` means a partial HF upload or an interrupted evaluation — re-pull before
 believing anything from that run.
+
+**Part 3 — collapse-signature check** (added 2026-10-01 from external review: pin the exact
+test base rate and each run's predicted-positive fraction — decides whether C2/C3 are literally
+"say-yes-to-everything" collapse or the partial/erasure mode of §5.3):
+
+```python
+import json
+import numpy as np
+from embeded.train import run_dir, EVAL_METRICS_NAME
+
+z0 = np.load(run_dir("C0", 13) / "predictions.npz")
+p = float(z0["test_labels"].mean())
+print(f"exact test base rate p = {p:.4f} ({int(z0['test_labels'].sum()):,} positives "
+      f"/ {len(z0['test_labels']):,})")
+print(f"all-positive F1 = 2p/(1+p) = {2*p/(1+p):.4f};  all-negative F1 = 0.0000")
+print("== per-run behaviour at the stored threshold ==")
+for c in ("C0", "C1", "C2", "C3"):
+    for s in (13, 14, 15):
+        d = run_dir(c, s)
+        if not (d / EVAL_METRICS_NAME).exists():
+            continue
+        m = json.loads((d / EVAL_METRICS_NAME).read_text())
+        if m.get("smoke"):
+            continue
+        z = np.load(d / "predictions.npz")
+        thr, sc = float(z["threshold"]), z["test_scores"]
+        frac = float((sc >= thr).mean())
+        f1 = m["test_f1"]
+        verdict = "matches all-positive collapse" if abs(f1 - 2*p/(1+p)) < 0.02 else \
+                  ("near all-positive" if frac > 0.9 else
+                   ("near all-negative" if frac < 0.05 else "partial / erasure mode"))
+        print(f"  {c}_{s}: F1={f1:.4f}  predicted-positive={frac:6.1%}  -> {verdict}")
+```
+
+Expected reading if §5.3's erasure account holds: C0 **partial** (it is a weak separator, not
+a degenerate one — P 0.21 / R 0.34 at threshold 0.9779); C1 partial with a healthy positive
+fraction; C2/C3 at threshold 1.0000 reveal which degenerate mode they took. Note C2/C3's F1
+(0.24–0.29) sits *below* the all-positive ceiling whenever p > ~0.14 — a pure "yes to
+everything" predictor would score 2p/(1+p), so an observed shortfall is itself informative
+(band compression with wrong-side ordering), exactly the distinction this block settles.
+The base rate p also replaces §5.3's model-calibrated π ≈ 0.15–0.20 with an exact number.
