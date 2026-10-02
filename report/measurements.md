@@ -576,15 +576,13 @@ Label-noise floors (correction 5; proxies, not the audit): share of negatives th
 
 ## Phase 2 — main results
 
-Generated from `artifacts/runs/<condition>_<seed>/eval_metrics.json` by `python -m embeded.evaluate --results-table` — version `phase01-v6`. Threshold policy: *max_f1_on_valid* (chosen on validation, applied unchanged to test; test is scored once per run).
+Generated from `artifacts/runs/<condition>_<seed>/eval_metrics.json` by `python -m embeded.evaluate --results-table` — version `phase01-v7`. Threshold policy: *max_f1_on_valid* (chosen on validation, applied unchanged to test; test is scored once per run).
 
 | condition | seed | F1 | precision | recall | MAP@R | valid threshold | n test pairs |
 |---|---|---|---|---|---|---|---|
 | C0 | 13 | 0.2572 | 0.2075 | 0.3383 | 0.1024 | 0.9779 | 415416 |
 | C1 | 13 | 0.7454 | 0.7313 | 0.7602 | 0.6672 | 0.4358 | 415416 |
-| C1 | 13 | 0.7230 | 0.6814 | 0.7700 | 0.5804 | 0.7165 | 600 |
 | C1 | 14 | 0.7546 | 0.7402 | 0.7696 | 0.6802 | 0.4357 | 415416 |
-| C1 | 14 | 0.7564 | 0.6576 | 0.8900 | 0.6225 | 0.6022 | 600 |
 | C1 | 15 | 0.7599 | 0.7394 | 0.7815 | 0.6862 | 0.4492 | 415416 |
 | C1 | 16 | 0.7545 | 0.7496 | 0.7595 | 0.6774 | 0.4396 | 415416 |
 | C1 | 17 | 0.7118 | 0.6774 | 0.7500 | 0.6026 | 0.4622 | 415416 |
@@ -601,18 +599,26 @@ Generated from `artifacts/runs/<condition>_<seed>/eval_metrics.json` by `python 
 | C3 | 16 | 0.2727 | 0.1875 | 0.4994 | 0.0790 | 1.0000 | 415416 |
 | C3 | 17 | 0.2697 | 0.1877 | 0.4792 | 0.0722 | 1.0000 | 415416 |
 | C3 | 18 | 0.2789 | 0.1839 | 0.5774 | 0.0813 | 1.0000 | 415416 |
+| C4 | 13 | 0.4108 | 0.3256 | 0.5564 | 0.2559 | 0.4965 | 415416 |
+| C4 | 14 | 0.3988 | 0.3411 | 0.4800 | 0.2369 | 0.5414 | 415416 |
+| C4 | 15 | 0.4529 | 0.3755 | 0.5705 | 0.2967 | 0.4977 | 415416 |
+| C4 | 16 | 0.4418 | 0.3436 | 0.6183 | 0.2735 | 0.5083 | 415416 |
+| C4 | 17 | 0.4609 | 0.3711 | 0.6083 | 0.3085 | 0.5180 | 415416 |
+| C4 | 18 | 0.4444 | 0.4010 | 0.4983 | 0.2847 | 0.5707 | 415416 |
 
 | condition | runs | mean F1 | sd F1 | mean P | mean R | mean MAP@R |
 |---|---|---|---|---|---|---|
 | C0 | 1 | 0.2572 | 0.0000 | 0.2075 | 0.3383 | 0.1024 |
-| C1 | 8 | 0.7447 | 0.0176 | 0.7190 | 0.7764 | 0.6509 |
+| C1 | 6 | 0.7464 | 0.0176 | 0.7355 | 0.7586 | 0.6674 |
 | C2 | 6 | 0.2555 | 0.0123 | 0.1547 | 0.7713 | 0.0474 |
 | C3 | 6 | 0.2733 | 0.0091 | 0.1854 | 0.5234 | 0.0772 |
+| C4 | 6 | 0.4349 | 0.0246 | 0.3597 | 0.5553 | 0.2760 |
 
 - C0 is the untuned baseline (one evaluation, not a trained condition) at mean F1 0.2572.
-- Among the trained conditions the highest mean F1 is C1 (0.7447); per-seed values above, not the best seed.
+- Among the trained conditions the highest mean F1 is C1 (0.7464); per-seed values above, not the best seed.
 - Sanity reference: published CodeXGLUE fine-tuned-CodeBERT F1 ~ 0.95 under a different model/protocol. Observed F1 range 0.2408–0.7599. A large discrepancy is a harness/protocol check (metric implementation, pair order, labels, threshold handling), not a reason to tune against the test split.
-- 1 smoke-run result(s) are excluded from this table (harness checks, not measurements).
+- 2 smoke-run result(s) are excluded from this table (harness checks, not measurements).
+- 2 result file(s) with conditions outside ['C0', 'C1', 'C2', 'C3', 'C4'] (Phase 3 sprime runs) are excluded from this table.
 
 ## Phase 3 — decisions (recorded before the runs)
 
