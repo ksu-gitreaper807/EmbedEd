@@ -680,3 +680,18 @@ as "denoising attempted, contamination persists" and the F1 comparison is footno
 headlined. Mining is CPU-only (BM25); v7 bumps VERSION, so the `[cache]` is invalidated —
 the re-mined C1–C3 triples are deterministic and bit-identical (same seeds, same code paths),
 only C4's triples are new bytes.
+
+**§9.4 execution log — mining stage (2026-10-02, VM).** The sanctioned v7 re-mine ran clean:
+`frags=8063 corpus=6451 anchors=1600 k=20`; all four strategies landed at 32,000 triples
+(`anchors_short=0` everywhere). **C1–C3 re-mined bit-identical to the `.v6bak` backups
+(sha256 match) — the audit key and every Phase-2 label survive the version bump.** The
+determinism assumption is now verified on real data, not just asserted. Provenance note: the
+first attempt crashed on C2 (`NameError: frags`) — a C4-only pad block had been committed
+inside the shared `clean_candidates` (fixed in `91d2f7c` with forced-pad regression tests;
+offline fixtures never execute the pad path, only scale does). C4 mining stats:
+`jaccard_filtered = 66,958` (candidates dropped at J ≥ 0.40 while scanning the k×20 BM25
+depth — the audit cut removing real mass), `head_skipped = 16,000` (= 1600 × 10 exactly:
+every anchor had ≥ 10 survivors past the cut), `padded = 111` (0.35 % of C4 negatives — no
+drift toward C1), against C2's `padded = 7`. Order from here: §4 diagnostics row → §5/§5.5
+**mandatory 50-pair blind audit gate** (pass ≤ 42 %, hope ≈ 0 %) → only then the six-seed
+campaign, and only a passed gate puts C4 numbers on equal footing.
