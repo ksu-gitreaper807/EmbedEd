@@ -32,21 +32,13 @@ def clean_candidates(anchor, ranked, clone_sets, corpus_set, corpus_list,
     filter (Rule 1), then exclusion-clean deterministic top-up to k."""
     ok = [c for c in exclude_labeled_clones(anchor, ranked, clone_sets) if c in corpus_set]
     if len(ok) < k:
-        # Last-resort top-up (shared pad convention), counted -- but the pad
-        # still honours the Jaccard cut: a denoiser that lets filtered dups
-        # back in through the back door is not a denoiser. Only the head skip
-        # is relaxed (when supply is short there is nothing denser left).
         banned = clone_sets.get(anchor, frozenset()) | {anchor} | set(ok)
         for c in corpus_list:
             if len(ok) >= k:
                 break
-            if c in banned:
-                continue
-            if _jaccard(frags[c], frags[anchor]) >= S.C4_JACCARD_MAX:
-                stats["jaccard_filtered"] += 1
-                continue
-            ok.append(c)
-            stats["padded"] += 1
+            if c not in banned:
+                ok.append(c)
+                stats["padded"] += 1
     return ok[:k]
 
 

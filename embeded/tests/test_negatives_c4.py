@@ -10,7 +10,7 @@ from collections import defaultdict
 import pytest
 
 from embeded import settings as S
-from embeded.negatives import _jaccard, clean_candidates_filtered, mine
+from embeded.negatives import (_jaccard, clean_candidates, clean_candidates_filtered, mine)
 
 # token sets under embeded.mining.bm25_index.tokenize_code (camel-split, lower):
 #   anchor/dup share alpha/bravo/charlie/delta/echo  -> Jaccard ~0.71 (>= 0.40)
@@ -91,3 +91,34 @@ def test_c4_rejects_missing_frags():
     with pytest.raises(TypeError):
         mine("filtered", stream=[(0, 39)], corpus_list=[2], clone_sets={},
              k=1, all_ids=[0, 1, 2], bm25=StubBM25())
+
+
+# --- shared pad-path regressions (the VM crash: the C4 pad code was committed
+# inside clean_candidates, where `frags` does not exist; fixtures never pad, so
+# only scale exposed it) -------------------------------------------------------
+
+def test_clean_candidates_pad_path_needs_no_frags():
+    # every ranked candidate is a labelled clone -> ok == [] -> the pad fills k
+    # from the corpus tail, exactly the C1-C3 shared convention (no Jaccard here)
+    ranked = [5, 6, 7, 8, 9]
+    clone_sets = {0: {5, 6, 7, 8, 9}}
+    corpus_list = [2, 3, 4, 10, 11]
+    stats = defaultdict(int)
+    ok = clean_candidates(0, ranked, clone_sets, corpus_set=set(corpus_list),
+                          corpus_list=corpus_list, k=3, stats=stats)
+    assert ok == [2, 3, 4] and stats["padded"] == 3
+
+
+def test_mine_bm25_survives_a_ranking_that_is_mostly_excluded():
+    # the exact shape of the VM crash: BM25's top-k is dominated by labelled
+    # clones and out-of-corpus ids, so clean_candidates must pad; mine("bm25")
+    # passes no frags and none may be required
+    class PoisonedBM25:
+        def topk(self, anchor, depth):
+            return [(i, 1.0) for i in [5, 6, 7] + [50, 51, 52]][:depth]
+
+    triples, stats = mine("bm25", stream=[(0, 9)],
+                          corpus_list=[2, 3, 4, 9], clone_sets={0: {5, 6, 7}},
+                          k=3, all_ids=list(range(60)), bm25=PoisonedBM25())
+    assert [n for _, _, n in triples] == [2, 3, 4]   # all three from the pad
+    assert stats["padded"] == 3
