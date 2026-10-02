@@ -745,3 +745,46 @@ pushed to HF by the trainer; harmless (never matches `C[0-4]_<seed>` globs), opt
 cleanup. (3) Correction to the C4_13 log entry above: run fingerprints legitimately differ
 across seeds (the hash covers condition+seed by construction); the cross-run identity check
 is the shared `artifacts` hash block in each `run_config.json`, not the fingerprint.
+
+**§9.4 FINAL — the mandatory C4 audit gate (2026-10-02, reader VM; sheet `artifacts/audit_c4/`,
+blind, key verified against the on-disk triples). Clone rate 15/50 = 30 % [Wilson 0.191,
+0.438]; incl. unsure 16/50 = 32 % [0.208, 0.458] (unsure 1). References: C1 ≈ 0–2 %, C2
+42 % [0.294, 0.558], C3 30 % [0.191, 0.438].**
+
+**Gate verdict: PASSED by the pre-registered criterion (30 % ≤ 42 %) — C4 comparisons stand
+on equal footing. The pre-registered HOPE (≈ 0 %) failed: the fork registered before the
+audit lands on its second branch — PARTIAL DENOISING.** The Jaccard cut removed the lexical
+false negatives (the J ≥ 0.40 band, C2-style surface-similar poison); the *semantic* clones
+(same functionality, different tokens — J < 0.40) sailed through, and they alone account
+for the 30 %.
+
+**The decisive comparison the two audits now make possible: C3 and C4 carry the SAME
+measured contamination — 15/50 each — yet sit 0.16 F1 apart with opposite scorer states (C3:
+10/12 thresholds saturated at 1.0000 and MAP@R below C0; C4: 6/6 unpinned and MAP@R 2.7×
+C0). Contamination RATE therefore does not determine collapse; the FN mass's SURFACE
+SIMILARITY does. C3's false negatives are retrieved *by* semantic proximity and include the
+lexically-hot band; C4's contain no token-J ≥ 0.40 member by construction. Refinement of
+§6: the collapse trigger is a false negative that is simultaneously a functional clone AND
+a surface near-duplicate — the push-apart gradient then contradicts the very features that
+define clones (→ saturation erasure, §9.1). Function-only clones are a milder corruption:
+they misallocate capacity without eroding the representation. FN similarity = trigger, FN
+rate = dose, margin 0.10 = amplifier (unchanged).**
+
+**C4 verdict for the write-up (headline-able as of this gate):** denoised hard negatives
+(C4: F1 0.4349 ± 0.0246, MAP@R 0.2760) escape the degenerate mode that undenoised mining
+produces (C2 0.2478 ± 0.0231 / C3 0.2707 ± 0.0095; MAP@R 0.047/0.077), beat the untuned
+baseline on both axes (+0.178 F1, 2.7× MAP@R), and do NOT approach the clean-easy control
+(C1 0.7464 ± 0.0176; gap −0.31) — and the audit prices the residue: 30 % of C4's negatives
+are still false negatives, the semantic clone mass a lexical filter cannot see. Claim
+(literature-aligned, RocketQA / NV-Retriever, extended by the similarity-axis finding):
+under this frozen recipe (margin 0.10, thresholded F1) denoising is necessary and
+sufficient for avoiding collapse but buys no advantage over easy negatives — and the
+denoising axis matters: token-level filtering removes exactly the collapse-causing
+component while leaving the semantic FN mass intact. Any future denoiser must be semantic
+(cross-encoder or embedding-distance veto), not lexical.
+
+Housekeeping: the audit artifacts live on the reader VM; preserve by a fresh `pull --light`
+immediately followed by an artifacts-only `push` from that same VM (never `--include-report`
+from a second VM, and do not commit that VM's stale repo copy of `report/measurements.md` —
+this section is canonical). The §9.2 stored-metrics repair (per-file SHA check + `evaluate
+--force` on the 9 mismatched v6 runs) remains the last open campaign item.
