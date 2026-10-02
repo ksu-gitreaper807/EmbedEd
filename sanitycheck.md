@@ -695,3 +695,22 @@ every anchor had ≥ 10 survivors past the cut), `padded = 111` (0.35 % of C4 ne
 drift toward C1), against C2's `padded = 7`. Order from here: §4 diagnostics row → §5/§5.5
 **mandatory 50-pair blind audit gate** (pass ≤ 42 %, hope ≈ 0 %) → only then the six-seed
 campaign, and only a passed gate puts C4 numbers on equal footing.
+
+**§9.4 execution log — C4_13 first result (2026-10-02, monitoring read from the reader VM;
+comparison DEFERRED pending the mandatory audit gate).** `test_f1 = 0.4108` (P 0.3256, R
+0.5564, thr 0.4965 — **not pinned**), MAP@R 0.2559, valid F1 0.4023 ≈ test, counts internally
+consistent (tp 31,617 + fn 25,203 = 56,820 positives; recomputed from stored tp/fp/fn).
+Placement, seed 1 of 6: far above the collapsed cluster (C2 0.2478±0.023, C3 0.2707±0.010,
+ceiling 0.2406; 1.71× the all-positive ceiling) and far below C1 (0.7464±0.018) — an
+**intermediate**, i.e. neither pre-registered pure outcome. Healthy-scorer signatures
+distinguish it from the C2/C3 degenerate mode: unpinned mid-range threshold (vs 10/12 runs
+at 1.0000), no saturation-erasure signature, and ranking ABOVE the untuned baseline (MAP@R
+0.2559 = 2.5× C0's 0.1024, where C2/C3 ranked below it). Registered BEFORE the audit, for
+the gate to discriminate: if the audit's contamination is low (≲10 %), the 0.41-vs-0.75 gap
+reads as hard-but-clean signal being neutral-to-harmful under the frozen margin-0.10 hinge;
+if contamination sits in the ~20–40 % band, it reads as partial denoising (the lexical cut
+removes the lexical poison, not all of it). Note the C2/C3 F1-vs-contamination points cannot
+be interpolated here — those scorers are saturated-degenerate, so F1 is not a function of
+contamination in that regime. Provenance: fingerprint `39251c7058a7e78c`; all six C4 runs
+must share it — it will differ from the v6-era C1–C3 fingerprints because v7's hash covers
+`triples_C4.jsonl` as well (expected, not drift).
