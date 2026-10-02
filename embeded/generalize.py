@@ -65,8 +65,14 @@ from .train import (CHECKPOINT_NAME, CONFIG_NAME, EVAL_CONFIG_NAME, EVAL_METRICS
                     load_checkpoint, run_dir as phase2_run_dir, save_checkpoint, set_seed,
                     triplet_loss, verify_checkpoint)
 
-CONDS = ("C1", "C2", "C3")                 # trained generalisation conditions
-ALL_CONDITIONS = ("C0", "C1", "C2", "C3")  # + C0 as the untuned transfer-only baseline
+# Trained generalisation conditions. The filtered_* set (C4/C5/C6) joins iff its
+# s′ triples have been mined (user decision 2026-10-03: the bouncer factorial is
+# measured on unseen functionality too; supersedes the old P6-1 "no fourth
+# strategy" scope). Until then every downstream path behaves exactly as before.
+CONDS = ("C1", "C2", "C3") + tuple(
+    c for c in ("C4", "C5", "C6")
+    if S.artifact(f"sprime_triples_{c}.jsonl").exists())
+ALL_CONDITIONS = ("C0",) + CONDS             # + C0 as the untuned transfer-only baseline
 PICKLE_GLOB = "*bcb_v2_sampled_bf*.pickle"
 RULE_NAME = "max_pair_count_then_lowest_id"   # decision D4 — the notebook records this string
 CENSUS_NAME = "sprime_census.json"
@@ -373,7 +379,7 @@ def _encode_sprime(frags: dict[int, str], *, embed_fn=None, device=None) -> tupl
 
 def mine(holdout_k: int, k: int, cap: int, *, embed_fn=None, force: bool = False,
          device=None) -> dict:
-    """Mine C1/C2/C3 negatives from s′ itself, inside the held-in functionalities
+    """Mine C1-C6 negatives from s′ itself, inside the held-in functionalities
     (`embeded.negatives.mine` — the same implementation, so the manipulation cannot
     drift from the main experiment). Also writes the fragment table and the ONE
     seen/unseen partition the runs will score."""
@@ -448,12 +454,11 @@ def mine(holdout_k: int, k: int, cap: int, *, embed_fn=None, force: bool = False
 
     summary: dict = {}
     corpus_list = pool
-    for strategy, cond in NG.COND.items():
-        if cond not in CONDS:   # C4 is Phase-2-only; s' mining stays C1-C3
-            continue
+    for strategy, cond in NG.COND.items():   # all six: C1-C3 and the bouncer set
         triples, stats = NG.mine(strategy, stream=stream, corpus_list=corpus_list,
                                  clone_sets=clone_sets, k=k, all_ids=all_ids,
-                                 bm25=bm25, semantic=semantic, seed=S.SEED)
+                                 bm25=bm25, semantic=semantic, seed=S.SEED,
+                                 frags=frags)
         out = S.artifact(TRIPLES_NAME.format(cond=cond))
         with open(out, "w", encoding="utf-8") as fh:
             for an, po, ne in triples:
@@ -470,7 +475,8 @@ def mine(holdout_k: int, k: int, cap: int, *, embed_fn=None, force: bool = False
                        "sprime_pairs": int(len(frame)), "sprime_frag_pool": len(pool),
                        "split_counts": split["counts"]}
     S.artifact(SUMMARY_NAME).write_text(json.dumps(summary, indent=2))
-    print(f"wrote {SPLIT_NAME}, {SUMMARY_NAME} and triples for {CONDS}")
+    mined = sorted(c for c in summary if c != "_run")
+    print(f"wrote {SPLIT_NAME}, {SUMMARY_NAME} and triples for {mined}")
     return summary
 
 
@@ -486,7 +492,8 @@ def _cached_mining(k: int, cap: int, holdout_k: int) -> dict | None:
     if not (run.get("version") == S.VERSION and run.get("k") == k and run.get("cap") == cap
             and run.get("holdout_k") == holdout_k and run.get("rule") == RULE_NAME):
         return None
-    if not all(S.artifact(TRIPLES_NAME.format(cond=c)).exists() for c in CONDS):
+    if not all(S.artifact(TRIPLES_NAME.format(cond=c)).exists()
+               for c in ("C1", "C2", "C3", "C4", "C5", "C6")):
         return None
     return summary
 
@@ -980,8 +987,8 @@ def write_results_table(runs_root: Path | None = None, *, report_md: Path | None
         best = max(trained, key=lambda c: agg[c]["mean_f1_unseen"])
         notes.append(f"On the unseen functionalities the highest mean F1 is {best} "
                      f"({agg[best]['mean_f1_unseen']:.4f}); per-seed values above — never the "
-                     "best seed alone. If Δ is indistinguishable across C1/C2/C3, that is the "
-                     "finding (PHASE3_PLAN §3.1): no fourth strategy (P6-1), no LR rescue (P6-2).")
+                     "best seed alone. If Δ is indistinguishable across the trained "
+                     "conditions, that is the finding (PHASE3_PLAN §3.1): no LR rescue (P6-2).")
     elif trained:
         notes.append(f"Partial: {', '.join(trained)} only — a partial table may only be "
                      "reported if the P6-8 seed ladder was taken deliberately "
@@ -1023,7 +1030,7 @@ def main(argv=None) -> int:
     modes.add_argument("--census", action="store_true",
                        help="measure per-functionality pair counts, fix the D4 holdout")
     modes.add_argument("--mine", action="store_true",
-                       help="mine C1/C2/C3 negatives from s′ + write the seen/unseen split")
+                       help="mine C1-C6 negatives from s′ + write the seen/unseen split")
     modes.add_argument("--hardness", action="store_true",
                        help="gate G1s: the D1 hardness verdict re-measured on s′ (exit 1 = FAIL)")
     modes.add_argument("--results-table", action="store_true",

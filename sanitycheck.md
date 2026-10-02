@@ -855,3 +855,27 @@ Next per pre-registration: §4 diagnostics rows (free) → §5–§6.5 the TWO m
 gates (C5 prediction 0–2 %, C6 prediction 25–35 % under H1; pass ≤ 42 % each) → §7 n = 3
 campaign. The H1/H2 decision rule (scorer state primary) is fixed and must not be adjusted
 after seeing results.
+
+**§9.5 addendum (2026-10-03): scope extension + observed C5/C6 results (comparison STILL gated
+on the two mandatory audits).** (1) **Scope:** by user decision the bouncer factorial joins
+Phase 3 — `generalize.py` CONDS now admits C4/C5/C6 iff their s′ triples are mined; s′ mining
+produces all six conditions (frags threaded for the bouncer); the s′ resume gate demands all
+six; gate G1s verdict remains the D1 rule on C1 < C2 ≤ C3 with C4–C6 reported alongside; the
+Δ table, §9 free transfer reading and the UMAP figure cover C0–C6 (18 runs + C0). This
+supersedes both the original P6-1 ("no fourth strategy") and §9.5's own "Phase-2-only" note.
+Phase3_Colab.ipynb updated throughout (preflight, mining, gate, campaign, table, figure).
+(2) **Observed results (VM report rebuilds `3493132`/`463c367`, n = 6 each — the full ladders
+ran, beyond the registered n = 3 triage):** **C5 = 0.7399 ± 0.0140, MAP@R 0.6629** — Δ vs C1
+(0.7464 ± 0.0176) = −0.0065, far inside seed noise: the control prediction (bouncer ≈ no-op on
+a clean supply) is confirmed at the F1 level. **C6 = 0.4722 ± 0.0282, MAP@R 0.1826** — the
+primary endpoint (scorer state) reads **de-saturated** (visible thresholds 0.63/0.68/0.82 for
+seeds 16/17/18 — nothing pinned at 1.0), F1 lands above C4's band (0.4349 ± 0.0246) and 1.7×
+C3's collapsed 0.2707 → **H2 (dose-only) is refuted by the scorer state; H1
+(similarity-trigger) survives** — the semantic supply with its lexically-hot band removed
+behaves like the rescued BM25 supply, not like its unfiltered twin, despite carrying (by
+construction) the semantic FN mass. (3) **Gate status: NOT yet headlined — the 50-pair blind
+audits for C5 (prediction 0–2 %) and C6 (prediction 25–35 % under H1) are still mandatory**
+before any C5/C6 comparison is written down as a finding; the H1 verdict above is
+pre-registered-rule reading of the scorer endpoint, to be confirmed (or upset) by the audits —
+if C6's audit comes back LOW-contamination, H1's mechanism needs a second look. Log both gate
+blocks in this section when scored.
