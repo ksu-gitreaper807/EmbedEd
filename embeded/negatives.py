@@ -23,6 +23,11 @@ from .data.prepare_data import corpus_ids, labeled_clones, load_fragments, posit
 from .mining.exclude import exclude_labeled_clones
 
 OVERFETCH = 4  # ranked candidates fetched before filtering = OVERFETCH * k
+# Naming key: C1-C3 encode the SUPPLY (random / BM25 / semantic). The bouncer
+# conditions reuse that supply under a "filtered_" prefix, and their numbers
+# continue the sequence in the order they were built -- the number does NOT
+# encode the ranker: C4 = filtered_bm25 (= C2 + bouncer), C5 = filtered_random
+# (= C1 + bouncer), C6 = filtered_semantic (= C3 + bouncer).
 COND = {"random": "C1", "bm25": "C2", "semantic": "C3",
         "filtered": "C4",                    # alias for filtered_bm25
         "filtered_random": "C5", "filtered_semantic": "C6"}

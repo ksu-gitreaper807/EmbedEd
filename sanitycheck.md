@@ -639,6 +639,13 @@ functionality almost losslessly** — F1_unseen 0.7230 vs seen 0.7454 (−0.022,
 average drop of ~31%, that is LLM-scale robustness from a 32k-triple bi-encoder — the
 single most encouraging number in the project so far, and the healthy-scorer transfer
 quantity §6 predicted would be the informative Phase 3 measurement.
+**Naming key for the filtered set (read this before §9.4/§9.5):** C1–C3 encode the SUPPLY
+(random / BM25 / semantic). The bouncer conditions reuse that supply under a `filtered_` prefix,
+and their numbers simply continue the sequence in the order they were built — **the number does
+not encode the ranker**: C4 = filtered_bm25 (= C2 + bouncer), C5 = filtered_random (= C1 +
+bouncer), C6 = filtered_semantic (= C3 + bouncer). There is no fourth ranker. Read every pair
+as "Cx = Cy + the bouncer".
+
 ### 9.4 C4 "filtered" — pre-registration (written BEFORE any C4 run exists; commit `56822ba`)
 
 The one strategy the campaign left untested: **denoised hard negatives**. C2/C3 collapsed
