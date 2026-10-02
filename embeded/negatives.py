@@ -23,7 +23,9 @@ from .data.prepare_data import corpus_ids, labeled_clones, load_fragments, posit
 from .mining.exclude import exclude_labeled_clones
 
 OVERFETCH = 4  # ranked candidates fetched before filtering = OVERFETCH * k
-COND = {"random": "C1", "bm25": "C2", "semantic": "C3", "filtered": "C4"}
+COND = {"random": "C1", "bm25": "C2", "semantic": "C3",
+        "filtered": "C4",                    # alias for filtered_bm25
+        "filtered_random": "C5", "filtered_semantic": "C6"}
 
 
 def clean_candidates(anchor, ranked, clone_sets, corpus_set, corpus_list,
@@ -120,8 +122,25 @@ def mine(strategy, *, stream, corpus_list, clone_sets, k, all_ids,
             ranked = [i for i, _ in bm25.topk(anchor, depth)]
         elif strategy == "semantic":
             ranked = [i for i, _ in semantic.topk_for_fragment(anchor, depth)]
-        elif strategy == "filtered":
+        elif strategy in ("filtered", "filtered_bm25"):
             ranked = [i for i, _ in bm25.topk(anchor, k * S.C4_OVERFETCH)]
+            negs = clean_candidates_filtered(anchor, ranked, clone_sets,
+                                             corpus_set, corpus_list, k, stats,
+                                             frags)
+            stats["anchors_short"] += int(len(negs) < k)
+            triples.extend((anchor, positive, n) for n in negs)
+            continue
+        elif strategy == "filtered_random":
+            # C1's sampling convention (depth + 10), bouncer applied after
+            ranked = rng.sample(all_ids, min(k * OVERFETCH + 10, len(all_ids)))
+            negs = clean_candidates_filtered(anchor, ranked, clone_sets,
+                                             corpus_set, corpus_list, k, stats,
+                                             frags)
+            stats["anchors_short"] += int(len(negs) < k)
+            triples.extend((anchor, positive, n) for n in negs)
+            continue
+        elif strategy == "filtered_semantic":
+            ranked = [i for i, _ in semantic.topk_for_fragment(anchor, k * S.C4_OVERFETCH)]
             negs = clean_candidates_filtered(anchor, ranked, clone_sets,
                                              corpus_set, corpus_list, k, stats,
                                              frags)
@@ -184,10 +203,10 @@ def main(argv=None):
             return
 
     bm25 = semantic = None
-    if "bm25" in strategies or "filtered" in strategies:
+    if any(s in strategies for s in ("bm25", "filtered", "filtered_bm25")):
         from .mining.bm25_index import BM25Index
         bm25 = BM25Index([frags[i] for i in all_ids])
-    if "semantic" in strategies:
+    if any(s in strategies for s in ("semantic", "filtered_semantic")):
         from .hardcheck import missing_artifact_message
         from .mining.semantic_index import SemanticIndex, load_corpus_emb
         for name in ("corpus_emb.npy", "corpus_emb.meta.json"):

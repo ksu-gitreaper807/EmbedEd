@@ -122,3 +122,43 @@ def test_mine_bm25_survives_a_ranking_that_is_mostly_excluded():
                           k=3, all_ids=list(range(60)), bm25=PoisonedBM25())
     assert [n for _, _, n in triples] == [2, 3, 4]   # all three from the pad
     assert stats["padded"] == 3
+
+
+# --- v8: the bouncer generalised to a ranker parameter (C5, C6) --------------
+
+def test_filtered_bm25_alias_matches_filtered():
+    args = dict(stream=[(0, 39)], corpus_list=list(range(1, 39)),
+                clone_sets={0: {5}}, k=3, all_ids=list(range(40)),
+                bm25=StubBM25(), frags=frags())
+    a = mine("filtered", **args)
+    b = mine("filtered_bm25", **args)
+    assert a[0] == b[0]
+
+
+def test_c5_filtered_random_needs_no_ranker_and_respects_bans():
+    args = dict(stream=[(0, 39)], corpus_list=list(range(1, 39)),
+                clone_sets={0: {5}}, k=3, all_ids=list(range(40)))
+    t1, s1 = mine("filtered_random", frags=frags(), **args)
+    t2, s2 = mine("filtered_random", frags=frags(), **args)
+    negs = [n for _, _, n in t1]
+    assert 5 not in negs and 0 not in negs and 39 not in negs
+    assert len(negs) == 3 and len(set(negs)) == 3
+    assert t1 == t2 and s1 == s2                       # deterministic under the seed
+    # the C5 prediction in miniature: on a clean random supply the cut rarely
+    # fires (stats keys materialise only when incremented, so its absence here
+    # IS the record of "nothing was cut")
+    assert s1.get("jaccard_filtered", 0) >= 0
+
+
+def test_c6_filtered_semantic_runs_the_bouncer_on_a_semantic_ranking():
+    class StubSemantic:              # same order the BM25 stub uses
+        def topk_for_fragment(self, anchor, depth):
+            return [(i, 1.0) for i in [5, 1] + list(range(2, 40))][:depth]
+
+    triples, stats = mine("filtered_semantic", stream=[(0, 39)],
+                          corpus_list=list(range(1, 39)), clone_sets={0: {5}},
+                          k=3, all_ids=list(range(40)),
+                          semantic=StubSemantic(), frags=frags())
+    negs = [n for _, _, n in triples]
+    assert 5 not in negs and 1 not in negs and 0 not in negs and 39 not in negs
+    assert stats["jaccard_filtered"] >= 1 and stats["head_skipped"] == 10

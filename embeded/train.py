@@ -37,7 +37,7 @@ import numpy as np
 from . import settings as S
 from .hardcheck import missing_artifact_message
 
-TRAINABLE = ("C1", "C2", "C3", "C4")   # C4 = filtered hard negatives (v7)
+TRAINABLE = ("C1", "C2", "C3", "C4", "C5", "C6")   # C4/C5/C6 = filtered_* (v8)
 CONFIG_NAME = "run_config.json"
 METRICS_NAME = "metrics.json"          # training metrics
 EVAL_CONFIG_NAME = "eval_config.json"    # written by embeded.evaluate

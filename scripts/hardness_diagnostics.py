@@ -36,8 +36,9 @@ import numpy as np
 from embeded import settings as S
 from embeded.hardcheck import missing_artifact_message, standardized_gap
 
-CONDS = ("C1", "C2", "C3") + (
-    ("C4",) if S.artifact("triples_C4.jsonl").exists() else ())  # C4 joins the diagnostics iff it has been mined
+CONDS = ("C1", "C2", "C3") + tuple(
+    c for c in ("C4", "C5", "C6")
+    if S.artifact(f"triples_{c}.jsonl").exists())  # filtered_* join iff mined
 
 
 def _load_triples(path) -> dict[int, dict]:
