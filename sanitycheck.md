@@ -832,3 +832,26 @@ comparison (`audit_sample --conditions C5` / `--conditions C6`, separate
 triage (seeds 13/14/15) for both; extend C6 to n = 6 iff its F1 lands within 0.05 of a
 decision boundary. Compute: ~7–8 units (n=3 both) / ~15 (n=6 both) — against ~45 remaining.
 C5/C6 are Phase-2-only (s′ mining untouched: generalize iterates C1–C3 only).
+
+**§9.5 execution log — v8 re-mine verified (2026-10-02, VM).** `C1–C4 bit-identical to the
+.v7bak backups` — the second determinism proof; all audit sheets (C2/C3 labels, audit_c4)
+survive the version bump. All six conditions at 32,000 triples, `anchors_short = 0` except
+none. Mining-stat predictions vs outcome:
+
+- **C5 `jaccard_filtered = 1,768` = 0.27 % of ~656 k scanned** (predicted ≈ 0). The random
+  supply is lexically clean; the bouncer removes ~1 candidate per 18 anchors. Mechanically
+  C5 ≈ C1 before training even starts — the audit (predicted 0–2 %) and the F1 band
+  (≈ 0.7464) remain the formal checks.
+- **C6 `jaccard_filtered = 87,024` = 13.6 % of 640 k scanned** (predicted 10–25 %): the
+  lexically-hot sub-band inside C3's semantic supply is real and now quantified. Same depth,
+  ranker-for-ranker: BM25's ranking carries 10.5 % (C4's 66,958) vs semantic's 13.6 % —
+  semantic retrieval surfaces ~31 % more lexical poison, consistent with it being the
+  stronger poison-fisher (the 99.2 % closer-than-positive statistic).
+- **C6 supply is thinner post-cut:** `head_skipped = 15,957` (< the uniform 16,000 — 43
+  anchors had <10 survivors in their whole 400-deep scan) and `padded = 710` (2.2 %, vs C4's
+  0.35 %). Still hard-dominated, not a C1-in-disguise — the audit and the F1 band will judge.
+
+Next per pre-registration: §4 diagnostics rows (free) → §5–§6.5 the TWO mandatory audit
+gates (C5 prediction 0–2 %, C6 prediction 25–35 % under H1; pass ≤ 42 % each) → §7 n = 3
+campaign. The H1/H2 decision rule (scorer state primary) is fixed and must not be adjusted
+after seeing results.
