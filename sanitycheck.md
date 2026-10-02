@@ -788,3 +788,47 @@ immediately followed by an artifacts-only `push` from that same VM (never `--inc
 from a second VM, and do not commit that VM's stale repo copy of `report/measurements.md` —
 this section is canonical). The §9.2 stored-metrics repair (per-file SHA check + `evaluate
 --force` on the 9 mismatched v6 runs) remains the last open campaign item.
+
+### 9.5 C5 + C6 — completing the factorial (pre-registered 2026-10-02, BEFORE any C5/C6 run; code `e8c04ac`, v8)
+
+C4-vs-C2 isolated the bouncer on one ranker. The full design is ranker × bouncer, and two
+cells are empty. Filling them turns the §9.4 similarity-axis finding from a cross-ranker
+observation into within-ranker causal tests:
+
+| supply | no bouncer | + bouncer |
+|---|---|---|
+| random (C1 0.7464) | — | **C5 = filtered_random** |
+| BM25 (C2 0.2478) | C4 0.4349 | ✔ done |
+| semantic (C3 0.2707) | — | **C6 = filtered_semantic** |
+
+Bouncer = the §9.4 mechanism unchanged (clone/corpus exclusion → J ≥ 0.40 cut → skip first
+10 survivors → counted pad honouring the cut). Everything else frozen: same anchors,
+positives, k, margin, cap, seeds. VERSION v8; the v8 re-mine backs up the on-disk C1–C4 and
+**asserts bit-identity** (second determinism proof; the audit_c4 sheet stays valid iff C4
+triples are unchanged — asserted before anything trains).
+
+**C5 predictions (control):** jaccard_filtered ≈ 0 on a random supply; F1 ≈ C1's band
+(0.7464 ± 0.02); thresholds unpinned (~0.44); audit clone rate ≈ 0–2 %. Purpose: prove the
+bouncer's effect is *band removal*, not supply transformation — on a clean supply it must be
+≈ a no-op. **If C5 lands > 0.03 below C1, the bouncer (or the sampling-parity assumption) is
+doing something unexplained → halt and investigate before interpreting C6.**
+
+**C6 predictions (discriminator) — the fork, with the decision rule fixed NOW:**
+- **H1 similarity-trigger (current §6):** C3's collapse-causing component is its
+  lexically-hot sub-band. C6's scorer DE-saturates (thresholds unpin; predicted-positive
+  share back to ~17–30 %) and F1 ≥ C4's band (≈ 0.43+) — *while the audit stays contaminated*
+  (predicted ~25–35 %, i.e. the semantic FN mass passes the lexical cut untouched). C6's
+  mining `jaccard_filtered` (predicted 10–25 % of scanned candidates) quantifies that sub-band
+  for free, before any GPU hour.
+- **H2 dose-only:** ~30 % FN of any kind collapses this recipe → C6 ≈ C3 (pinned, ~0.27) with
+  small jaccard_filtered → **the §9.4 similarity-axis reading is OVERTURNED**; §6 gets
+  rewritten around FN rate, and the C3=C4 same-rate comparison is reinterpreted as sample noise.
+- Primary endpoint: scorer state (pinned vs not). Secondary: F1 band. Tertiary: audit rate.
+  Either H wins is a publishable result; H2 explicitly falsifies the §9.4 trigger claim.
+
+**Gates and budget:** mandatory 50-pair blind audits for BOTH conditions before any
+comparison (`audit_sample --conditions C5` / `--conditions C6`, separate
+`EMBEDED_AUDIT_DIR`s — audit_c5/, audit_c6/); pass = ≤ 42 % each, hopes as above. n = 3
+triage (seeds 13/14/15) for both; extend C6 to n = 6 iff its F1 lands within 0.05 of a
+decision boundary. Compute: ~7–8 units (n=3 both) / ~15 (n=6 both) — against ~45 remaining.
+C5/C6 are Phase-2-only (s′ mining untouched: generalize iterates C1–C3 only).
