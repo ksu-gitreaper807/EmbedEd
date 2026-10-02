@@ -608,6 +608,8 @@ Generated from `artifacts/runs/<condition>_<seed>/eval_metrics.json` by `python 
 | C5 | 13 | 0.7269 | 0.7074 | 0.7474 | 0.6496 | 0.3945 | 415416 |
 | C5 | 14 | 0.7273 | 0.7004 | 0.7563 | 0.6379 | 0.4048 | 415416 |
 | C5 | 15 | 0.7321 | 0.7092 | 0.7566 | 0.6424 | 0.4314 | 415416 |
+| C5 | 16 | 0.7490 | 0.7307 | 0.7684 | 0.6777 | 0.4011 | 415416 |
+| C5 | 17 | 0.7623 | 0.7490 | 0.7762 | 0.6977 | 0.4317 | 415416 |
 | C6 | 13 | 0.4381 | 0.3049 | 0.7777 | 0.2031 | 0.8252 | 415416 |
 | C6 | 14 | 0.4760 | 0.3542 | 0.7255 | 0.1367 | 0.7955 | 415416 |
 | C6 | 15 | 0.4922 | 0.3608 | 0.7743 | 0.1482 | 0.8344 | 415416 |
@@ -619,12 +621,12 @@ Generated from `artifacts/runs/<condition>_<seed>/eval_metrics.json` by `python 
 | C2 | 6 | 0.2555 | 0.0123 | 0.1547 | 0.7713 | 0.0474 |
 | C3 | 6 | 0.2733 | 0.0091 | 0.1854 | 0.5234 | 0.0772 |
 | C4 | 6 | 0.4349 | 0.0246 | 0.3597 | 0.5553 | 0.2760 |
-| C5 | 3 | 0.7288 | 0.0029 | 0.7057 | 0.7534 | 0.6433 |
+| C5 | 5 | 0.7395 | 0.0156 | 0.7193 | 0.7610 | 0.6611 |
 | C6 | 3 | 0.4688 | 0.0278 | 0.3400 | 0.7592 | 0.1627 |
 
 - C0 is the untuned baseline (one evaluation, not a trained condition) at mean F1 0.2572.
 - Among the trained conditions the highest mean F1 is C1 (0.7464); per-seed values above, not the best seed.
-- Sanity reference: published CodeXGLUE fine-tuned-CodeBERT F1 ~ 0.95 under a different model/protocol. Observed F1 range 0.2408–0.7599. A large discrepancy is a harness/protocol check (metric implementation, pair order, labels, threshold handling), not a reason to tune against the test split.
+- Sanity reference: published CodeXGLUE fine-tuned-CodeBERT F1 ~ 0.95 under a different model/protocol. Observed F1 range 0.2408–0.7623. A large discrepancy is a harness/protocol check (metric implementation, pair order, labels, threshold handling), not a reason to tune against the test split.
 - 3 smoke-run result(s) are excluded from this table (harness checks, not measurements).
 - 2 result file(s) with conditions outside ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6'] (Phase 3 sprime runs) are excluded from this table.
 
