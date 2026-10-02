@@ -714,3 +714,34 @@ be interpolated here — those scorers are saturated-degenerate, so F1 is not a 
 contamination in that regime. Provenance: fingerprint `39251c7058a7e78c`; all six C4 runs
 must share it — it will differ from the v6-era C1–C3 fingerprints because v7's hash covers
 `triples_C4.jsonl` as well (expected, not drift).
+
+**§9.4 execution log — C4 campaign COMPLETE, n=6 (2026-10-02; VM board + rebuilt report
+`a14b62c`; formal comparison still DEFERRED pending the mandatory audit gate).**
+
+F1 by seed: 13→0.4108, 14→0.3988, 15→0.4529, 16→0.4418, 17→0.4609, 18→0.4444.
+**C4 = 0.4349 ± 0.0246** (sample-sd convention; range 0.062, comparable to C1's 0.048 —
+normal seed spread, no outlier). MAP@R by seed: 0.2559/0.2369/0.2967/0.2735/0.3085/0.2847 →
+**mean 0.2760**. Placement: vs C2 +0.1871, vs C3 +0.1643, vs C0 +0.1777, vs C1 −0.3115;
+1.81× the all-positive ceiling; C1/C4 = 1.72×. MAP@R: 2.70× C0 (0.1024), vs C1 0.667
+(2.42× below), vs C2 0.047 (5.9× above), vs C3 0.077 (3.6× above) — **C4 ranks ABOVE the
+untuned baseline**, unlike C2/C3 which ranked below it (§9.1).
+
+**Outcome: none of the three pre-registered pure results obtained — this is the fourth
+outcome, PARTIAL RESCUE.** Denoising is necessary and sufficient for escaping the
+degenerate mode (C4 ≫ C2/C3 with a completely healthy scorer: 6/6 thresholds unpinned in
+0.4965–0.5707 vs 10/12 C2/C3 runs pinned at 1.0000; predicted-positive share 17–25 % of
+test pairs vs the 27–67 % saturation mass; valid ≈ test throughout) but not for reaching
+the clean-easy control (C1 −0.31). The collapse mechanism (§6: FN cause, margin amplifier,
+saturation erasure) is *prevented* by the denoisers; the remaining gap to C1 is either
+residual false-negative contamination or genuine hard-clean signal being net-neutral under
+the frozen margin-0.10 hinge — **exactly what the mandatory 50-pair blind audit must now
+discriminate** (≲10 % contamination → "hard-but-clean is harmful here"; 20–40 % → "partial
+denoising"). No headline claim until the gate passes (≤ 42 %, hope ≈ 0 %).
+
+Housekeeping: (1) the 25-run confusion board reads predictions.npz, so its C2/C3 rows are
+the npz values (e.g. C2_13 0.2165) — the §9.2 stored-metrics repair (`evaluate --force` on
+the 9 runs) remains outstanding and untouched. (2) `smoke_C4_13/` (499 MB checkpoint) was
+pushed to HF by the trainer; harmless (never matches `C[0-4]_<seed>` globs), optional
+cleanup. (3) Correction to the C4_13 log entry above: run fingerprints legitimately differ
+across seeds (the hash covers condition+seed by construction); the cross-run identity check
+is the shared `artifacts` hash block in each `run_config.json`, not the fingerprint.
