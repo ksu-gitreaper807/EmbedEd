@@ -220,3 +220,65 @@ def test_exclude_patterns_env_override(monkeypatch):
     assert H.exclude_patterns() == ("sprime/*", "runs/*/checkpoint.pt")
     monkeypatch.setenv("EMBEDED_HF_EXCLUDE", "")
     assert H.exclude_patterns() == ()
+
+
+def test_sections_compose_and_prefix():
+    root = H.allow_patterns()
+    assert root == ["artifacts/*", "artifacts/**", "report/*", "report/**"]  # legacy default
+    sub = H.allow_patterns("alice/run1")
+    assert sub == ["alice/run1/artifacts/*", "alice/run1/artifacts/**",
+                   "alice/run1/report/*", "alice/run1/report/**"]
+    pats = H.allow_patterns("sub", sections=["mining", "runs-meta"])
+    assert "sub/artifacts/fragments.jsonl" in pats
+    assert "sub/artifacts/runs/*/eval_metrics.json" in pats
+    raw = H.allow_patterns(sections=["audit"], include=["artifacts/runs/C4_16/*"])
+    assert "artifacts/audit/**" in raw and "artifacts/runs/C4_16/*" in raw
+    try:
+        H.allow_patterns(sections=["nope"])
+        raise AssertionError("unknown section must fail")
+    except SystemExit as e:
+        assert "known:" in str(e)
+
+
+def test_pull_sections_reports_skipped(monkeypatch, tmp_path, capsys):
+    """A sectioned pull (a) requests only the section's allow patterns and (b)
+    prints what it did NOT download, so 'push' expectations stay honest
+    (additive upload semantics mean nothing is lost remotely)."""
+    import huggingface_hub
+
+    captured: dict = {}
+    snap = tmp_path / "snap"
+
+    def fake_download(**kw):
+        captured.update(kw)
+        (snap / "artifacts").mkdir(parents=True, exist_ok=True)
+        for f in ("artifacts/fragments.jsonl", "artifacts/triples_C1.jsonl"):
+            (snap / f).parent.mkdir(parents=True, exist_ok=True)
+            (snap / f).write_text("x")
+        return str(snap)
+
+    class FakeApi:
+        def __init__(self, token=None):
+            pass
+
+        def list_repo_files(self, **kw):
+            return ["artifacts/fragments.jsonl", "artifacts/triples_C1.jsonl",
+                    "artifacts/runs/C1_13/predictions.npz",
+                    "artifacts/audit/audit_key.csv"]
+
+    monkeypatch.setattr(huggingface_hub, "snapshot_download", fake_download)
+    monkeypatch.setattr(huggingface_hub, "HfApi", FakeApi)
+    cfg = H.RepoConfig(repo_id="user/embeded-artifacts")
+    art = tmp_path / "artifacts"
+    rep = tmp_path / "report" / "measurements.md"
+
+    restored = H.pull_from_hf(cfg, art, rep, sections=["mining"])
+    assert captured["allow_patterns"] == H.SECTIONS["mining"]
+    assert any("fragments" in r for r in restored)
+    assert not (art / "runs" / "C1_13").exists()          # not in the mining section
+    out = capsys.readouterr().out
+    assert "PARTIAL pull" in out and "runs" in out and "audit" in out
+
+    capsys.readouterr()
+    H.pull_from_hf(cfg, art, rep)                          # default: full view, no notice
+    assert "PARTIAL pull" not in capsys.readouterr().out

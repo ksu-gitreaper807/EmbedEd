@@ -97,14 +97,45 @@ def load_repo_config(*, required: bool = True, repo_id: str | None = None,
     )
 
 
-def allow_patterns(subdir: str = "") -> list[str]:
+# Pull sections: named, composable subsets of the repo. A section is a virtual
+# view (allow_patterns on the download), NOT a repo restructure -- the hub keeps
+# one layout (artifacts/, report/) and VMs download only the slices they need,
+# so a fresh Colab VM stops paying for ~4.5 GB of checkpoints or ~100 MB of npz
+# it will never read. No --section at all = the full pull (unchanged).
+SECTIONS: dict[str, list[str]] = {
+    "mining": ["artifacts/fragments.jsonl", "artifacts/mining_summary.json",
+               "artifacts/triples_C*.jsonl", "artifacts/corpus_emb.npy",
+               "artifacts/corpus_emb.meta.json", "artifacts/codexglue_data.jsonl"],
+    "runs-meta": ["artifacts/runs/*/eval_metrics.json", "artifacts/runs/*/metrics.json",
+                  "artifacts/runs/*/run_config.json", "artifacts/runs/*/train_log.jsonl"],
+    "runs": ["artifacts/runs/*", "artifacts/runs/**"],
+    "audit": ["artifacts/audit/*", "artifacts/audit/**"],
+    "sprime": ["artifacts/sprime_*", "artifacts/sprime/*", "artifacts/sprime/**"],
+    "report": ["report/*", "report/**"],
+}
+
+
+def allow_patterns(subdir: str = "", sections: list[str] | None = None,
+                   include: list[str] | None = None) -> list[str]:
+    """The download allow-list. No sections = the full repo view (unchanged).
+    With sections, the union of the named sections (+ any raw `include` globs)
+    -- everything NOT matched stays on the hub. Patterns are fnmatch-style and
+    fnmatch's `*` crosses '/', so mid-path stars are fine."""
     prefix = f"{subdir.strip('/')}/" if subdir else ""
-    return [
-        f"{prefix}artifacts/*",
-        f"{prefix}artifacts/**",
-        f"{prefix}report/*",
-        f"{prefix}report/**",
-    ]
+    if not sections and not include:
+        return [
+            f"{prefix}artifacts/*",
+            f"{prefix}artifacts/**",
+            f"{prefix}report/*",
+            f"{prefix}report/**",
+        ]
+    pats: list[str] = []
+    for name in (sections or []):
+        if name not in SECTIONS:
+            raise SystemExit(f"unknown pull section {name!r} — known: {sorted(SECTIONS)}")
+        pats.extend(SECTIONS[name])
+    pats.extend(include or [])
+    return [f"{prefix}{pat}" if not pat.startswith(prefix) else pat for pat in pats]
 
 
 def _is_excluded(rel_posix: str, patterns) -> bool:
@@ -186,7 +217,8 @@ def restore_download_tree(snapshot_root: Path, artifacts_root: Path, report_md: 
 
 
 def pull_from_hf(cfg: RepoConfig, artifacts_root: Path, report_md: Path,
-                 *, light: bool = False) -> list[str]:
+                 *, light: bool = False, sections: list[str] | None = None,
+                 include: list[str] | None = None) -> list[str]:
     from huggingface_hub import HfApi, snapshot_download
     try:  # huggingface_hub moved the exception between releases
         from huggingface_hub.errors import RepositoryNotFoundError
@@ -208,12 +240,21 @@ def pull_from_hf(cfg: RepoConfig, artifacts_root: Path, report_md: Path,
     ):
         print(f"[hf] repo {cfg.repo_type}:{cfg.repo_id}@{cfg.revision} has no synced artifacts yet")
         return []
-
+    if sections:
+        import fnmatch as _fn
+        pats = allow_patterns(cfg.subdir, sections)
+        have = [name for name, spats in SECTIONS.items()
+                if any(_fn.fnmatch(f, f"{prefix}{sp}") for sp in spats for f in files)]
+        skipped = [s for s in have if s not in sections]
+        if skipped:
+            print(f"[hf] PARTIAL pull (sections: {','.join(sections)}) — repo also has "
+                  f"{','.join(sorted(skipped))}, NOT downloaded; a later 'push' from this "
+                  "VM cannot include them (pull-before-push still applies to what you edit)")
     snap = Path(snapshot_download(
         repo_id=cfg.repo_id,
         repo_type=cfg.repo_type,
         revision=cfg.revision,
-        allow_patterns=allow_patterns(cfg.subdir),
+        allow_patterns=allow_patterns(cfg.subdir, sections, include),
         ignore_patterns=["*.pt"] if light else None,
         token=cfg.token,
     ))
@@ -309,6 +350,12 @@ def main(argv=None):
     ap.add_argument("--light", action="store_true",
                     help="when pulling, skip per-run model checkpoints (*.pt) — "
                          "keeps metrics/logs/predictions.npz (table, board, audit blocks)")
+    ap.add_argument("--section", default=None,
+                    help="pull only the named sections (comma-separated): "
+                         f"{', '.join(sorted(SECTIONS))}. Default: the whole repo.")
+    ap.add_argument("--include", default=None,
+                    help="extra raw fnmatch globs to allow on a pull (comma-separated, "
+                         "repo-relative, e.g. 'artifacts/runs/C4_16/*')")
     a = ap.parse_args(argv)
 
     cfg = load_repo_config(required=not a.if_configured, repo_id=a.repo_id,
@@ -319,8 +366,10 @@ def main(argv=None):
         return
 
     if a.action == "pull":
+        sections = [s.strip() for s in a.section.split(",") if s.strip()] if a.section else None
+        include = [s.strip() for s in a.include.split(",") if s.strip()] if a.include else None
         run_with_retries(pull_from_hf, cfg, S.ARTIFACTS, S.REPORT_MD, label="pull",
-                         light=a.light)
+                         light=a.light, sections=sections, include=include)
     else:
         run_with_retries(push_to_hf, cfg, S.ARTIFACTS, S.REPORT_MD, label="push",
                          include_report=a.include_report)
