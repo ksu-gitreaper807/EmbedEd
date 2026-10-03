@@ -110,7 +110,14 @@ SECTIONS: dict[str, list[str]] = {
                   "artifacts/runs/*/run_config.json", "artifacts/runs/*/train_log.jsonl"],
     "runs": ["artifacts/runs/*", "artifacts/runs/**"],
     "audit": ["artifacts/audit/*", "artifacts/audit/**"],
-    "sprime": ["artifacts/sprime_*", "artifacts/sprime/*", "artifacts/sprime/**"],
+    # s-prime MINING inputs only (fragments/split/census/summary/triples/encode
+    # cache). Deliberately NOT artifacts/sprime/**: a legacy push left the raw
+    # dataset (~2,358 CloneNNN.java files, re-fetchable from Zenodo by DOI) on
+    # the hub, and a dir wildcard would re-download it on every fresh VM.
+    # Mining runs off the derived fragments; the raw corpus is provenance.
+    "sprime": ["artifacts/sprime_fragments.jsonl", "artifacts/sprime_split.json",
+               "artifacts/sprime_census.json", "artifacts/sprime_mining_summary.json",
+               "artifacts/sprime_triples_*.jsonl", "artifacts/sprime_emb.npy"],
     "report": ["report/*", "report/**"],
 }
 
