@@ -598,7 +598,7 @@ def sprime_run_config(condition: str, seed: int, holdout: list[str], *, cap: int
         "grad_clip": S.GRAD_CLIP, "batch": S.BATCH, "epochs": S.EPOCHS,
         "max_len": S.MAX_LEN, "amp_dtype": S.AMP_DTYPE,
         "grad_checkpoint": S.GRAD_CHECKPOINT, "k_negatives": S.K_NEGATIVES,
-        "sprime_train_cap": cap, "seed_list": list(S.SEEDS), "artifacts": artifacts,
+        "sprime_train_cap": cap, "seed_list": list(S.SPRIME_SEEDS), "artifacts": artifacts,
     }
     if smoke:
         cfg.update({"batch": min(4, S.BATCH), "epochs": S.SMOKE_EPOCHS,

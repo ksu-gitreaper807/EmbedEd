@@ -125,6 +125,10 @@ WEIGHT_DECAY = 0.01
 WARMUP_STEPS = 100                 # linear warmup then linear decay to 0 over the run
 GRAD_CLIP = 1.0                    # 0 disables; fp16 on a T4 needs *some* ceiling
 SEEDS = (SEED, SEED + 1, SEED + 2)  # 13, 14, 15 — PHASE2_PLAN §3.1
+# s′ (Phase 3) seeds: six per condition, user decision 2026-10-03 — the
+# generalisation campaign runs the full Phase-2 seed ladder, not the n = 3
+# triage. SEEDS above is untouched: Phase 2's recorded inventory stays as run.
+SPRIME_SEEDS = (13, 14, 15, 16, 17, 18)
 RUNS_SUBDIR = "runs"               # ARTIFACTS/runs/<condition>_<seed>/{checkpoint,config,metrics}
 # Threshold policy (PHASE2_PLAN §3.3): the F1-maximising cosine threshold on the
 # VALIDATION split, per condition/model, applied unchanged to test. Test scores
