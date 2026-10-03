@@ -312,6 +312,37 @@ TRANSIENT_EXC_NAMES = frozenset({
 TRANSIENT_HTTP_STATUS = frozenset({408, 425, 429, 500, 502, 503, 504})
 SYNC_RETRIES = 3          # extra attempts after the first failure
 SYNC_BACKOFF_S = 2.0      # waits 2s, 4s, 8s (exponential)
+# HTTP 429 is a DIFFERENT beast: the free Hub limit is a rolling window, and
+# re-hitting it quickly EXTENDS the limit (observed 2026-10-03 on a Colab VM
+# whose ~200-file sectioned pull ran without a token). So: honour Retry-After,
+# wait 20s/40s otherwise, and give up fast with a wait-it-out message instead
+# of hammering.
+SYNC_RETRIES_429 = 1      # one patient retry, then stop and tell the user to wait
+BACKOFF_429_S = 20.0
+BACKOFF_429_CAP_S = 120.0
+
+
+def rate_limited(exc: BaseException) -> bool:
+    return getattr(getattr(exc, "response", None), "status_code", None) == 429
+
+
+def retry_after_seconds(exc: BaseException) -> float | None:
+    resp = getattr(exc, "response", None)
+    headers = getattr(resp, "headers", None) or {}
+    val = headers.get("Retry-After")
+    if not val:
+        return None
+    try:
+        return min(float(val), BACKOFF_429_CAP_S)
+    except ValueError:
+        pass
+    try:  # HTTP-date form
+        from datetime import datetime, timezone
+        from email.utils import parsedate_to_datetime
+        delta = parsedate_to_datetime(val) - datetime.now(timezone.utc)
+        return max(0.0, min(delta.total_seconds(), BACKOFF_429_CAP_S))
+    except Exception:
+        return None
 
 
 def is_transient(exc: BaseException) -> bool:
@@ -328,11 +359,25 @@ def run_with_retries(fn, *args, label: str = "sync", **kwargs):
         try:
             return fn(*args, **kwargs)
         except Exception as exc:
-            if attempt >= SYNC_RETRIES or not is_transient(exc):
+            rl = rate_limited(exc)
+            limit = SYNC_RETRIES_429 if rl else SYNC_RETRIES
+            if attempt >= limit or not is_transient(exc):
+                if rl:
+                    raise SystemExit(
+                        f"[hf] rate limited (HTTP 429) during {label}: the free Hub limit is a "
+                        "rolling window — wait ~10-15 minutes WITHOUT re-running, then retry "
+                        "this cell. Repeated retries extend the limit, and pushes need HF_TOKEN "
+                        "attached (anonymous bursts are the usual trigger).")
                 raise
-            wait = SYNC_BACKOFF_S * (2 ** attempt)
-            print(f"[hf] transient network error during {label} "
-                  f"({type(exc).__name__}: {exc}) — retry {attempt + 1}/{SYNC_RETRIES} in {wait:.0f}s")
+            if rl:
+                wait = retry_after_seconds(exc) or min(BACKOFF_429_S * (2 ** attempt),
+                                                       BACKOFF_429_CAP_S)
+                print(f"[hf] rate limited during {label} — waiting {wait:.0f}s "
+                      "(Retry-After honoured; the window is rolling)…")
+            else:
+                wait = SYNC_BACKOFF_S * (2 ** attempt)
+                print(f"[hf] transient network error during {label} "
+                      f"({type(exc).__name__}: {exc}) — retry {attempt + 1}/{SYNC_RETRIES} in {wait:.0f}s")
             time.sleep(wait)
 
 

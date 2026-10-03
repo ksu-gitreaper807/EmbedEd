@@ -282,3 +282,64 @@ def test_pull_sections_reports_skipped(monkeypatch, tmp_path, capsys):
     capsys.readouterr()
     H.pull_from_hf(cfg, art, rep)                          # default: full view, no notice
     assert "PARTIAL pull" not in capsys.readouterr().out
+
+
+class _Resp:
+    def __init__(self, status, headers=None):
+        self.status_code = status
+        self.headers = headers or {}
+
+
+class _RateLimit(Exception):
+    def __init__(self, headers=None):
+        self.response = _Resp(429, headers)
+        super().__init__("429 too many requests")
+
+
+def test_run_with_retries_429_is_patient_and_gives_up_fast(monkeypatch):
+    """429 must NOT get the 2/4/8s blip treatment (it extends a rolling window):
+    honour Retry-After, wait 20s/40s otherwise, and stop after ONE patient retry
+    with a wait-it-out SystemExit."""
+    sleeps: list[float] = []
+    monkeypatch.setattr("scripts.hf_artifacts.time.sleep", sleeps.append)
+
+    calls = {"n": 0}
+
+    def flaky():
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise _RateLimit(headers={"Retry-After": "7"})
+        return "ok"
+
+    assert H.run_with_retries(flaky, label="pull") == "ok"
+    assert sleeps == [7.0]                       # Retry-After honoured verbatim
+
+    def always():
+        raise _RateLimit()
+
+    monkeypatch.setattr("scripts.hf_artifacts.time.sleep",
+                        lambda s: sleeps.append(s) or (_ for _ in ()).throw(AssertionError))
+    sleeps.clear()
+    monkeypatch.setattr("scripts.hf_artifacts.time.sleep", sleeps.append)
+    try:
+        H.run_with_retries(always, label="pull")
+        raise AssertionError("persistent 429 must raise")
+    except SystemExit as e:
+        assert "rolling window" in str(e)
+    assert len(sleeps) == 1 and sleeps[0] >= H.BACKOFF_429_S   # one patient wait, no hammering
+
+
+def test_run_with_retries_blips_keep_short_backoff(monkeypatch):
+    sleeps: list[float] = []
+    monkeypatch.setattr("scripts.hf_artifacts.time.sleep", sleeps.append)
+
+    calls = {"n": 0}
+
+    def flaky():
+        calls["n"] += 1
+        if calls["n"] <= 2:
+            raise TimeoutError()      # name-matched transient (TimeoutError is in the set)
+        return "ok"
+
+    assert H.run_with_retries(flaky, label="pull") == "ok"
+    assert sleeps == [2.0, 4.0]                  # unchanged blip behaviour
