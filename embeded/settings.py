@@ -128,7 +128,12 @@ SEEDS = (SEED, SEED + 1, SEED + 2)  # 13, 14, 15 — PHASE2_PLAN §3.1
 # s′ (Phase 3) seeds: six per condition, user decision 2026-10-03 — the
 # generalisation campaign runs the full Phase-2 seed ladder, not the n = 3
 # triage. SEEDS above is untouched: Phase 2's recorded inventory stays as run.
-SPRIME_SEEDS = (13, 14, 15, 16, 17, 18)
+# s′ campaign seeds: the registered triage three (13–15), identical to Phase 2's SEEDS.
+# 2026-10-03, twice amended by user decision: extended to 13–18 with the filtered set,
+# then reduced back to three BEFORE any 16–18 s′ run trained. Phase 2's six-seed
+# filtered inventory on the hub is untouched — only the s′ campaign is three seeds.
+# Recorded: PHASE3_PLAN §3.1/§3.2/§9, sanitycheck §9.5 second addendum.
+SPRIME_SEEDS = (13, 14, 15)
 RUNS_SUBDIR = "runs"               # ARTIFACTS/runs/<condition>_<seed>/{checkpoint,config,metrics}
 # Threshold policy (PHASE2_PLAN §3.3): the F1-maximising cosine threshold on the
 # VALIDATION split, per condition/model, applied unchanged to test. Test scores
