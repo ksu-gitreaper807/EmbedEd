@@ -123,8 +123,8 @@ def test_mine_shared_stream_exclusions_and_cap(sprime):
     frame = sprime.frame
     clones = clone_sets_from(frame)
 
-    t = {c: triples(c) for c in GZ.CONDS}
-    for c in GZ.CONDS:
+    t = {c: triples(c) for c in ("C1", "C2", "C3")}
+    for c in ("C1", "C2", "C3"):
         assert len(t[c]) == 9, "cap 9 with k=3 = 3 anchors x 3 negatives"
         assert summary[c]["n_triples"] == 9
         assert summary[c]["k"] == 3 and summary[c]["n_anchors"] == 3
@@ -145,7 +145,7 @@ def test_mine_shared_stream_exclusions_and_cap(sprime):
     rows = GZ.pair_frag_rows_of(frame)
     for i in train_pairs:
         train_frag_ids.update(rows[i][:2])
-    for c in GZ.CONDS:
+    for c in ("C1", "C2", "C3"):
         for r in t[c]:
             for x in (r["anchor"], r["positive"], r["negative"]):
                 assert x in train_frag_ids, "training triples must stay inside the " \

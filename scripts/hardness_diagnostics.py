@@ -36,9 +36,20 @@ import numpy as np
 from embeded import settings as S
 from embeded.hardcheck import missing_artifact_message, standardized_gap
 
-CONDS = ("C1", "C2", "C3") + tuple(
-    c for c in ("C4", "C5", "C6")
-    if S.artifact(f"triples_{c}.jsonl").exists())  # filtered_* join iff mined
+BASE_CONDS = ("C1", "C2", "C3")
+
+
+def conditions() -> tuple:
+    """The mined condition set: C1-C3 plus every filtered_* condition whose
+    triples exist -- evaluated AT CALL TIME. (The earlier module-level
+    "iff exists" tuple froze at import/pytest-collection time, when
+    EMBEDED_ARTIFACTS still pointed at the real tree, so fixtures that mine
+    only C1-C3 crashed on a phantom C4.)"""
+    return BASE_CONDS + tuple(c for c in ("C4", "C5", "C6")
+                              if S.artifact(f"triples_{c}.jsonl").exists())
+
+
+CONDS = conditions()   # import-time snapshot: for docs/reads only, never iterate
 
 
 def _load_triples(path) -> dict[int, dict]:
@@ -132,7 +143,7 @@ def analyse(emb: np.ndarray, row_of: dict[int, int], corpus: list[int],
     pos_cos = np.array([_cos(emb, row_of, a, triples["C1"][a]["positive"]) for a in anchors])
 
     # --- per-anchor similarity distribution over the corpus ------------------
-    per = {c: defaultdict(list) for c in CONDS}
+    per = {c: defaultdict(list) for c in conditions()}
     for idx, a in enumerate(anchors):
         sims = emb[corpus_rows] @ emb[row_of[a]]
         if row_of[a] in row_to_corpus_pos:            # never rank the anchor against itself
@@ -140,7 +151,7 @@ def analyse(emb: np.ndarray, row_of: dict[int, int], corpus: list[int],
         srt = np.sort(sims)
         n = len(srt)
         ap = float(pos_cos[idx])
-        for c in CONDS:
+        for c in conditions():
             negs = triples[c][a]["negatives"]
             nc = np.array([float(emb[row_of[a]] @ emb[row_of[x]]) for x in negs])
             below = np.searchsorted(srt, nc, side="left")             # corpus frags strictly less similar
@@ -157,10 +168,10 @@ def analyse(emb: np.ndarray, row_of: dict[int, int], corpus: list[int],
                      "anchor_positive_cos_mean": round(float(pos_cos.mean()), 5),
                      "anchor_positive_cos_sd": round(float(pos_cos.std()), 5)},
            "conditions": {}}
-    means = {c: float(np.mean(per[c]["cos"])) for c in CONDS}
-    sds = {c: float(np.std(per[c]["cos"])) for c in CONDS}
+    means = {c: float(np.mean(per[c]["cos"])) for c in conditions()}
+    sds = {c: float(np.std(per[c]["cos"])) for c in conditions()}
     span = means["C3"] - means["C1"]
-    for c in CONDS:
+    for c in conditions():
         d = {"mean_cos": round(means[c], 5), "sd": round(sds[c], 5),
              "gap_vs_C1": round(means[c] - means["C1"], 5),
              # the gate's definition, imported — diagnostics and hardcheck can
@@ -198,7 +209,7 @@ def examples(emb, row_of, frags, triples, n: int) -> list[str]:
         lines.append(f"anchor {a}: {_snippet(frags[a])}")
         lines.append(f"  positive {p} (cos {_cos(emb, row_of, a, p):.3f}, jaccard "
                      f"{jaccard(ta, set(tokenize_code(frags[p]))):.2f}): {_snippet(frags[p])}")
-        for c in CONDS:
+        for c in conditions():
             x = triples[c][a]["negatives"][0]
             lines.append(f"  {c} neg#1 {x} (cos {_cos(emb, row_of, a, x):.3f}, jaccard "
                          f"{jaccard(ta, set(tokenize_code(frags[x]))):.2f}): {_snippet(frags[x])}")
@@ -219,7 +230,7 @@ def write_section(res: dict) -> None:
              "verdict so a pass can be read without re-deriving the scale of this space.", "",
              "| cond | mean cos | sd | gap vs C1 | d vs C1 | position C1→C3 | pct mean | pct median | in top-20 | in top-100 | closer than positive |",
              "|---|---|---|---|---|---|---|---|---|---|---|"]
-    for c in CONDS:
+    for c in conditions():
         m = cd[c]
         pos = "—" if m["position_in_C1_C3_range"] is None else f"{m['position_in_C1_C3_range']:.2f}"
         lines.append(f"| {c} | {m['mean_cos']:.4f} | {m['sd']:.3f} | {m['gap_vs_C1']:+.4f} | {m['d_vs_C1']:.2f} | {pos} | "
@@ -234,7 +245,7 @@ def write_section(res: dict) -> None:
                   "(Jaccard). Positives shown with the same yardstick.", "",
                   "| set | train-labelled clone (must be 0) | valid-labelled clone | Jaccard median | ≥ 0.5 | ≥ 0.75 |",
                   "|---|---|---|---|---|---|"]
-        for c in CONDS:
+        for c in conditions():
             m = ln[c]
             lines.append(f"| {c} negatives | {m['train_labelled_clone_frac']:.2%} | {m['valid_labelled_clone_frac']:.2%} | "
                          f"{m['jaccard_median']:.2f} | {m['near_dup_frac_ge_0.5']:.1%} | {m['near_dup_frac_ge_0.75']:.1%} |")
@@ -272,7 +283,7 @@ def main(argv=None):
     frags = load_fragments()
     row_of = {c: i for i, c in enumerate(sorted(frags))}
     triples = {}
-    for c in CONDS:
+    for c in conditions():
         p = S.artifact(f"triples_{c}.jsonl")
         if not p.exists():
             raise SystemExit(missing_artifact_message(p))

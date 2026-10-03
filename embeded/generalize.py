@@ -68,11 +68,23 @@ from .train import (CHECKPOINT_NAME, CONFIG_NAME, EVAL_CONFIG_NAME, EVAL_METRICS
 # Trained generalisation conditions. The filtered_* set (C4/C5/C6) joins iff its
 # s′ triples have been mined (user decision 2026-10-03: the bouncer factorial is
 # measured on unseen functionality too; supersedes the old P6-1 "no fourth
-# strategy" scope). Until then every downstream path behaves exactly as before.
-CONDS = ("C1", "C2", "C3") + tuple(
-    c for c in ("C4", "C5", "C6")
-    if S.artifact(f"sprime_triples_{c}.jsonl").exists())
-ALL_CONDITIONS = ("C0",) + CONDS             # + C0 as the untuned transfer-only baseline
+# strategy" scope). Evaluated AT CALL TIME -- the module-level "iff exists"
+# tuple froze at import/pytest-collection time and breaks on machines where the
+# s′ triples already exist. Until mining, conditions() == BASE_CONDS.
+BASE_CONDS = ("C1", "C2", "C3")
+
+
+def conditions() -> tuple:
+    return BASE_CONDS + tuple(c for c in ("C4", "C5", "C6")
+                              if S.artifact(f"sprime_triples_{c}.jsonl").exists())
+
+
+def all_conditions() -> tuple:
+    return ("C0",) + conditions()          # + C0 as the untuned transfer-only baseline
+
+
+CONDS = conditions()             # import-time snapshot: docs/reads only, never iterate
+ALL_CONDITIONS = all_conditions()
 PICKLE_GLOB = "*bcb_v2_sampled_bf*.pickle"
 RULE_NAME = "max_pair_count_then_lowest_id"   # decision D4 — the notebook records this string
 CENSUS_NAME = "sprime_census.json"
@@ -401,7 +413,7 @@ def mine(holdout_k: int, k: int, cap: int, *, embed_fn=None, force: bool = False
     if not force:
         cached = _cached_mining(k, cap, holdout_k)
         if cached is not None:
-            for c in CONDS:
+            for c in conditions():
                 print(c, {x: cached[c][x] for x in ("strategy", "n_anchors", "k", "n_triples")})
             print(f"[cache] s′ triples for version {S.VERSION} (k={k}, cap={cap}) already "
                   "mined — skipping (--force to redo)")
@@ -516,7 +528,7 @@ def hardness_main(holdout_k: int, *, embed_fn=None, anchors: int = S.HARDNESS_CH
     History is appended under its own section; exit 1 = FAIL ⇒ stop (notebook §6)."""
     _require_holdout_k(holdout_k)
     files = {}
-    for c in CONDS:
+    for c in conditions():
         p = S.artifact(TRIPLES_NAME.format(cond=c))
         if not p.exists():
             raise SystemExit(missing_artifact_message(
@@ -532,15 +544,15 @@ def hardness_main(holdout_k: int, *, embed_fn=None, anchors: int = S.HARDNESS_CH
     row_of = {i: r for r, i in enumerate(sorted(frags))}
     per = hardness_measure(files, emb, row_of, anchors, S.SEED)
     ci = None if no_bootstrap else bootstrap_d(
-        {c: per[c].get("per_anchor", {}) for c in CONDS})
-    means = {c: per[c]["mean_cos"] for c in CONDS}
-    sds = {c: per[c]["std"] for c in CONDS}
+        {c: per[c].get("per_anchor", {}) for c in conditions()})
+    means = {c: per[c]["mean_cos"] for c in conditions()}
+    sds = {c: per[c]["std"] for c in conditions()}
     d = standardized_gap(means["C1"], sds["C1"], means["C2"], sds["C2"])
     verdict = evaluate_gap(means, sds, ci=ci)
     ok = verdict["ok"]
 
     run = ["", f"### run {stamp or _stamp()} — version `{S.VERSION}`, rule: {S.HARDNESS_RULE}", ""]
-    for c in CONDS:
+    for c in conditions():
         m = per[c]
         run.append(f"- {c}: mean cos(anchor, negative) = {m['mean_cos']:.5f} "
                    f"(sd {m['std']:.3f}, n = {m['n_samples']}, anchors = {m['n_anchors']})")
@@ -549,7 +561,7 @@ def hardness_main(holdout_k: int, *, embed_fn=None, anchors: int = S.HARDNESS_CH
     run.append("")
     _replace_or_append_section(S.REPORT_MD, GATE_SECTION, "\n".join(run))
 
-    payload = {c: {k: v for k, v in per[c].items() if k != "per_anchor"} for c in CONDS}
+    payload = {c: {k: v for k, v in per[c].items() if k != "per_anchor"} for c in conditions()}
     log_p = S.artifact(GATE_LOG_NAME)
     runs = []
     if log_p.exists():
@@ -637,7 +649,7 @@ def train_sprime(condition: str, seed: int, *, holdout: list[str], cap: int,
 
     from .encoder import autocast_ctx, forward_embed
 
-    if condition not in CONDS:
+    if condition not in conditions():
         raise SystemExit(f"{condition} is not trainable on s′ — C0 is the untuned baseline: "
                          "`python -m embeded.generalize --condition C0 --seed 13 "
                          "--holdout-k 3 --transfer`")
@@ -890,9 +902,9 @@ def transfer_main(condition: str, seed: int, holdout_k: int, *, embed_fn=None,
     the untouched base model) on the s′ seen/unseen partition. NO training, never part
     of the Δ table (PHASE3_PLAN §3.3)."""
     _require_holdout_k(holdout_k)
-    if condition not in ALL_CONDITIONS:
-        raise SystemExit(f"unknown condition {condition!r} — one of {list(ALL_CONDITIONS)}")
-    if condition in CONDS:
+    if condition not in all_conditions():
+        raise SystemExit(f"unknown condition {condition!r} — one of {list(all_conditions())}")
+    if condition in conditions():
         ck = phase2_run_dir(condition, seed) / CHECKPOINT_NAME
         if not ck.exists():
             raise SystemExit(f"missing {ck} — the transfer reading scores a Phase 2 "
@@ -956,7 +968,7 @@ def write_results_table(runs_root: Path | None = None, *, report_md: Path | None
              "| condition | seed | F1_seen | F1_unseen | Δ | threshold | n seen | n unseen |",
              "|---|---|---|---|---|---|---|---|"]
     agg: dict[str, dict] = {}
-    for c in ALL_CONDITIONS:
+    for c in all_conditions():
         ms = sorted([m for m in rows if m["condition"] == c], key=lambda r: r["seed"])
         for m in ms:
             delta = m["f1_seen"] - m["f1_unseen"]
@@ -982,7 +994,7 @@ def write_results_table(runs_root: Path | None = None, *, report_md: Path | None
     if "C0" in agg:
         notes.append(f"C0 is the untuned baseline on the same partition (one evaluation, "
                      f"not a trained condition) at mean Δ {agg['C0']['mean_delta']:+.4f}.")
-    trained = [c for c in CONDS if c in agg]
+    trained = [c for c in conditions() if c in agg]
     if len(trained) == len(CONDS):
         best = max(trained, key=lambda c: agg[c]["mean_f1_unseen"])
         notes.append(f"On the unseen functionalities the highest mean F1 is {best} "
@@ -1035,7 +1047,7 @@ def main(argv=None) -> int:
                        help="gate G1s: the D1 hardness verdict re-measured on s′ (exit 1 = FAIL)")
     modes.add_argument("--results-table", action="store_true",
                        help="rebuild the generalisation section from saved run metrics")
-    ap.add_argument("--condition", choices=ALL_CONDITIONS)
+    ap.add_argument("--condition", choices=all_conditions())
     ap.add_argument("--seed", type=int, default=S.SEED)
     ap.add_argument("--holdout-k", type=int, default=S.SPRIME_HELDOUT_K,
                     help=f"must equal settings.SPRIME_HELDOUT_K = {S.SPRIME_HELDOUT_K}")
