@@ -392,3 +392,25 @@ def test_results_table_placeholder_when_nothing_ran(sprime):
     GZ.write_results_table()
     block = S.REPORT_MD.read_text().split(GZ.TABLE_SECTION, 1)[1].split("\n## ", 1)[0]
     assert "placeholder" in block
+
+
+def test_results_table_six_conditions_and_off_ladder_seeds(mined):
+    """C4-C6 runs must be TABLED (the C[123]-only regex silently dropped half the
+    design), and an out-of-ladder seed (e.g. the pre-re-scope sprime_C1_16) must be
+    excluded from the rows AND the mean, visibly."""
+    h = HOLDOUT_SORTED
+    _fake_run("C1", 13, h, f1_seen=0.50, f1_unseen=0.30)
+    _fake_run("C1", 16, h, f1_seen=0.90, f1_unseen=0.10)     # pre-re-scope straggler
+    _fake_run("C4", 13, h, f1_seen=0.60, f1_unseen=0.35)
+    _fake_run("C6", 15, h, f1_seen=0.55, f1_unseen=0.40)
+    _fake_run("C4", 13, h, f1_seen=0.45, f1_unseen=0.30, transfer=True)
+    res = GZ.write_results_table()
+    assert res["runs"] == 3
+    assert res["aggregate"]["C1"]["n"] == 1                  # 16 kept OUT of the mean
+    assert res["aggregate"]["C1"]["per_seed_delta"] == [0.2]
+    assert res["aggregate"]["C4"]["n"] == 1 and res["aggregate"]["C6"]["n"] == 1
+    text = S.REPORT_MD.read_text()
+    block = text.split(GZ.TABLE_SECTION, 1)[1].split("\n## ", 1)[0]
+    assert "| C4 | 13 |" in block and "| C6 | 15 |" in block
+    assert "| C1 | 16 |" not in block
+    assert "### Transfer" in block and "| C4 |" in block.split("### Transfer", 1)[1]

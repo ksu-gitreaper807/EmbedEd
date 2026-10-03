@@ -931,8 +931,8 @@ def transfer_main(condition: str, seed: int, holdout_k: int, *, embed_fn=None,
 
 # --------------------------------------------------------------------- results table
 
-_RUN_DIR_RE = re.compile(r"^sprime_(C[123])_(\d+)$")
-_TRANSFER_RE = re.compile(r"^sprime_transfer_(C[0123])_(\d+)$")
+_RUN_DIR_RE = re.compile(r"^sprime_(C[1-6])_(\d+)$")
+_TRANSFER_RE = re.compile(r"^sprime_transfer_(C[0-6])_(\d+)$")
 
 
 def write_results_table(runs_root: Path | None = None, *, report_md: Path | None = None) -> dict:
@@ -949,6 +949,13 @@ def write_results_table(runs_root: Path | None = None, *, report_md: Path | None
                 (smoke if m.get("smoke") else rows).append(m)
             elif _TRANSFER_RE.match(name) and not m.get("smoke"):
                 transfer.append(m)
+    ladder = {int(s) for s in S.SPRIME_SEEDS}
+    off_ladder = sorted({int(m["seed"]) for m in rows} - ladder)
+    if off_ladder:
+        print(f"[table] excluding out-of-ladder s′ run(s), seed(s) {off_ladder}: the registered "
+              f"ladder is SPRIME_SEEDS={sorted(S.SPRIME_SEEDS)} (e.g. pre-re-scope runs left on "
+              "disk). They are NOT scored here — delete the dir or amend the ladder to include.")
+        rows = [m for m in rows if int(m["seed"]) in ladder]
     holdouts = {tuple(m.get("holdout_functionalities") or []) for m in rows}
     if len(holdouts) > 1:
         raise SystemExit(f"the s′ runs do not share one holdout: {holdouts} — strategy would "
@@ -968,7 +975,8 @@ def write_results_table(runs_root: Path | None = None, *, report_md: Path | None
              "| condition | seed | F1_seen | F1_unseen | Δ | threshold | n seen | n unseen |",
              "|---|---|---|---|---|---|---|---|"]
     agg: dict[str, dict] = {}
-    for c in all_conditions():
+    extra_conds = sorted({m["condition"] for m in rows} - set(all_conditions()))
+    for c in [*all_conditions(), *extra_conds]:
         ms = sorted([m for m in rows if m["condition"] == c], key=lambda r: r["seed"])
         for m in ms:
             delta = m["f1_seen"] - m["f1_unseen"]
