@@ -343,3 +343,29 @@ def test_run_with_retries_blips_keep_short_backoff(monkeypatch):
 
     assert H.run_with_retries(flaky, label="pull") == "ok"
     assert sleeps == [2.0, 4.0]                  # unchanged blip behaviour
+
+
+def test_section9_transfer_pull_glob_is_exactly_the_ladder():
+    """The section-9 pull must fetch the 19 phase-2 run dirs for seeds 13-15 and
+    nothing else checkpoint-sized: phase-2's published 16-18 extras and every
+    s-prime checkpoint (~9 GB each) are not inputs to sections 9-12."""
+    import fnmatch, json
+    pat = "artifacts/runs/C[0-6]_1[345]/*"
+    assert [f for f in ("artifacts/runs/C0_13/checkpoint.pt",
+                        "artifacts/runs/C5_14/predictions.npz",
+                        "artifacts/runs/C6_15/eval_metrics.json")
+            if fnmatch.fnmatch(f, pat)] == [
+        "artifacts/runs/C0_13/checkpoint.pt",
+        "artifacts/runs/C5_14/predictions.npz",
+        "artifacts/runs/C6_15/eval_metrics.json"]
+    for not_wanted in ("artifacts/runs/C1_16/checkpoint.pt",
+                       "artifacts/runs/C1_17/predictions.npz",
+                       "artifacts/runs/sprime_C1_13/checkpoint.pt",
+                       "artifacts/runs/sprime_smoke_C1_13/checkpoint.pt",
+                       "artifacts/runs/C4_18/run_config.json"):
+        assert not fnmatch.fnmatch(not_wanted, pat), not_wanted
+    # and the notebook actually uses it
+    root = Path(__file__).resolve().parents[2]
+    nb = json.loads((root / "notebooks" / "Phase3_Colab.ipynb").read_text())
+    src = "\n".join("".join(c["source"]) for c in nb["cells"] if c["cell_type"] == "code")
+    assert src.count(pat) == 2          # section 9 + section 12 demo
