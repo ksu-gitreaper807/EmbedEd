@@ -215,6 +215,24 @@ def load_checkpoint(path: Path, model, cfg: dict) -> dict | None:
     return ck
 
 
+def load_trained_checkpoint(path: Path, model) -> dict:
+    """Era-tolerant load for SCORING ONLY (transfer readings, re-evaluations):
+    load the exact recorded weights of a checkpoint trained under an EARLIER
+    config, so a historical run can be scored without retraining it. The strict
+    gate stays in load_checkpoint — RESUMING training across a settings change
+    would mix two experiments; scoring a recorded checkpoint does not (its
+    fingerprint is the provenance and travels with the eval output)."""
+    import torch
+
+    if not path.exists():
+        raise SystemExit(f"missing {path}")
+    ck = torch.load(path, map_location="cpu", weights_only=False)
+    if not isinstance(ck, dict) or "model" not in ck or "fingerprint" not in ck:
+        raise SystemExit(f"{path} is not a fingerprinted EmbedEd checkpoint — refusing to score it")
+    model.load_state_dict(ck["model"])
+    return ck
+
+
 def verify_checkpoint(path: Path, model, cfg: dict) -> dict:
     """Save/reload round-trip (PHASE2_PLAN §2 item 5): the file on disk must
     reproduce the trained weights exactly, or a resumed/evaluated run is not

@@ -918,12 +918,16 @@ def transfer_main(condition: str, seed: int, holdout_k: int, *, embed_fn=None,
     frags = load_sprime_fragments()
     pair_frag_rows = pair_frag_rows_of(frame)
     out_dir = sprime_transfer_dir(condition, seed)
+    note = "caller-provided embed_fn"
     if embed_fn is None:
-        embed_fn, _dev, _note = default_embed_fn(condition, seed, device=device)
+        embed_fn, _dev, note = default_embed_fn(condition, seed, device=device)
     eval_sprime(condition, seed, holdout=split["holdout"], split=split,
                 pair_frag_rows=pair_frag_rows, frags=frags, out_dir=out_dir,
                 embed_fn=embed_fn, kind="transfer", force=force, device=device,
                 verbose=verbose)
+    (out_dir / "transfer_provenance.json").write_text(json.dumps(
+        {"note": note, "recorded_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())},
+        indent=2))
     print(f"transfer reading written to {out_dir.name}/ — secondary observation only, "
           "never part of the Δ table (it never trains on functionality-labelled data)")
     return 0

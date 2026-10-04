@@ -303,8 +303,10 @@ def test_default_embed_fn_refuses_an_untrained_condition(monkeypatch, mined, enc
 
 
 def test_default_embed_fn_loads_the_checkpoint(monkeypatch, mined, encoder):
-    """The production path: base model + this run's checkpoint, and a refusal
-    when the checkpoint belongs to a different config."""
+    """The production path: base model + this run's checkpoint; a checkpoint from
+    an EARLIER config is scored as-is (era-tolerant) with its fingerprint in the
+    provenance note — training resume stays strict (see
+    test_load_trained_checkpoint_scoring_is_era_tolerant_strict_resume_is_not)."""
     import embeded.encoder as ENC
     monkeypatch.setattr(ENC, "load_encoder", lambda *a, **k: encoder)
     TR.train("C1", 13, smoke=True, encoder=encoder, verbose=False)
@@ -323,14 +325,19 @@ def test_default_embed_fn_loads_the_checkpoint(monkeypatch, mined, encoder):
     assert vecs.shape == (2, 16)
     assert np.allclose(np.linalg.norm(vecs, axis=1), 1.0, atol=1e-5)   # L2-normalised
 
-    # a checkpoint from another config must not be evaluated as this run
+    # a checkpoint from another config is still the recorded trained artifact:
+    # scored as-is (era-tolerant), never silently presented as this run's config
     ck_path = TR.run_dir("C1", 13, smoke=True) / TR.CHECKPOINT_NAME
     ck = torch.load(ck_path, weights_only=False)
     ck["fingerprint"] = "deadbeefdeadbeef"
     torch.save(ck, ck_path)
-    with pytest.raises(SystemExit) as e:
-        EV.default_embed_fn("C1", 13, smoke=True)
-    assert "different config" in str(e.value)
+    fresh2 = tiny_model()
+    monkeypatch.setattr(ENC, "load_encoder",
+                        lambda *a, **k: (TinyTokenizer(), fresh2, "cpu"))
+    fn2, _dev2, note2 = EV.default_embed_fn("C1", 13, smoke=True)
+    assert "earlier-config checkpoint" in note2 and "deadbeef" in note2
+    loaded2 = fresh2.state_dict()
+    assert all(torch.equal(trained[k], loaded2[k]) for k in loaded2)  # exact weights, era-tagged
 
 
 def test_results_table_aggregates_and_excludes_smoke(mined):
@@ -393,3 +400,31 @@ def test_cli_entrypoints(monkeypatch, mined, encoder, capsys):
     assert "wrote" in capsys.readouterr().out
     with pytest.raises(SystemExit):
         EV.main([])                                     # --condition required
+
+
+def test_load_trained_checkpoint_scoring_is_era_tolerant_strict_resume_is_not(tmp_path):
+    """The v6/v7-era Phase-2 checkpoints must be scoreable from a v8 checkout
+    (transfer readings, section 9.2 repair) WITHOUT weakening the training-resume
+    gate: resume refuses an era mismatch; the scoring load takes the recorded
+    weights and keeps the fingerprint for provenance."""
+    import torch
+    import torch.nn as nn
+
+    src, dst = nn.Linear(4, 3), nn.Linear(4, 3)
+    cfg = {"version": "v-test", "seed": 13}
+    p = tmp_path / "checkpoint.pt"
+    torch.save({"model": src.state_dict(), "epoch": 1, "step": 7,
+                "fingerprint": TR.fingerprint(cfg), "loss": 0.25}, p)
+
+    assert TR.load_checkpoint(p, dst, cfg) is not None                 # same era: resumes
+    assert TR.load_checkpoint(p, dst, {**cfg, "version": "v-next"}) is None  # era drift: refuse
+    dst2 = nn.Linear(4, 3)
+    ck = TR.load_trained_checkpoint(p, dst2)                           # scoring: tolerant
+    assert ck["step"] == 7
+    for (name, buf_src), (_, buf_dst) in zip(src.state_dict().items(), dst2.state_dict().items()):
+        assert torch.equal(buf_src, buf_dst), name
+
+    unlabeled = tmp_path / "unlabeled.pt"
+    torch.save({"model": src.state_dict()}, unlabeled)                 # no fingerprint: refuse
+    with pytest.raises(SystemExit, match="fingerprinted"):
+        TR.load_trained_checkpoint(unlabeled, dst2)

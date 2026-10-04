@@ -35,8 +35,8 @@ import numpy as np
 from . import settings as S
 from .hardcheck import missing_artifact_message
 from .train import (CHECKPOINT_NAME, EVAL_CONFIG_NAME, EVAL_METRICS_NAME,
-                    PREDICTIONS_NAME, fingerprint, load_checkpoint, run_config,
-                    run_dir, set_seed)
+                    PREDICTIONS_NAME, fingerprint, load_checkpoint,
+                    load_trained_checkpoint, run_config, run_dir, set_seed)
 
 CONDITIONS = ("C0", "C1", "C2", "C3", "C4", "C5", "C6")
 SECTION = "## Phase 2 — main results"
@@ -126,8 +126,10 @@ def subsample(pairs, n: int, seed: int):
 def default_embed_fn(condition: str, seed: int, *, smoke: bool = False,
                      device: str | None = None):
     """(embed_fn, device, model_note). C0 = untouched base model; C1/C2/C3 =
-    the base model with the run's checkpoint loaded (and refused if the
-    checkpoint belongs to a different config)."""
+    the base model with the run's checkpoint loaded — same-config checkpoints
+    load directly; a checkpoint from an earlier recorded config (e.g. a v6/v7-era
+    Phase 2 run scored from today's checkout) is scored as-is via the
+    era-tolerant load, with its fingerprint kept in the provenance note."""
     from .encoder import encode_texts, load_encoder
 
     ck_path = None
@@ -144,10 +146,15 @@ def default_embed_fn(condition: str, seed: int, *, smoke: bool = False,
         cfg = run_config(condition, seed, smoke=smoke)
         ck = load_checkpoint(ck_path, model, cfg)
         if ck is None:
-            raise SystemExit(f"{ck_path} was written by a different config — retrain "
-                             f"(`python -m embeded.train --condition {condition} "
-                             f"--seed {seed} --force`); evaluating it would mix two experiments")
-        note = f"{S.MODEL_ID} + {condition} seed {seed} (step {ck['step']})"
+            ck = load_trained_checkpoint(ck_path, model)
+            print(f"[eval] {ck_path} was written by an earlier config "
+                  f"({str(ck.get('fingerprint'))[:12]}…) — scoring the recorded weights "
+                  "as-is; the fingerprint travels in the provenance note (training "
+                  "resumes remain strict — that gate was never about scoring)")
+            note = (f"{S.MODEL_ID} + {condition} seed {seed} (step {ck['step']}; "
+                    f"earlier-config checkpoint {str(ck.get('fingerprint'))[:8]})")
+        else:
+            note = f"{S.MODEL_ID} + {condition} seed {seed} (step {ck['step']})"
     model.eval()
     max_len = S.SMOKE_MAX_LEN if smoke else S.MAX_LEN
     amp = S.AMP_DTYPE if str(dev).startswith("cuda") else "float32"
