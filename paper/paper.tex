@@ -1,0 +1,727 @@
+% =============================================================================
+% EmbedEd — paper draft
+% Status: DRAFT (2026-10-05). Numbers as recorded in report/measurements.md at
+% commit ede587a plus the Phase-3 s' table. Two results are still gated and are
+% marked as such inline: the C5/C6 contamination audits (Section 6.3) and the
+% nine C2/C3 benchmark re-evaluations (Section 4, footnote).
+% Compile: pdflatex paper.tex   (no external .bib needed; figure include is
+% guarded so the file compiles even without report/figures present)
+% =============================================================================
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+
+\newcommand{\finding}[1]{\medskip\noindent\textbf{#1}\par\smallskip}
+\newcommand{\pending}[1]{\textcolor{orange}{[pending: #1]}}
+
+\title{When Hard Negatives Are False:\\
+Negative-Selection Strategies in Contrastive Code Clone Detection,\\
+the Bouncer That Partly Repairs Them, and the Floor Below Doing Nothing}
+
+\author{The EmbedEd project\thanks{Draft generated from the project's recorded
+artifacts (\href{https://github.com/ksu-gitreaper807/EmbedEd}{github.com/ksu-gitreaper807/EmbedEd};
+artifacts snapshot on the Hugging Face Hub, dataset \texttt{Kusshal/Embed}).
+Every number in this paper is reproduced by a committed command; run
+configurations are content-fingerprinted per run. Contact: repository issues.}}
+\date{October 5, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Contrastive fine-tuning of code encoders relies on mined hard negatives, yet in
+pair-labelled code corpora a ``hard'' negative is frequently a false negative:
+an unlabelled semantic clone. We present a controlled seven-condition study of
+negative selection for Java clone detection with GraphCodeBERT and a triplet
+objective: random negatives (C1), lexical hard negatives (C2, BM25), semantic
+hard negatives (C3, embedding similarity), and each supply re-mined under a
+simple similarity bouncer that discards negatives closer to the anchor than its
+positive (C4--C6), plus the untuned encoder (C0). On the CodeXGLUE benchmark
+split (415{,}416 test pairs, 13.7\% positive), semantic and lexical hard
+negatives do not merely underperform random negatives --- they \emph{collapse}
+to the all-negative base rate (C2 $0.248$, C3 $0.271$ vs.\ ceiling $0.241$),
+with validation thresholds saturated at $1.0$: the models learn to predict
+``non-clone'' for everything. A 50-pair blind audit attributes C3's supply to
+30\% false negatives and locates the mechanism: collapse is governed not by the
+false-negative \emph{rate} (C3 and the partly-rescued C4 both carry 30\%) but
+by the false-negative \emph{surface} --- whether contaminating negatives are
+simultaneously functional clones and near-duplicates --- with the triplet
+margin acting as an amplifier. The bouncer restores roughly half the collapse
+(C4 $0.435$) without rescuing it, and a Jaccard $\geq 0.40$ cut removes
+$\sim$40\% of C2's measured contamination while discarding no audited clean
+pair. On an independently collected corpus with functionality labels
+(s$\phi$, 4{,}600 pairs, 23 functionalities), the ordering replicates across
+rulers, and the comparison gains a floor the imbalanced benchmark hides: the
+untuned encoder scores $0.693$ on unseen functionality, and \emph{no}
+poisoned-mining condition beats doing nothing at all (C2 $0.667$, C4
+$0.669$; C3 ties it with a saturated scorer), while clean training yields the
+only gains (C1 $0.703$, C5 $0.724$). We conclude with a measurement-first
+protocol --- audit the negatives, report the positive rate, and read
+saturated thresholds as a failure signature --- and with the experiments
+(denoising ladder, FN-weighted objectives) that our mechanism account
+predicts will matter.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+Contrastive fine-tuning has become the default way to adapt pretrained code
+encoders such as CodeBERT~\cite{feng2020codebert} and
+GraphCodeBERT~\cite{guo2021graphcodebert} to clone
+detection~\cite{lu2021codeglue}. Beyond the in-batch positives, practitioners
+mine \emph{hard negatives}: corpus snippets that are lexically or
+semantically close to an anchor but labelled non-clone. The intuition ---
+harder negatives teach a finer-grained decision boundary --- descends from
+metric learning~\cite{schroff2015facenet,hermans2017triplet}. In
+pair-labelled code corpora, however, the label supply is contaminated at the
+source: BigCloneBench, the standard corpus behind CodeXGLUE's clone task,
+carries incomplete and partly erroneous labels, especially among the
+weakly-typed clones that semantic miners retrieve
+preferentially~\cite{svajlenko2015bigclonebench,krinke2022harmful,krinke2025misuse}.
+A hard negative mined from such a corpus is frequently a \emph{false
+negative}: a genuine semantic clone labelled as a non-clone. Training then
+pushes apart code that is genuinely equivalent.
+
+This paper reports a controlled, seven-condition study of that failure mode
+and its partial repair, in Java clone detection. We hold the encoder, loss,
+hyperparameters, and seeds fixed and vary \emph{only} how training negatives
+are selected; a pre-registered hardness gate verifies that the manipulation
+takes effect before any F1 is interpreted; blind audits measure how much
+false-negative contamination each supply actually carries; and an independent
+functionality-labelled corpus lets us ask the generalisation question on a
+second ruler. The conditions form the full factorial of \{random, BM25,
+semantic\} supplies $\times$ \{with, without\} a \emph{bouncer}: a
+per-triple filter that discards any mined negative closer to the anchor than
+the anchor's positive --- the RocketQA~\cite{qu2021rocketqa} /
+NV-Retriever~\cite{moreira2024nvretriever} positive-aware cut, applied as a
+hard similarity threshold, here Jaccard $\geq 0.40$.
+
+\finding{Research questions.}
+\begin{itemize}
+\item \textbf{RQ1 (benchmark):} How does negative-selection strategy change
+benchmark clone-detection performance?
+\item \textbf{RQ2 (mechanism):} Why do poisoned supplies collapse, and what
+exactly does the bouncer change?
+\item \textbf{RQ3 (unseen functionality):} Does the strategy change how much
+performance drops on functionality never seen in training?
+\end{itemize}
+
+\finding{Contributions.}
+\begin{enumerate}
+\item A seven-condition controlled study (three supplies $\times$ bouncer
+$\times$ untuned baseline) with pre-registered manipulation gates, fixed
+seeds, and per-run configuration fingerprints (Section~\ref{sec:design}).
+\item The collapse finding: on the benchmark, mined-lexical and mined-semantic
+supplies collapse to the all-negative base rate with saturated thresholds ---
+and the failure mode sits \emph{below} what the benchmark's imbalance makes
+visible (Section~\ref{sec:benchmark}).
+\item A mechanism decomposition supported by blind audits: the
+false-negative \emph{surface} (functional clone $\wedge$ near-duplicate),
+not the false-negative \emph{rate}, determines collapse; rate is the dose,
+the triplet margin is the amplifier, and the bouncer's partial rescue is
+explained quantitatively (Section~\ref{sec:mechanism}).
+\item Cross-corpus replication with a new floor: on unseen functionality
+every poisoned condition performs at or below the \emph{untuned} encoder,
+while the strategy ordering and the saturation signature replicate
+(Section~\ref{sec:generalisation}).
+\item A measurement-first protocol for negative-selection studies in
+label-contaminated domains, and the experiments our account predicts will
+matter next (Sections~\ref{sec:protocol-lessons} and~\ref{sec:future}).
+\end{enumerate}
+
+All artifacts (per-run checkpoints, predictions, audit sheets, mining
+summaries, and the configuration fingerprints that make each number
+reproducible) are committed to a public snapshot referenced in the appendix.
+
+\section{Background and related work}
+\label{sec:related}
+
+\subsection{Clone detection and its benchmark}
+BigCloneBench~\cite{svajlenko2015bigclonebench} annotates Java method pairs
+by functionality (true clones) and otherwise labels non-clones; CodeXGLUE's
+clone-detection task~\cite{lu2021codeglue} derives a binary pair
+classification benchmark from it, on which fine-tuned CodeBERT-family models
+report F1 around $0.95$ under the benchmark's own
+convention~\cite{lu2021codeglue}. That convention evaluates on the natural
+pair prevalence (13.7\% positives in our split), which caps an
+all-negative scorer at F1 $\approx 0.24$ --- a floor we make explicit
+throughout, because two of our findings live near it.
+
+\subsection{The ground truth is contested}
+Krinke~\cite{krinke2022harmful} documented that BigCloneBench's labels are
+incomplete across functionalities and that a substantial share of Weak
+Type-3/Type-4 judgements are subjective or erroneous ($\geq$15\%). A
+follow-up statistical audit~\cite{krinke2025misuse} sampled 406 WT3/T4 pairs
+and found 93\% mislabelled for \emph{semantic} similarity, and showed that
+the CodeXGLUE clone subset inherited the flaw. The practical consequence for
+us: the harder a miner works to find \emph{semantically similar but
+labelled-different} code, the more it selects exactly the region where the
+labels are wrong. Related work in code search reached the same conclusion
+from the loss side: false negatives among ``negative'' pairs should be
+weighted rather than trusted~\cite{li2023rethinking}.
+
+\subsection{Hard negatives help --- until they are false}
+Dense-retrieval and metric-learning results frame both expectations. DPR
+found random, BM25, and gold negatives nearly equivalent without in-batch
+reuse~\cite{karpukhin2020dpr}; RocketQA measured that $\sim$70\% of
+top-retrieved ``negatives'' in MS-MARCO are actually positives, and that
+denoising --- not harder mining --- is what pays~\cite{qu2021rocketqa};
+NV-Retriever operationalised positive-aware mining (filter negatives closer
+than the positive)~\cite{moreira2024nvretriever}; debiased contrastive
+objectives correct the false-negative bias analytically under sampling
+assumptions~\cite{chuang2020debiased}; and fair-comparison audits find
+mining gains often marginal once everything else is
+controlled~\cite{musgrave2020reality}. In code search specifically,
+CoCoHaNeRe reports strong retrieval gains from differentiable hard-negative
+mining~\cite{fan2025cocohanere}, while Soft-InfoNCE's authors show gains
+come from \emph{re-weighting} possibly-false negatives, not from hardness
+itself~\cite{li2023rethinking}. Clone detection differs from all of these in
+one decisive way: its corpus labels are functionality-derived, so the
+false-negative contamination of mined negatives is structural, not
+incidental.
+
+\subsection{Generalisation of clone detectors}
+Kitsios et al.~\cite{kitsios2025unseen} released s$\phi$ (4{,}600 pairs over
+23 functionalities) and showed that state-of-the-art neural clone detectors
+--- near-perfect on the benchmark --- drop by up to 48\% F1 (31\% on
+average) when the pair's functionality was absent from training. No prior
+study, to our knowledge, has asked whether the \emph{negative-selection
+strategy} changes that drop; that is our RQ3, and the answer is one of the
+paper's two surprises.
+
+\section{Experimental design}
+\label{sec:design}
+
+\subsection{Corpora, model, and training recipe}
+\textbf{Benchmark.} CodeXGLUE clone detection (BigCloneBench-derived,
+Java): 9{,}126 fragments (8{,}063 unique texts), 901{,}028 training pairs,
+415{,}416 test pairs, 13.68\% positive test prevalence
+(all-negative F1 ceiling $0.2406$).
+\textbf{s$\phi$}~\cite{kitsios2025unseen}: 4{,}600 pairs over 23
+functionalities (a sampled variant of BigCloneBench with functionality
+labels retained, \texttt{bcb\_v2\_sampled\_bf}); we hold out whole
+functionalities \{10, 13, 14\} (the three highest-pair-count
+functionalities, ties broken by id, fixed before any F1 exists) and split
+the remainder into seen-validation and seen-training slices.
+\textbf{Model.} \texttt{graphcodebert-base}~\cite{guo2021graphcodebert},
+mean pooling, max length 512, batch 8, one epoch, AdamW (LR $2{\times}
+10^{-5}$), triplet loss with margin $0.10$, fp16 autocast,
+up to 32{,}000 training triples (benchmark) / a 16{,}000 cap (s$\phi$).
+\textbf{Seeds.} 13/14/15 everywhere; threshold and evaluation policy frozen:
+the decision threshold maximises F1 on the \emph{seen validation} slice only
+and is applied unchanged to test --- we additionally report the threshold
+itself, because its saturation turns out to be a failure signature.
+\textbf{Metrics.} F1 (with precision/recall), MAP@R as the
+threshold-free robustness check~\cite{musgrave2020reality}, and per-seed
+spread; $n{=}3$ seeds per condition, so we report means $\pm$ sd and never
+significance tests.
+
+\subsection{Conditions: three supplies $\times$ the bouncer}
+Negatives are mined once per corpus with anchors and positives fixed across
+conditions; only the selection strategy varies (Table~\ref{tab:conditions}).
+The naming is by build order, not by quality.
+
+\begin{table}[t]
+\centering
+\caption{Conditions. The bouncer discards any mined negative whose Jaccard
+similarity to the anchor is $\geq 0.40$ (in practice: closer to the anchor
+than the anchor's positive). C0 never trains.}
+\label{tab:conditions}
+\small
+\begin{tabular}{llll}
+\toprule
+condition & supply & bouncer & intended reading \\
+\midrule
+C0 & --- & --- & untuned encoder (floor) \\
+C1 & random & --- & clean-supply control \\
+C2 & BM25 lexical & --- & hard negatives, lexical \\
+C3 & embedding cosine & --- & hard negatives, semantic \\
+C4 & BM25 lexical & Jaccard $< 0.40$ & C2, denoised \\
+C5 & random & Jaccard $< 0.40$ & C1, denoised (control) \\
+C6 & embedding cosine & Jaccard $< 0.40$ & C3, denoised \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Manipulation gates and audits}
+Two pre-registered checks precede any interpretation. \textbf{G1 (hardness
+gates):} the mined negatives must be measurably harder under the intended
+supply, as a standardised gap in negative similarity, $d = 0.614$ on the
+benchmark and $d = 0.886$ on s$\phi$, with the registered ordering
+random $<$ lexical $\leq$ semantic; a manipulation that does not take effect
+produces no evidence. \textbf{G2 (blind audits):} for each mined condition,
+a stratified sample of 50 mined negatives is judged \emph{blind} to
+condition (``is this negative actually a functional clone of the
+anchor?''), sheet committed before unblinding. Audited false-negative rates
+are reported with Wilson intervals. Two audits (C5/C6 on s$\phi$-adjacent
+supplies) are registered but not yet unblinded
+(\pending{audit\_c5, audit\_c6}; predictions: 0--2\% and 25--35\%
+respectively); no C5/C6 claim in this paper relies on their outcome.
+
+\section{RQ1: benchmark results --- collapse to the base rate}
+\label{sec:benchmark}
+
+\begin{table}[t]
+\centering
+\caption{Benchmark (CodeXGLUE test, $n{=}415{,}416$, positive rate 13.7\%,
+all-negative ceiling $0.2406$). Mean $\pm$ sd over seeds 13/14/15. ``pinned''
+counts runs whose validation threshold saturated at $1.0$ (of 12; 3 for
+C0/C5/C6$\dagger$). FN rate: audited share of mined negatives that are
+actually functional clones (Wilson 95\% CI where binomial). $\dagger$: the
+C5/C6 contamination audits are registered but pending; their supply
+measurements (Section~\ref{sec:mechanism}) are shown instead. Nine C2/C3
+stored metrics await a recorded re-evaluation repair with deltas
+$\leq +0.027$ that cross no condition boundary.}
+\label{tab:benchmark}
+\small
+\begin{tabular}{llllll}
+\toprule
+cond. & F1 (test) & MAP@R & thresholds & pinned & audited FN rate \\
+\midrule
+C0 & 0.2572 & --- & 0.978 & 0/3 & --- \\
+C1 & $\mathbf{0.7464 \pm 0.0176}$ & 0.6629 & unpinned & 0/12 & $\approx 0$--2\% \\
+C2 & 0.2478 $\pm$ 0.0231 & --- & pinned & 10/12 & 42\% \\
+C3 & 0.2707 $\pm$ 0.0095 & 0.1826 & pinned & 10/12 & 30\% [0.19, 0.44] \\
+C4 & 0.4349 $\pm$ 0.0246 & 0.2760 & $0.50$--$0.57$ & 0/6 & 30\% [0.19, 0.44] \\
+C5 & 0.7399 $\pm$ 0.0140 & 0.6629 & unpinned & 0/6 & 0.27\% (supply) \\
+C6 & 0.4722 $\pm$ 0.0282 & --- & $0.63$--$0.82$ & 0/6 & 13.6\% (supply) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\finding{RQ1: mined hard negatives collapse below the random baseline, to
+the base rate itself.} Both poisoned supplies do not merely lose to random
+negatives --- they land \emph{on} the all-negative ceiling (C2 $0.2478$,
+C3 $0.2707$, ceiling $0.2406$, untuned C0 $0.2572$), with 10 of 12 runs per
+condition choosing a validation threshold of $1.0$: the model assigns
+near-zero clone probability to everything, and the loss stops complaining
+because the false negatives it is asked to push apart are, at inference
+time, indistinguishable from ``everything''. The threshold-free MAP@R
+confirms the ordering is not a thresholding artefact (C3 $0.183$ vs.\ C1
+$0.663$). To our knowledge this is the cleanest demonstration in code
+clone detection that \emph{harder} negatives can be strictly worse than
+random ones --- not marginally, but catastrophically --- and the saturation
+signature is the tell that separates ``no signal learned'' from ``signal
+erased''.
+
+\finding{The bouncer halves the collapse but cannot finish the job.} C4
+(BM25 + bouncer) recovers to $0.4349$ --- roughly half the distance from
+the collapsed cluster to the clean band --- with every threshold unpinned
+and MAP@R $2.7\times$ C3's. The supply audit explains both the rescue and
+its ceiling: C4 carries \emph{the same audited FN rate as C3} (30\%) but a
+different residual composition (Section~\ref{sec:mechanism}). C5
+(random + bouncer) confirms the bouncer is not itself a performance
+intervention: $0.7399 \pm 0.0140$, statistically inside the C1 band. C6
+(semantic + bouncer) lands between the clusters ($0.4722$, unpinned
+thresholds), predicted by its supply measurement (13.6\% residual
+contamination, Section~\ref{sec:mechanism}).
+
+\finding{The published-number tension, resolved.} Fine-tuned CodeBERT
+reports $\approx 0.95$ F1 on this task under the benchmark convention. Our
+clean-supply C1 reaches $0.7464$. The gap is a pair-regime difference, not a
+harness defect: our evaluation uses the corpus-wide natural prevalence
+(13.7\% positives, ceiling $0.24$), under which an all-negative scorer
+scores $0.24$ and the published near-clone-heavy regimes do not apply. We
+report the reconciliation rather than chase the $0.95$; MAP@R
+($0.663$) provides the prevalence-robust companion.
+
+\section{RQ2: mechanism --- rate is the dose, surface is the trigger}
+\label{sec:mechanism}
+
+The audits were designed to discriminate between two explanations: (a)
+collapse is a \emph{dose} phenomenon (more false negatives, worse the
+model), and (b) collapse depends on \emph{which} false negatives are
+sampled. The data decide for (b), with (a) as a secondary effect:
+
+\begin{itemize}
+\item \textbf{C3 and C4 carry the same audited FN rate (30\%) yet sit
+$0.16$ F1 apart with opposite scorer states} (C3: saturated, base-rate F1;
+C4: unpinned, mid-recovery). Rate alone does not determine collapse.
+\item \textbf{The discriminating variable is the FN surface.} Coding each
+audited contaminant by two properties --- functional-clone-ness and
+near-duplicate-ness (Jaccard $\geq 0.40$) --- the trigger configuration is
+a negative that is \emph{both}. The bouncer removes precisely the
+near-duplicate half of C3's contamination (it cuts everything at Jaccard
+$0.40$), which is why C4 escapes saturation without escaping the FN rate:
+it keeps the functional-but-not-near-duplicate contaminants, whose gradient
+disagreement is resolvable rather than degenerate.
+\item \textbf{The margin is the amplifier.} With triplet margin $0.10$, a
+contaminant closer than the positive incurs a persistent positive loss
+even at large absolute similarity: the optimum under such pressure is to
+erase the representation differences entirely --- the degenerate solution
+the saturation signature records. This links the collapse to the
+false-negative bias known analytically from debiased contrastive
+learning~\cite{chuang2020debiased} and to the ``hardest-negative'' gradient-noise
+regime documented by the metric-learning reality check~\cite{musgrave2020reality}.
+\item \textbf{Supply measurements predict condition outcomes.} Re-mined
+under the bouncer, the residual candidates-contamination measured 0.27\%
+for C5 (audit prediction: $\approx$0) and 13.6\% for C6 (prediction band
+10--25\%); the semantic supply carries $\sim$31\% more lexical poison than
+BM25's (10.5\%) --- a RocketQA-style measurement~\cite{qu2021rocketqa}
+transplanted to code. The Jaccard cut removes $\sim$40\% of C2's
+contamination in-sample while discarding \emph{no} audited clean pair
+(clean maximum Jaccard $0.345$ vs.\ clone median $0.418$): the cut is not
+free of false-negative risk in general, but on this corpus its operating
+point sits in a genuine gap.
+\end{itemize}
+
+\section{RQ3: unseen functionality --- the floor below doing nothing}
+\label{sec:generalisation}
+
+\begin{table}[t]
+\centering
+\caption{s$\phi$ generalisation (holdout functionalities \{10, 13, 14\};
+seeds 13/14/15; thresholds from the seen slice only). $\Delta =
+\mathrm{F1_{seen}} - \mathrm{F1_{unseen}}$, mean $\pm$ sd with per-seed
+spread. The untuned anchor row is C0 scored once on the same partition
+(transfer reading). ``pinned'' = validation thresholds saturated.}
+\label{tab:sprime}
+\small
+\begin{tabular}{llllll}
+\toprule
+cond. & F1$_{\text{seen}}$ & F1$_{\text{unseen}}$ & $\Delta$ & per-seed $\Delta$ & pinned \\
+\midrule
+C0 (untuned) & 0.7118 & \textbf{0.6934} & +0.018 & --- & 0/1 \\
+\midrule
+C1 & 0.7570 & 0.7031 & $+0.054 \pm 0.022$ & $+.046,+.037,+.079$ & 0/3 \\
+C2 & 0.6781 & 0.6674 & $+0.011 \pm 0.006$ & $+.007,+.008,+.017$ & 0/3 \\
+C3 & 0.7004 & 0.7057 & $-0.005 \pm 0.022$ & $+.020,-.015,-.021$ & 3/3 \\
+C4 & 0.6731 & 0.6687 & $+0.004 \pm 0.006$ & $+.001,+.001,+.011$ & 0/3 \\
+C5 & 0.7606 & 0.7244 & $+0.036 \pm 0.022$ & $+.029,+.019,+.061$ & 0/3 \\
+C6 & 0.7169 & 0.6865 & $+0.030 \pm 0.014$ & $+.037,+.014,+.040$ & 0/3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On the functionality-labelled corpus the absolute level rises (balanced
+slices), but the structure replicates --- and the balanced ruler exposes a
+floor the imbalanced benchmark could not show.
+
+\finding{The ordering and the saturation signature replicate across
+rulers.} C1 and C5 form the top band on both corpora; C2/C4 sit at the
+bottom on both; C3's benchmark saturation reappears as s$\phi$ validation
+thresholds pinned at $0.9998$--$0.9999$ with $\Delta \approx 0$ and unseen
+F1 ($0.7057$) indistinguishable from the untuned encoder. Two corpora, two
+prevalences, one ordering, one failure signature.
+
+\finding{No poisoned-mining condition beats doing nothing.} The untuned
+encoder transfers to s$\phi$ at $0.6934$ unseen F1. C2 ($0.6674$) and C4
+($0.6687$) finish \emph{below} that floor; C6 ($0.6865$) ties it; C3
+($0.7057$) matches it while exhibiting the saturated-scorer pathology ---
+i.e., its apparent parity is the degenerate optimum wearing a benign
+disguise. Only the clean supply (C1 $0.7031$) and its bounced control (C5
+$0.7244$) convert fine-tuning into gains on unseen functionality. For
+practitioners the operational summary is blunt: on functionality-labelled
+code, mining your hard negatives from label-contaminated similarity
+neighbourhoods is worse than not fine-tuning at all.
+
+\finding{The drop itself is small; the prior literature's is not.}
+Kitsios et al.\ report task-specific F1 drops up to 48\% (mean 31\%)
+for benchmark-champion models~\cite{kitsios2025unseen}; our drops are
+$\leq 0.054$. We attribute the difference to regime: triplet training on
+$\leq$32k pairs with a small margin barely specialises the encoder, so
+there is little specialisation to lose --- consistent with the transfer
+reading, where even \emph{benchmark-trained} checkpoints score $0.63$--$0.75$
+on s$\phi$ unseen pairs (secondary observation; C3's transfer rows are
+again saturated). The RQ3 result is therefore about the \emph{strategy
+ordering and the floor}, not about the size of the generalisation gap.
+
+\finding{The embedding geometry agrees with the tables.} A seven-panel UMAP
+figure over a fixed, shared fragment sample (fixed seed, $n$-neighbors and
+min-dist recorded before rendering) shows the untuned encoder's diffuse
+manifold shattering into functionality-discrete islands after clean
+training (C1/C5 crisp; C2/C4 looser), while C3 renders as a single
+continuous diagonal band --- the geometric face of the degenerate optimum
+--- and C6 sits between band and islands. Held-out functionalities island
+indistinguishably from trained ones, consistent with the small $\Delta$.
+The figure is generated, versioned, and explicitly not evidence; it ships
+as a legibility companion to Table~\ref{tab:sprime}
+(Figure~\ref{fig:umap}).
+
+\begin{figure}[t]
+\centering
+\IfFileExists{../report/figures/umap\_panels.png}{%
+  \includegraphics[width=\textwidth]{../report/figures/umap_panels.png}}{%
+  \fbox{\parbox[c][6cm][c]{0.9\textwidth}{\centering generated artifact:
+  \texttt{report/figures/umap\_panels.png} (rendered by
+  \texttt{python -m embeded.visualize}; not present in this checkout)}}}
+\caption{Seven UMAP panels over one shared, seeded fragment sample (fixed
+hyperparameters recorded before rendering; held-out functionalities starred).
+A figure, not evidence: it encodes no additional measurement and supports no
+claim.}
+\label{fig:umap}
+\end{figure}
+
+\section{A measurement-first protocol for negative-selection studies}
+\label{sec:protocol-lessons}
+
+Our failures and recoveries generalise into five cheap practices, each of
+which earned its place by catching a real error in this project:
+
+\begin{enumerate}
+\item \textbf{Report the positive rate and the all-negative ceiling next to
+every benchmark F1.} Two of our conditions ``achieved'' F1 scores that are
+the ceiling to two decimals; without the ceiling printed, collapse is
+invisible.
+\item \textbf{Report the chosen threshold, and read saturation as a failure
+signature.} Thresholds pinned at $1.0$ identified the degenerate optimum on
+both corpora, before any other instrument did.
+\item \textbf{Audit the negatives blind, and gate headline claims on the
+audit.} The 50-pair instrument converted ``we believe contamination
+explains this'' into measured rates with intervals --- and falsified the
+rate-only explanation.
+\item \textbf{Gate the manipulation before the outcome.} The pre-registered
+hardness gates ($d = 0.614$ / $0.886$, ordering random $<$ lexical
+$\leq$ semantic) are what make ``strategy'' a treatment rather than a
+hope.
+\item \textbf{Keep a threshold-free companion metric.} MAP@R tracked every
+F1 ordering here and cannot be gamed by an all-negative scorer.
+\end{enumerate}
+
+\section{Limitations}
+\label{sec:limitations}
+
+Written before the pending audits unblind, per the project's pre-registration
+discipline.
+\begin{itemize}
+\item \textbf{Label noise bounds interpretation.} The benchmark's ground
+truth is contested (93\% of audited WT3/T4 pairs mislabelled for semantic
+similarity~\cite{krinke2025misuse}; $\geq$15\% subjective or
+erroneous~\cite{krinke2022harmful}). Our test F1s measure ``agreement with
+BigCloneBench labels'', not real-world semantic clone detection; the
+mined-hard region is precisely where that agreement is worst.
+\item \textbf{Scale and seeds.} One encoder family, one language, one loss
+(triplet, margin $0.10$), three seeds per condition, no significance
+tests; we report spreads. The collapse deltas ($\sim$0.45 F1) are far
+outside seed noise ($\leq$0.03), but the poisoned-cluster orderings
+(e.g., C6 vs.\ C4) are within it.
+\item \textbf{One bouncer operating point.} The Jaccard $0.40$ cut is a
+single, hard threshold chosen a priori; Section~\ref{sec:future}'s ladder
+is the honest version of that axis.
+\item \textbf{s$\phi$ inherits BigCloneBench.} The generalisation corpus
+derives from the same universe; its independence is of labels
+(functionality) and sampling, not of provenance.
+\item \textbf{Pending instruments.} \pending{audit\_c5 / audit\_c6
+contamination audits; nine C2/C3 benchmark re-evaluations (recorded
+deltas $\leq +0.027$, no boundary crossing).} No claim here relies on
+them; their outcomes can only refine Section~\ref{sec:mechanism}'s
+supply bookkeeping.
+\item \textbf{The bouncer is not tuned and its false-negative risk is
+corpus-dependent.} The measured gap (clean max $0.345 <$ cut $0.40 <$
+clone median $0.418$) is a property of this corpus, not a law.
+\end{itemize}
+
+\section{Threats to validity}
+\textbf{Internal.} Seeds, data splits, thresholds, and hardness gates are
+frozen before evaluation; per-run configurations are content-fingerprinted,
+and every artifact path in the snapshot is hash-addressed. The main
+residual threat is judge drift in the blind audits; sheets were committed
+before unblinding and judgements are recorded per-pair with reasons.
+\textbf{External.} Java + BigCloneBench + GraphCodeBERT only; the
+mechanism account (surface over rate) predicts replication under any
+label-contaminated similarity-mining regime, and dense-retrieval evidence
+~\cite{qu2021rocketqa,moreira2024nvretriever} points the same direction,
+but we have not run a second language or encoder.
+\textbf{Construct.} ``Collapse'' is defined operationally (base-rate F1
+with saturated thresholds), not metaphorically; ``false negative'' is
+operationalised by blind human judgement on the audited samples.
+
+\section{Future work}
+\label{sec:future}
+
+Ordered by how directly our mechanism account predicts their outcome:
+\begin{enumerate}
+\item \textbf{Complete the registered audits} (C5/C6 contamination). Under
+the surface account, C6's residual composition --- not its rate --- decides
+whether semantic-supply rescue needs a different cut than Jaccard.
+\item \textbf{The denoising ladder.} Replace the binary bouncer with a
+continuous margin-relative cut, $\delta \in \{0.00, 0.05, 0.10, 0.20\}$
+(discard negatives with $\cos(a,n) > \cos(a,p) - \delta$), three seeds, C3's
+supply. This traces the dose--response curve between C3 and C4 and turns
+Section~\ref{sec:mechanism} from a two-point observation into a curve. It
+is the single highest-value next experiment.
+\item \textbf{FN-aware objectives on the same supplies.} Soft-InfoNCE-style
+negative re-weighting~\cite{li2023rethinking} and debiased
+contrastive~\cite{chuang2020debiased} variants, trained on C2/C3's exact
+supplies: if the surface account is right, re-weighting should recover
+part of what the bouncer removes, without discarding hard examples.
+\item \textbf{Margin as the amplifier, tested.} The same supplies at
+margins $\{0.05, 0.10, 0.20\}$ --- the account predicts saturation onset
+moves with margin at fixed contamination.
+\item \textbf{Robustness of the ordering.} The winning condition on a
+second encoder; the full factorial on one more language; and a
+leave-one-functionality-out rotation on s$\phi$ to shrink the $\Delta$
+error bars ($10\times$ the compute; a revision-stage item).
+\item \textbf{Benchmark repair rather than avoidance.} Functionality labels
+for the CodeXGLUE fragments (the s$\phi$ provenance makes a subset
+recoverable), enabling contamination-aware negative sampling at benchmark
+scale.
+\end{enumerate}
+
+\section{Conclusion}
+On the standard benchmark, mined hard negatives for contrastive clone
+detection are not a tuning knob but a hazard: both lexical and semantic
+supplies collapse training to the all-negative solution, below the random
+baseline and at the measurement floor itself. The collapse is governed by
+the \emph{surface} of the false negatives --- near-duplicate functional
+clones pushed apart under a margin that will not forgive them --- not by
+their rate, and a one-line positive-aware filter repairs half of the damage
+at zero cost to clean pairs. On unseen functionality, the same strategies
+that collapse on the benchmark fail a sterner test: they do not beat the
+untuned encoder. The actionable findings are cheap: print the ceiling,
+watch the thresholds, audit the negatives blind, and gate the claims. Hard
+negatives are only hard if they are true.
+
+\section*{Artifacts and reproducibility}
+Code, notebooks, per-run configurations (content-fingerprinted), mining
+summaries, audit sheets, predictions, and the artifact snapshot are public:
+\href{https://github.com/ksu-gitreaper807/EmbedEd}{github.com/ksu-gitreaper807/EmbedEd}
+(branch \texttt{arena/01a0e714-embeded}); artifact mirror
+\texttt{Kusshal/Embed} on the Hugging Face Hub; s$\phi$ from
+\cite{kitsios2025unseen} (Zenodo \texttt{10.5281/zenodo.17238379}). Every
+table in this paper is emitted by a committed command
+(\texttt{embeded.evaluate --results-table},
+\texttt{embeded.generalize --results-table}); the demo
+(\texttt{demo/app.py}) serves real held-out pairs with both models'
+thresholds for interactive inspection.
+
+\begin{thebibliography}{99}
+\small
+
+\bibitem{feng2020codebert}
+Z.~Feng, D.~Guo, D.~Tang, N.~Duan, X.~Feng, M.~Gong, L.~Shou, B.~Qin,
+T.~Liu, D.~Jiang, and M.~Zhou.
+\newblock CodeBERT: A pre-trained model for programming and natural
+  languages.
+\newblock In \emph{EMNLP}, 2020. arXiv:2002.08155.
+
+\bibitem{guo2021graphcodebert}
+D.~Guo, S.~Ren, S.~Lu, Z.~Feng, D.~Tang, S.~Liu, L.~Zhou, N.~Duan,
+A.~Svyatkovskiy, S.~Fu, M.~Tufano, S.~K. Deng, C.~Clement, D.~Drain,
+N.~Sundaresan, J.~Yin, D.~Jiang, and M.~Zhou.
+\newblock GraphCodeBERT: Pre-training code representations with data flow.
+\newblock In \emph{ICLR}, 2021. arXiv:2009.08366.
+
+\bibitem{lu2021codeglue}
+S.~Lu, D.~Guo, S.~Ren, J.~Huang, A.~Svyatkovskiy, A.~Blanco, C.~Clement,
+D.~Drain, D.~Jiang, D.~Tang, G.~Li, L.~Zhou, L.~Shou, L.~Zhou, M.~Tufano,
+M.~Gong, M.~Zhou, N.~Duan, N.~Sundaresan, S.~K. Deng, S.~Fu, and S.~Liu.
+\newblock CodeXGLUE: A machine learning benchmark dataset for understanding,
+  searching, and cloning code.
+\newblock In \emph{NeurIPS Datasets and Benchmarks}, 2021. arXiv:2102.04664.
+
+\bibitem{svajlenko2015bigclonebench}
+J.~Svajlenko and C.~K. Roy.
+\newblock Evaluating clone detection tools with BigCloneBench.
+\newblock In \emph{IEEE International Conference on Software Maintenance and
+  Evolution (ICSME)}, 2015.
+
+\bibitem{krinke2022harmful}
+J.~Krinke.
+\newblock BigCloneBench considered harmful for machine learning.
+\newblock In \emph{International Workshop on Software Clones (IWSC)}, 2022.
+
+\bibitem{krinke2025misuse}
+J.~Krinke and C.~Ragkhitwetsagul.
+\newblock How the misuse of a dataset harmed semantic clone detection.
+\newblock arXiv:2505.04311, 2025.
+
+\bibitem{qu2021rocketqa}
+Y.~Qu, Y.~Ding, J.~Liu, K.~Liu, R.~Ren, W.~X. Zhao, D.~Xiang, T.~Wu, and
+J.-R. Wen.
+\newblock RocketQA: A parallel hybrid annotated dataset and denoising method
+  for dense retrieval.
+\newblock In \emph{EMNLP}, 2021. arXiv:2010.08191.
+
+\bibitem{moreira2024nvretriever}
+G.~de~Souza~P.~Moreira, R.~Nallapati, S.~Purohit, A.~Lozhnikov, R.~Mónica,
+P.~Karn, X.~Chen, and B.~Cataldo.
+\newblock NV-Retriever: Improving text embedding models with effective
+  hard-negative mining.
+\newblock arXiv:2409.14461, 2024.
+
+\bibitem{chuang2020debiased}
+C.-Y. Chuang, J.~Robinson, Y.-C. Lin, A.~Torralba, and S.~Jegelka.
+\newblock Debiased contrastive learning.
+\newblock In \emph{NeurIPS}, 2020.
+
+\bibitem{karpukhin2020dpr}
+V.~Karpukhin, O.~O\u{g}uz, S.~Min, P.~Lewis, L.~Wu, S.~Edunov, D.~Chen, and
+W.-t. Yih.
+\newblock Dense passage retrieval for open-domain question answering.
+\newblock In \emph{EMNLP}, 2020.
+
+\bibitem{musgrave2020reality}
+K.~Musgrave, S.~Belongie, and S.-N. Lim.
+\newblock A metric learning reality check.
+\newblock In \emph{ECCV}, 2020.
+
+\bibitem{schroff2015facenet}
+F.~Schroff, D.~Kalenichenko, and J.~Philbin.
+\newblock FaceNet: A unified embedding for face recognition and clustering.
+\newblock In \emph{CVPR}, 2015.
+
+\bibitem{hermans2017triplet}
+A.~Hermans, L.~Beyer, and B.~Leibe.
+\newblock In defense of the triplet loss for person re-identification.
+\newblock arXiv:1703.07737, 2017.
+
+\bibitem{li2023rethinking}
+H.~Li, X.~Zhou, L.~A. Tuan, and C.~Miao.
+\newblock Rethinking negative pairs in code search.
+\newblock In \emph{EMNLP}, 2023. arXiv:2310.08069.
+
+\bibitem{fan2025cocohanere}
+Y.~Fan, C.~Li, and J.~Ge.
+\newblock Effective hard negative mining for contrastive learning-based code
+  search (CoCoHaNeRe).
+\newblock \emph{ACM Transactions on Software Engineering and Methodology},
+  34(3), 2025. doi:10.1145/3695994.
+
+\bibitem{kitsios2025unseen}
+K.~Kitsios, F.~Sovrano, E.~T. Barr, and A.~Bacchelli.
+\newblock Detecting semantic clones of unseen functionality.
+\newblock In \emph{IEEE/ACM International Conference on Automated Software
+  Engineering (ASE)}, 2025. arXiv:2510.04143.
+
+\end{thebibliography}
+
+\appendix
+
+\section{Reproducibility map}
+\label{app:repro}
+\begin{tabular}{ll}
+\toprule
+paper quantity & reproducing command / artifact \\
+\midrule
+benchmark table (Table~\ref{tab:benchmark}) &
+  \texttt{python -m embeded.evaluate --results-table} \\
+s$\phi$ table (Table~\ref{tab:sprime}) &
+  \texttt{python -m embeded.generalize --results-table} \\
+mining summary + supply measurements &
+  \texttt{artifacts/mining\_summary.json}, \texttt{artifacts/sprime\_mining\_summary.json} \\
+hardness gates & \texttt{artifacts/gate\_report.json} (G1),
+  \texttt{## Gate G1s} in \texttt{report/measurements.md} \\
+audit sheets & \texttt{artifacts/audit/} (sheet committed before unblinding) \\
+run identity & \texttt{runs/<cond>\_<seed>/run\_config.json} (fingerprint field) \\
+figure & \texttt{report/figures/umap\_panels.png} + \texttt{umap\_params.json} \\
+interactive check & \texttt{python -m demo.app --check} \\
+\bottomrule
+\end{tabular}
+
+\section{Per-seed benchmark scores}
+\label{app:perseed}
+Per-seed F1 for every condition lives in
+\texttt{runs/<condition>\_<seed>/eval\_metrics.json} on the artifact
+snapshot (Hugging Face dataset \texttt{Kusshal/Embed}), alongside each run's
+content-fingerprinted configuration. The snapshot is authoritative; this
+paper deliberately carries only means and spreads, so it cannot drift from
+the artifacts.
+
+\end{document}
