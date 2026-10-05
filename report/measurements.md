@@ -38,6 +38,15 @@ Suggested: **BATCH = 8, TRAIN_PAIRS_CAP = 31,268, EPOCHS = 1** (rule: fastest-wi
 
 
 
+
+
+
+
+
+
+
+
+
 ## s′ acquisition (Phase 0.7)
 
 **verdict: PASS** — Clones paper replication package release zip/datasets/bcb_v2_sampled_bf/data_bcb_v2_sampled_bf.pickle: 4600 pairs, labels {1: 2300, 0: 2300}, functionality cols {'functionality_id': 23} (+4 duplicate copy/copies: Clones paper replication package release zip/llms/dataset.pickle, Clones paper replication package release zip/astnn/data/java/bcb_v2_sampled_bf/blocks.pickle, Clones paper replication package release zip/astnn/data/java/bcb_v2_sampled_bf/pair_ids.pickle, Clones paper replication package release zip/astnn/data/java/bcb_v2_sampled_bf/pairs.pickle)
@@ -647,7 +656,7 @@ Generated from `artifacts/runs/<condition>_<seed>/eval_metrics.json` by `python 
 
 ## s′ census — measured pair counts and the holdout (D4)
 
-Measured from `data_bcb_v2_sampled_bf.pickle` (md5 `c5495307a422…`, 4600 rows) by `python -m embeded.generalize --census --holdout-k 3` — version `phase01-v6`, recorded before any F1 exists (PHASE3_PLAN §3.2, decision D4).
+Measured from `data_bcb_v2_sampled_bf.pickle` (md5 `c5495307a422…`, 4600 rows) by `python -m embeded.generalize --census --holdout-k 3` — version `phase01-v8`, recorded before any F1 exists (PHASE3_PLAN §3.2, decision D4).
 
 | functionality | pairs | clone | non-clone |
 |---|---|---|---|
@@ -679,12 +688,79 @@ Measured from `data_bcb_v2_sampled_bf.pickle` (md5 `c5495307a422…`, 4600 rows)
 
 ## Gate G1s — hardness on s′
 
-### run 2026-09-28T15:32:45Z — version `phase01-v6`, rule: D1 scale-aware: C1 < C2 <= C3 and d(C1->C2) >= 0.5
+### run 2026-10-05T03:19:50Z — version `phase01-v8`, rule: D1 scale-aware: C1 < C2 <= C3 and d(C1->C2) >= 0.5
 
 - C1: mean cos(anchor, negative) = 0.93383 (sd 0.039, n = 16000, anchors = 800)
 - C2: mean cos(anchor, negative) = 0.96355 (sd 0.027, n = 16000, anchors = 800)
 - C3: mean cos(anchor, negative) = 0.98080 (sd 0.011, n = 16000, anchors = 800)
+- C4: mean cos(anchor, negative) = 0.95653 (sd 0.028, n = 16000, anchors = 800)
+- C5: mean cos(anchor, negative) = 0.93355 (sd 0.039, n = 16000, anchors = 800)
+- C6: mean cos(anchor, negative) = 0.97507 (sd 0.013, n = 16000, anchors = 800)
 - embeddings: microsoft/graphcodebert-base max_len=512 n=4140
 - corpus: s′ (bcb_v2_sampled_bf) — the CodeXGLUE verdict must NOT be assumed to transfer; this gate re-measures it (PHASE3_PLAN §2 item 4)
 - 95% CI for d(C1→C2) = 1.337–1.643 (2000 resamples over anchors, not negatives)
 - **verdict: PASS** — order C1 < C2 <= C3 holds (0.9338 < 0.9636 <= 0.9808) and d(C1→C2) = 0.886 >= 0.5 (absolute gap +0.0297)
+
+## Phase 3 — generalisation (F1_seen / F1_unseen / Δ)
+
+Generated from `artifacts/runs/sprime_<condition>_<seed>/eval_metrics.json` by `python -m embeded.generalize --results-table` — version `phase01-v8`. Threshold policy: *max_f1_on_valid* — chosen on the seen slice only, applied unchanged to the unseen functionalities (the threshold column shows it was not tuned on the unseen pairs).
+
+**Different corpus from the Phase 2 main table** (decision D3=B: fine-tuned on s′, negatives mined from s′): absolute F1 is NOT comparable across the two tables. The unseen-functionality drop itself is Kitsios et al. (ASE 2025) — the question here is only whether the size of the drop differs across negative-selection strategies.
+
+| condition | seed | F1_seen | F1_unseen | Δ | threshold | n seen | n unseen |
+|---|---|---|---|---|---|---|---|
+| C1 | 13 | 0.7578 | 0.7116 | +0.0462 | 0.7090 | 400 | 600 |
+| C1 | 14 | 0.7644 | 0.7278 | +0.0366 | 0.6950 | 400 | 600 |
+| C1 | 15 | 0.7489 | 0.6700 | +0.0789 | 0.6874 | 400 | 600 |
+| C2 | 13 | 0.6734 | 0.6667 | +0.0067 | 0.1563 | 400 | 600 |
+| C2 | 14 | 0.6780 | 0.6696 | +0.0084 | 0.2126 | 400 | 600 |
+| C2 | 15 | 0.6830 | 0.6659 | +0.0171 | 0.3420 | 400 | 600 |
+| C3 | 13 | 0.6717 | 0.6521 | +0.0196 | 0.9998 | 400 | 600 |
+| C3 | 14 | 0.7155 | 0.7303 | -0.0148 | 0.9999 | 400 | 600 |
+| C3 | 15 | 0.7140 | 0.7347 | -0.0207 | 0.9999 | 400 | 600 |
+| C4 | 13 | 0.6718 | 0.6705 | +0.0013 | 0.3282 | 400 | 600 |
+| C4 | 14 | 0.6678 | 0.6667 | +0.0011 | 0.1699 | 400 | 600 |
+| C4 | 15 | 0.6797 | 0.6689 | +0.0108 | 0.2642 | 400 | 600 |
+| C5 | 13 | 0.7505 | 0.7212 | +0.0293 | 0.6270 | 400 | 600 |
+| C5 | 14 | 0.7639 | 0.7453 | +0.0186 | 0.6325 | 400 | 600 |
+| C5 | 15 | 0.7675 | 0.7067 | +0.0608 | 0.6592 | 400 | 600 |
+| C6 | 13 | 0.7149 | 0.6779 | +0.0370 | 0.3912 | 400 | 600 |
+| C6 | 14 | 0.7240 | 0.7100 | +0.0140 | 0.3512 | 400 | 600 |
+| C6 | 15 | 0.7118 | 0.6715 | +0.0403 | 0.3562 | 400 | 600 |
+
+| condition | runs | mean F1_seen | mean F1_unseen | mean Δ | sd Δ | per-seed Δ (spread visible) |
+|---|---|---|---|---|---|---|
+| C1 | 3 | 0.7570 | 0.7031 | +0.0539 | 0.0222 | +0.046, +0.037, +0.079 |
+| C2 | 3 | 0.6781 | 0.6674 | +0.0107 | 0.0056 | +0.007, +0.008, +0.017 |
+| C3 | 3 | 0.7004 | 0.7057 | -0.0053 | 0.0218 | +0.020, -0.015, -0.021 |
+| C4 | 3 | 0.6731 | 0.6687 | +0.0044 | 0.0055 | +0.001, +0.001, +0.011 |
+| C5 | 3 | 0.7606 | 0.7244 | +0.0362 | 0.0219 | +0.029, +0.019, +0.061 |
+| C6 | 3 | 0.7169 | 0.6865 | +0.0304 | 0.0143 | +0.037, +0.014, +0.040 |
+
+- On the unseen functionalities the highest mean F1 is C5 (0.7244); per-seed values above — never the best seed alone. If Δ is indistinguishable across the trained conditions, that is the finding (PHASE3_PLAN §3.1): no LR rescue (P6-2).
+
+### Transfer readings — D3 option (A), secondary, NOT the Δ table
+
+Phase 2 checkpoints (C0 = base model) scored on the same s′ partition without training; the independent variable is gone, so these never enter the table above (PHASE3_PLAN §3.3).
+
+| condition | seed | F1_seen | F1_unseen | Δ | threshold | n unseen |
+|---|---|---|---|---|---|---|
+| C0 | 13 | 0.7118 | 0.6934 | +0.0184 | 0.9093 | 600 |
+| C1 | 13 | 0.7258 | 0.6815 | +0.0443 | 0.4124 | 600 |
+| C1 | 14 | 0.7214 | 0.6908 | +0.0306 | 0.4748 | 600 |
+| C1 | 15 | 0.7243 | 0.7341 | -0.0098 | 0.4664 | 600 |
+| C2 | 13 | 0.6824 | 0.6667 | +0.0157 | 1.0000 | 600 |
+| C2 | 14 | 0.6808 | 0.6971 | -0.0163 | 1.0000 | 600 |
+| C2 | 15 | 0.6667 | 0.6637 | +0.0030 | 0.5002 | 600 |
+| C3 | 13 | 0.7027 | 0.7223 | -0.0196 | 1.0000 | 600 |
+| C3 | 14 | 0.7006 | 0.7756 | -0.0750 | 1.0000 | 600 |
+| C3 | 15 | 0.6876 | 0.7473 | -0.0597 | 1.0000 | 600 |
+| C4 | 13 | 0.6678 | 0.6471 | +0.0207 | 0.2308 | 600 |
+| C4 | 14 | 0.6667 | 0.6577 | +0.0090 | 0.1809 | 600 |
+| C4 | 15 | 0.6689 | 0.6347 | +0.0342 | 0.2738 | 600 |
+| C5 | 13 | 0.7152 | 0.6819 | +0.0333 | 0.4008 | 600 |
+| C5 | 14 | 0.7006 | 0.6986 | +0.0020 | 0.4274 | 600 |
+| C5 | 15 | 0.7093 | 0.7053 | +0.0040 | 0.4496 | 600 |
+| C6 | 13 | 0.6690 | 0.6338 | +0.0352 | 0.7480 | 600 |
+| C6 | 14 | 0.6701 | 0.6659 | +0.0042 | 0.6374 | 600 |
+| C6 | 15 | 0.6760 | 0.6592 | +0.0168 | 0.6970 | 600 |
