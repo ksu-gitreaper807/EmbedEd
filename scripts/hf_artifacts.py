@@ -117,7 +117,8 @@ SECTIONS: dict[str, list[str]] = {
     # Mining runs off the derived fragments; the raw corpus is provenance.
     "sprime": ["artifacts/sprime_fragments.jsonl", "artifacts/sprime_split.json",
                "artifacts/sprime_census.json", "artifacts/sprime_mining_summary.json",
-               "artifacts/sprime_triples_*.jsonl", "artifacts/sprime_emb.npy"],
+               "artifacts/sprime_triples_*.jsonl", "artifacts/sprime_emb.npy",
+               "artifacts/sprime_fragment_functions.json"],
     "report": ["report/*", "report/**"],
 }
 

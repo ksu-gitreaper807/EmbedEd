@@ -160,6 +160,15 @@ SPRIME_HELDOUT_K = 3
 # conditions and seeds; mining subsamples the anchor stream to it.
 SPRIME_TRAIN_CAP = 16_000
 
+# --- §4 figure (SCOPE P2-18): the UMAP hyperparameters, fixed and recorded
+# BEFORE the figure exists. A figure, not evidence: it ships after the Δ table.
+UMAP_SEED = 20260928          # reducer random_state
+UMAP_N_NEIGHBORS = 15
+UMAP_MIN_DIST = 0.1
+UMAP_METRIC = "cosine"        # embeddings are L2-normalised
+UMAP_MODEL_SEED = 13          # which s-prime seed's checkpoint each non-C0 panel shows
+UMAP_N_PER_FUNCTIONALITY = 18 # shared-sample size per functionality
+
 # --- pinned environment for the shared Colab notebook -------------------------
 # torch is intentionally NOT in this list: the notebook uses Colab's preinstalled
 # torch, already matched to the image's GPU/CUDA and its torchvision/torchaudio.
