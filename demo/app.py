@@ -168,7 +168,8 @@ def _bar_figure(score: float, thr: float, title: str):
 
 def serve(runs_root: Path | None = None, *, c0: str = "C0",
           best: str = DEFAULT_BEST, seed0: int | None = None,
-          seedb: int | None = None, pairs=None, frags=None, max_in_picker=24):
+          seedb: int | None = None, pairs=None, frags=None, max_in_picker=24,
+          share: bool = False):
     import gradio as gr
 
     rows, meta = collect(runs_root, c0=c0, best=best, seed0=seed0, seedb=seedb,
@@ -247,18 +248,30 @@ def serve(runs_root: Path | None = None, *, c0: str = "C0",
         btn = gr.Button("score pasted pair")
         o_md, o_g0, o_gb = gr.Markdown(), gr.Plot(), gr.Plot()
         btn.click(score_free, inputs=[fa, fb], outputs=[o_md, o_g0, o_gb])
-    demo.launch(server_name="0.0.0.0", inbrowser=False, show_error=True)
+    # --share: Colab prints a public gradio.live URL and this call BLOCKS —
+    # interrupt the notebook cell to stop the server (local app, not a deployment).
+    demo.launch(server_name="0.0.0.0", inbrowser=False, show_error=True, share=share)
 
 
-def main(argv=None) -> int:
+def build_parser() -> argparse.ArgumentParser:
+    """The CLI contract the notebook's §12 cells call (--check / --share); kept
+    test-addressable so the authored contract cannot drift from the module."""
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--check", action="store_true", help="headless contract check")
     ap.add_argument("--best", default=DEFAULT_BEST)
     ap.add_argument("--seed", type=int, default=None, help="pin C0's seed")
     ap.add_argument("--seed-best", type=int, default=None, help="pin C_best's seed")
     ap.add_argument("--runs-root", default=None)
-    a = ap.parse_args(argv)
-    kw = {"best": a.best, "runs_root": Path(a.runs_root) if a.runs_root else None}
+    ap.add_argument("--share", action="store_true",
+                    help="gradio public URL (Colab convenience); the call blocks until "
+                         "interrupted — the demo is a local app, not a deployment")
+    return ap
+
+
+def main(argv=None) -> int:
+    a = build_parser().parse_args(argv)
+    kw = {"best": a.best, "runs_root": Path(a.runs_root) if a.runs_root else None,
+          "share": a.share}
     if a.seed:
         kw["seed0"] = a.seed
     if a.seed_best:

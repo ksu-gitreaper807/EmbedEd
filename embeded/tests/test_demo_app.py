@@ -82,3 +82,15 @@ def test_import_does_not_touch_encoder(monkeypatch):
     sys.modules.pop("demo.app", None)
     mod = importlib.import_module("demo.app")
     assert mod.ILLUSTRATIVE_LABEL == "illustrative only — not part of the evaluation"
+
+
+def test_cli_contract_matches_the_notebook():
+    """The notebook's §12 cells call 'demo.app --check' and 'demo.app --share';
+    the parser must accept the whole authored contract (and --share must reach
+    serve as share=True)."""
+    import demo.app as app
+    for argv in (["--check"], ["--share"], ["--share", "--best", "C5"],
+                 ["--best", "C1", "--seed", "13", "--seed-best", "14"]):
+        app.build_parser().parse_args(argv)          # must not exit 2
+    assert app.build_parser().parse_args(["--share"]).share is True
+    assert app.build_parser().parse_args([]).share is False
