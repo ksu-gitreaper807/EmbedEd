@@ -119,7 +119,10 @@ SECTIONS: dict[str, list[str]] = {
     "sprime": ["artifacts/sprime_fragments.jsonl", "artifacts/sprime_split.json",
                "artifacts/sprime_census.json", "artifacts/sprime_mining_summary.json",
                "artifacts/sprime_triples_*.jsonl", "artifacts/sprime_emb.npy",
-               "artifacts/sprime_fragment_functions.json"],
+               "artifacts/sprime_fragment_functions.json",
+               # the Phase-3 decisions record: §5's census gate reads it BEFORE any
+               # mining exists, so it must come down with the section-1 pull
+               "artifacts/phase3_decisions.json"],
     "report": ["report/*", "report/**"],
 }
 

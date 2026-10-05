@@ -228,6 +228,8 @@ def test_sections_compose_and_prefix():
     sub = H.allow_patterns("alice/run1")
     assert sub == ["alice/run1/artifacts/*", "alice/run1/artifacts/**",
                    "alice/run1/report/*", "alice/run1/report/**"]
+    # the §5 census gate needs the decisions record before anything is mined
+    assert "artifacts/phase3_decisions.json" in H.allow_patterns(sections=["sprime"])
     pats = H.allow_patterns("sub", sections=["mining", "runs-meta"])
     assert "sub/artifacts/fragments.jsonl" in pats
     assert "sub/artifacts/runs/*/eval_metrics.json" in pats
