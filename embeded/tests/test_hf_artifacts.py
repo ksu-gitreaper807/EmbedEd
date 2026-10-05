@@ -369,3 +369,42 @@ def test_section9_transfer_pull_glob_is_exactly_the_ladder():
     nb = json.loads((root / "notebooks" / "Phase3_Colab.ipynb").read_text())
     src = "\n".join("".join(c["source"]) for c in nb["cells"] if c["cell_type"] == "code")
     assert src.count(pat) == 2          # section 9 + section 12 demo
+
+
+def test_notebook_flags_take_exactly_one_value():
+    """Lint the notebooks for the '--include a', 'b' mistake (made twice in the
+    Phase3 notebook): every flag that takes ONE value (--include/--section/
+    --repo-id/...) must be followed by exactly one non-flag element."""
+    import ast as pyast
+    import json as pyjson
+    import re
+    root = Path(__file__).resolve().parents[2]
+    ONE_VALUE_FLAGS = {"--include", "--section", "--repo-id", "--repo-type",
+                       "--revision", "--subdir"}
+    checked = 0
+    for nb_path in (root / "notebooks").glob("*.ipynb"):
+        for cell in pyjson.loads(nb_path.read_text())["cells"]:
+            if cell["cell_type"] != "code":
+                continue
+            src = "".join(cell["source"])
+            src = "\n".join(l for l in src.splitlines()
+                            if not re.match(r"^\s*[%!]", l))   # strip IPython magics
+            try:
+                tree = pyast.parse(src)
+            except SyntaxError:
+                continue
+            for node in pyast.walk(tree):
+                if not isinstance(node, pyast.List):
+                    continue
+                items = node.elts
+                for k, el in enumerate(items):
+                    if not (isinstance(el, pyast.Constant) and el.value in ONE_VALUE_FLAGS):
+                        continue
+                    checked += 1
+                    nxt = items[k + 1] if k + 1 < len(items) else None
+                    assert nxt is not None and isinstance(nxt, pyast.Constant) \
+                        and isinstance(nxt.value, str) and not nxt.value.startswith("--"), \
+                        f"{nb_path.name}: '{el.value}' must take exactly ONE value — join " \
+                        f"multiple globs with commas ('{el.value} a,b'); a second list " \
+                        "element becomes an unrecognized positional and exits 2"
+    assert checked >= 4            # the §9/§11/§12 pulls at minimum
