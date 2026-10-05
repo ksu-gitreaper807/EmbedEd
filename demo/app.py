@@ -107,7 +107,7 @@ def collect(runs_root: Path | None = None, *, c0: str = "C0", best: str = DEFAUL
                              "`python -m scripts.hf_artifacts pull --if-configured`")
         seed0, seedb = best_pick
         print(f"[demo] seed policy (max worst-cell coverage over pulled seeds): "
-              f"C0 seed {seed0}, {best} seed {seedb}")
+              f"C0 seed {seed0}, {best} seed {seedb}", flush=True)
     worst, counts = cell_counts(seed0, seedb)
 
     s_a, thr_a, _ = load(c0, seed0)
@@ -170,7 +170,12 @@ def serve(runs_root: Path | None = None, *, c0: str = "C0",
           best: str = DEFAULT_BEST, seed0: int | None = None,
           seedb: int | None = None, pairs=None, frags=None, max_in_picker=24,
           share: bool = False):
+    # three slow stages follow (fragment load, 415k-row alignment, gradio import +
+    # tunnel) — announce each so a silent minute never reads as a hang
+    print("[demo] loading fragments + test pairs, aligning recorded scores…",
+          flush=True)
     import gradio as gr
+    print("[demo] gradio imported — building the picker and the URL…", flush=True)
 
     rows, meta = collect(runs_root, c0=c0, best=best, seed0=seed0, seedb=seedb,
                          pairs=pairs, frags=frags)
