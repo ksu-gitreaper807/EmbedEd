@@ -45,12 +45,15 @@ mode is fp32-saturation erasure (thresholds pinned 1.0, base-rate F1). The v8 re
 put the poison supply where predicted: C5 0.27% (audit prediction ≈0), C6 13.6% of mined
 candidates (prediction 10–25%).
 
-**Measured FN rates (audited):** C4 15/50 = 30% [0.191, 0.438]; C2 42%; C1 ≈ 0–2%. The
+**Measured FN rates (audited):** C4 VOIDED 2026-10-21 — the 15/50 = 30% score had
+joined the C2/C3 labels file onto the C4 key (sanitycheck §9.6); re-audit registered
+(§4). Valid: C2 42%; C3 30% [0.191, 0.438]; C1 ≈ 0–2%. The
 J ≥ 0.40 cut removes ~40% of C2's contamination in-sample while keeping every audited clean
 pair (clean max 0.345 vs clone median 0.418).
 
 **Open items inherited (the reason this phase exists):**
-1. `audit_c5` / `audit_c6` — the 50-pair blind gates, unscored (§4 here).
+1. `audit_c4` (re-run; the original score is voided, §9.6) / `audit_c5` / `audit_c6`
+   — the 50-pair blind gates, unscored (§4 here).
 2. Nine C2/C3 runs with stored-metrics vs `predictions.npz` mismatches, up to +0.0273 (§5).
 3. The write-up itself, `run_all.sh` (still commented), and the literal one-table deliverable.
 
@@ -100,7 +103,7 @@ joined by the recorded 2026-10-03 addendum — keep it visible, not smuggled in)
 
 ---
 
-## 4. The audit gates — `audit_c5` and `audit_c6` (blocking)
+## 4. The audit gates — `audit_c4` (re-run), `audit_c5`, `audit_c6` (blocking)
 
 Protocol: the Phase-2 50-pair blind audit, unchanged (`scripts/audit_sample.py`; reader VM is
 fine — never push from a reader). Pre-registered predictions and endpoint order live in
@@ -110,6 +113,7 @@ fine — never push from a reader). Pre-registered predictions and endpoint orde
 |---|---|---|
 | `audit_c5` | 0–2% (the bouncer on a clean supply) | rate inside band → C5 = confirmed control, headlineable beside C1 |
 | `audit_c6` | 25–35% under H1 | H1 survives → §9.4's dose/similarity story extends to the semantic supply; H2 (rate ≪ band) → **§9.4 and SCOPE §6's rewrite**: the similarity-amplifier claim was BM25-specific |
+| `audit_c4` (re-run) | ≈0% hoped; gate ≤ 42% (the C2 floor) | the 2026-10-02 score is VOIDED (§9.6: the C2/C3 labels file had been copied over the C4 sheet — §9.4's "C3 = C4" was one measurement on two keys). The re-audit replaces it; C4 comparisons need it clearly below 42% |
 
 Rules: the audit sheet is committed before unblinding (sheet first, judgements after);
 `AUDIT_JUDGEMENTS.md` records every call; **no C5/C6 sentence enters the write-up's claims

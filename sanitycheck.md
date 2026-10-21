@@ -902,3 +902,42 @@ rate = <n>/50 = <p>% [<wilson lo, hi>]; H1 band 25-35%; branch taken: <H1 SURVIV
 §9.4 extends to the semantic supply / H2 -> §9.4 + SCOPE §6 rewrite (amplifier account
 was BM25-specific)>; consequence recorded in: <report section / sanitycheck addendum>.
 ```
+
+## §9.6 AMENDMENT (2026-10-21, append-only): C4/C5/C6 audit scores VOID — one labels file on three keys
+
+Found while opening the Phase-4 audit gate. Forensics on the pulled Hub
+artifacts: audit_c4/, audit_c5/ and audit_c6/ each hold a 100-row
+audit_labels.csv, byte-identical across the three dirs AND identical to the
+GENUINE artifacts/audit/ labels file (9,925 B; 36 clone / 63 not_clone /
+1 unsure; same per-pair notes; same first-20 label sequence). Each
+per-condition key has 50 pairs (P001..P050): scoring had joined the first
+50 ids of the C2/C3 sheet onto each condition's key. Each bogus
+audit_result.json records n=50 but n_labelled=100 — written at score time,
+so the wrong file was already in place when each gate "passed": C4 on the
+v7 checkout (2026-10-02), C5/C6 on v8 (2026-10-03). Mechanism: the Colab
+upload flow hands every sheet the same filename (audit_labels.csv) and the
+old sheets all reused ids P001..P050, so a stale Downloads copy of the
+genuine C2/C3 sheet fitted every later sheet silently. Fixed at 596f98b
+(content-tagged sheet ids; score refuses foreign ids; 3a quarantines
+wrong-sheet files).
+
+- VALID, unchanged: artifacts/audit/ — C2 42% [0.294, 0.558], C3 30%
+  [0.191, 0.438] (labels match their 100-row key; §9.4's C2/C3 legs, the
+  J ≥ 0.40 cut analysis, and C1's ≈0–2% (S3-era provenance) all stand).
+- VOID: C4 "30% [0.191, 0.438]" — it was the first 50 rows of the C2/C3
+  sheet. §9.4's "C3 = C4 = 15/50" — read since 2026-10-02 as a striking
+  coincidence — was ONE measurement joined onto two keys; the C3-vs-C4 arm
+  of the dose/trigger story loses its equal-dose premise. The dose reading
+  (C2 42% vs C3 30%) and the trigger/margin analysis on the genuine C2/C3
+  labels stand; C4-specific claims are withdrawn pending re-audit.
+- VOID: the C5/C6 scores surfaced 2026-10-21 (30% each — same join). The
+  §9.5 C5/C6 gates remain OPEN, exactly as §9.5 assumed.
+
+Repair (registered here before unblinding): the sheets themselves are sound
+(per-directory keys; blind md; keys verified against the on-disk triples).
+Re-label all three from their audit_pairs.md (150 pairs) and re-score with
+the 596f98b tooling, which refuses foreign ids. C4 re-enters the Phase-4
+gate beside C5/C6 (notebook §3). New numbers replace the void ones wherever
+they had spread (notebook Panels A/C, PHASE4_PLAN §3/§4, PROJECT_REPORT F2,
+paper G2 + benchmark table + mechanism section), and the branches taken are
+recorded in §9.5 — appended, never edited.
