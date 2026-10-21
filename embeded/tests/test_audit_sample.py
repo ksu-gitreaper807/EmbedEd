@@ -24,7 +24,7 @@ def test_make_is_blind_and_seeded(fx, capsys):
     labels = list(csv.DictReader(open(d / "audit_labels.csv")))
     key = list(csv.DictReader(open(d / "audit_key.csv")))
     assert len(labels) == len(key) == 4 and all(r["label"] == "" for r in labels)
-    assert pairs_md.count("## P0") == 4 and "```java" in pairs_md
+    assert all(f"## {r['id']}" in pairs_md for r in key) and "```java" in pairs_md
     assert "C2" not in pairs_md and "C3" not in pairs_md            # blind sheet
     assert sorted(r["condition"] for r in key) == ["C2", "C2", "C3", "C3"]
     for cond in ("C2", "C3"):                                       # distinct anchors per condition
@@ -154,3 +154,33 @@ def test_c4_sheet_is_separate_and_coexists_in_report(fx, capsys, monkeypatch):
     assert "## False-negative audit — C2/C3" in report
     A.score()                                                    # rerun replaces only its own tag
     assert S.REPORT_MD.read_text().count("## False-negative audit") == 2
+
+
+def test_score_refuses_a_labels_file_from_another_sheet(fx):
+    """Sheets used to reuse the ids P001..Pnnn, so a wrong sheet's labels file
+    'fitted' and scored as plausible nonsense; content-tagged ids end that."""
+    import pytest
+    _mine(fx)
+    A.make(2, 7)
+    d = S.ARTIFACTS / "audit"
+    key = list(csv.DictReader(open(d / "audit_key.csv")))
+    with open(d / "audit_labels.csv", "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=["id", "label", "note"]); w.writeheader()
+        for i, r in enumerate(key):
+            w.writerow({"id": r["id"], "label": "clone" if i % 2 else "not_clone", "note": ""})
+        w.writerow({"id": "P001", "label": "clone", "note": "stowaway from an old sheet"})
+    with pytest.raises(SystemExit, match="DIFFERENT audit sheet"):
+        A.score()
+
+
+def test_sheet_ids_are_unique_across_sheets(fx, monkeypatch):
+    """Two sheets made with the same seed must not share a single id - that is
+    what let one audit_labels.csv look valid in several directories."""
+    _mine(fx)
+    NG.main(["--strategies", "filtered", "--k", "3"])          # C4 triples on the fixture
+    A.make(2, 7)
+    ids_a = {r["id"] for r in csv.DictReader(open(S.ARTIFACTS / "audit" / "audit_key.csv"))}
+    monkeypatch.setenv("EMBEDED_AUDIT_DIR", str(S.ARTIFACTS / "audit_x"))
+    A.make(2, 7, conds=("C4",))
+    ids_b = {r["id"] for r in csv.DictReader(open(S.ARTIFACTS / "audit_x" / "audit_key.csv"))}
+    assert ids_a.isdisjoint(ids_b)

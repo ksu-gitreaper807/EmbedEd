@@ -11,6 +11,9 @@ ARTIFACTS/audit/:
     audit_labels.csv  id,label,note — fill `label` with clone | not_clone | unsure
     audit_key.csv     id -> condition/anchor/negative — do not open until scoring
 
+Ids carry a hash of the sheet's own content: a labels file moved in from
+another sheet is refused instead of being silently joined by colliding ids.
+
 `score` joins labels with the key and reports, per condition, the share of
 mined "negatives" that are in fact clones (Wilson 95% CI), with `unsure`
 counted separately (headline rate counts unsure as not_clone; an upper bound
@@ -30,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import math
 import os
@@ -71,8 +75,16 @@ def sample_pairs(n: int, seed: int, conds=None) -> list[dict]:
         for a in rng.sample(anchors, n):
             out.append({"condition": cond, "anchor": a, "negative": rng.choice(by_anchor[a])})
     rng.shuffle(out)
+    # Sheet-unique ids that stay blind: a hash tag of the sheet's own content.
+    # Every sheet used to reuse P001..Pnnn, so a labels file from ANOTHER sheet
+    # 'fitted' this one and scored as plausible nonsense; with content-tagged
+    # ids a wrong file simply refuses to join. The tag is one-way: the sheet
+    # stays blind.
+    tag = hashlib.sha256(
+        ("|".join(f"{p['condition']}:{p['anchor']}:{p['negative']}" for p in out)
+         + f"|{seed}|{len(out)}").encode()).hexdigest()[:8]
     for i, p in enumerate(out, 1):
-        p["id"] = f"P{i:03d}"
+        p["id"] = f"{tag}-{i:03d}"
     return out
 
 
@@ -232,6 +244,14 @@ def score() -> dict:
           + ", ".join(f"{c} {drift[c]['n']}/{drift[c]['n']}" for c in drift))
     with open(d / "audit_labels.csv", encoding="utf-8") as fh:
         labels = {r["id"]: r["label"] for r in csv.DictReader(fh)}
+    foreign = sorted(set(labels) - {r["id"] for r in key})
+    if foreign:
+        raise SystemExit(
+            f"{len(foreign)} label row(s) carry id(s) that are not in this sheet's "
+            f"key (e.g. {foreign[:5]}): audit_labels.csv belongs to a DIFFERENT audit "
+            "sheet. Sheets tag their ids with a hash of their own content precisely "
+            "so a wrong file can never silently 'fit' - move the foreign file aside "
+            "and label this sheet's own ids (they head the pairs in audit_pairs.md).")
     res = score_rows(labels, key)
     res["_provenance"] = {"key_matches_triples": drift, "version": S.VERSION,
                           "n_labelled": len([v for v in labels.values() if v.strip()])}
