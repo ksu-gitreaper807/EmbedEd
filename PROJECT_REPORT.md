@@ -284,6 +284,32 @@ the 40%-overlap cut removes ~40% of word-search's noise and 0 good pairs (good p
 
 ---
 
+## 4a. Figures & graphs (from `Image_Graphs/`)
+
+**Figure 1 — Phase 2, test-split confusion matrices, all 37 models** (untuned C0 + six
+seeds × six conditions; every panel's title carries its own F1 and chosen threshold;
+footer: n = 415,416 pairs, threshold chosen on validation, applied unchanged).
+This is finding **F1** made visible: read each panel's *top-left/bottom-left* pair —
+in every C2 (orange) and C3 (purple) panel the model predicts **non-clone for the
+majority of actual clones** (the false-negative quadrant dominates, e.g. C3_13: 47.2%
+of true clones caught, 34.9% of non-clones flagged), with the saturated thresholds
+(`1.0000`) printed right in the titles. C1 (blues) and C5 (reds) catch ~75–78% of
+clones at ~4–5% false-alarm cost; C4 (greens) sits midway (~50–57% caught); C6
+(magentas) between. *(Illustrates S4/S7; see §4 table for the numbers.)*
+
+![Phase 2 — test-split confusion matrices, 37 models](Image_Graphs/phase2_confusion_matrices%281%29.png)
+
+**Figure 2 — s′ fragment map per strategy, seven panels** (the Phase-3 §4 figure;
+held-out functionalities {10, 13, 14} starred; same seeded fragment sample in every
+panel; fixed UMAP parameters recorded before rendering — SCOPE P2-18).
+The untuned base encoder (C0) is one diffuse, intermingled blob; clean training (C1,
+C5) shatters it into functionality-discrete islands; C2/C4 are looser; **C3 renders as
+a single continuous diagonal band — the geometric face of the degenerate optimum**
+its saturated thresholds record; C6 sits between band and islands. *(A figure, not
+evidence — it supports no claim; it illustrates S8/F4.)*
+
+![Seven-panel UMAP per negative-selection strategy](Image_Graphs/umap_panels.png)
+
 ## 5. Evidence index — claim → file → command
 
 | Claim/number | Where it lives | Reproduce with |
