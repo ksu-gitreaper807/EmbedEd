@@ -259,10 +259,15 @@ produces no evidence. \textbf{G2 (blind audits):} for each mined condition,
 a stratified sample of 50 mined negatives is judged \emph{blind} to
 condition (``is this negative actually a functional clone of the
 anchor?''), sheet committed before unblinding. Audited false-negative rates
-are reported with Wilson intervals. Two audits (C5/C6 on s$\phi$-adjacent
-supplies) are registered but not yet unblinded
-(\pending{audit\_c5, audit\_c6}; predictions: 0--2\% and 25--35\%
-respectively); no C5/C6 claim in this paper relies on their outcome.
+are reported with Wilson intervals. Three audits are registered but not yet
+unblinded (\pending{audit\_c4 re-run, audit\_c5, audit\_c6}): the C4
+re-audit --- the 2026-10-02 C4 score (30\%) was \emph{voided} on 2026-10-21,
+when forensics showed the C2/C3 labels file had been copied over the C4
+sheet, so the C3$=$C4 equality was one measurement joined onto two keys
+(sanitycheck \S9.6) --- and the two s$\phi$-adjacent supplies C5/C6
+(predictions: gate $\leq 42\%$ with $\approx 0$ hoped for C4; 0--2\% and
+25--35\% for C5/C6). No C4/C5/C6 claim in this paper relies on their
+outcome.
 
 \section{RQ1: benchmark results --- collapse to the base rate}
 \label{sec:benchmark}
@@ -288,7 +293,7 @@ C0 & 0.2572 & --- & 0.978 & 0/3 & --- \\
 C1 & $\mathbf{0.7464 \pm 0.0176}$ & 0.6629 & unpinned & 0/12 & $\approx 0$--2\% \\
 C2 & 0.2478 $\pm$ 0.0231 & --- & pinned & 10/12 & 42\% \\
 C3 & 0.2707 $\pm$ 0.0095 & 0.1826 & pinned & 10/12 & 30\% [0.19, 0.44] \\
-C4 & 0.4349 $\pm$ 0.0246 & 0.2760 & $0.50$--$0.57$ & 0/6 & 30\% [0.19, 0.44] \\
+C4 & 0.4349 $\pm$ 0.0246 & 0.2760 & $0.50$--$0.57$ & 0/6 & \pending{audit\_c4} \\
 C5 & 0.7399 $\pm$ 0.0140 & 0.6629 & unpinned & 0/6 & 0.27\% (supply) \\
 C6 & 0.4722 $\pm$ 0.0282 & --- & $0.63$--$0.82$ & 0/6 & 13.6\% (supply) \\
 \bottomrule
@@ -314,8 +319,9 @@ erased''.
 (BM25 + bouncer) recovers to $0.4349$ --- roughly half the distance from
 the collapsed cluster to the clean band --- with every threshold unpinned
 and MAP@R $2.7\times$ C3's. The supply audit explains both the rescue and
-its ceiling: C4 carries \emph{the same audited FN rate as C3} (30\%) but a
-different residual composition (Section~\ref{sec:mechanism}). C5
+its ceiling: C4's own audited FN rate is pending a re-audit
+(\pending{audit\_c4}; the 2026-10-02 score was voided --- sanitycheck
+\S9.6 --- so the equal-rate comparison with C3 is withdrawn). C5
 (random + bouncer) confirms the bouncer is not itself a performance
 intervention: $0.7399 \pm 0.0140$, statistically inside the C1 band. C6
 (semantic + bouncer) lands between the clusters ($0.4722$, unpinned
@@ -340,9 +346,12 @@ model), and (b) collapse depends on \emph{which} false negatives are
 sampled. The data decide for (b), with (a) as a secondary effect:
 
 \begin{itemize}
-\item \textbf{C3 and C4 carry the same audited FN rate (30\%) yet sit
-$0.16$ F1 apart with opposite scorer states} (C3: saturated, base-rate F1;
-C4: unpinned, mid-recovery). Rate alone does not determine collapse.
+\item \textbf{C4's audited FN rate is pending re-audit}
+(\pending{audit\_c4}): the originally-cited C3$=$C4 equality (30\% each)
+was voided by the 2026-10-21 forensics --- one labels file joined onto two
+keys (sanitycheck \S9.6). Until the re-audit lands, ``rate alone does not
+determine collapse'' rests on the dose gradient (C2 42\% vs C3 30\%) and
+the trigger analysis below, and must be re-tested.
 \item \textbf{The discriminating variable is the FN surface.} Coding each
 audited contaminant by two properties --- functional-clone-ness and
 near-duplicate-ness (Jaccard $\geq 0.40$) --- the trigger configuration is
