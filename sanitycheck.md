@@ -886,3 +886,19 @@ before any C5/C6 comparison is written down as a finding; the H1 verdict above i
 pre-registered-rule reading of the scorer endpoint, to be confirmed (or upset) by the audits —
 if C6's audit comes back LOW-contamination, H1's mechanism needs a second look. Log both gate
 blocks in this section when scored.
+
+**§9.5 outcome rows — TEMPLATE (append after scoring; fill, do not edit anything above).**
+Copy the block, replace the angle-bracket fields, append at the end of §9.5, THEN let any
+headline sentence use C5/C6.
+
+```
+§9.5 outcome — audit_c5 (scored <UTC date>, sheet artifacts/audit_c5/, labelled by <who>):
+rate = <n>/50 = <p>% [<wilson lo, hi>]; prediction band 0-2%; scorer state at scoring:
+<thresholds pinned?>; branch taken: <CONFIRMED CONTROL / OUT OF BAND -> C5 loses
+control status, §9.5 addendum needed>; consequence recorded in: <report section>.
+
+§9.5 outcome — audit_c6 (scored <UTC date>, sheet artifacts/audit_c6/, labelled by <who>):
+rate = <n>/50 = <p>% [<wilson lo, hi>]; H1 band 25-35%; branch taken: <H1 SURVIVES ->
+§9.4 extends to the semantic supply / H2 -> §9.4 + SCOPE §6 rewrite (amplifier account
+was BM25-specific)>; consequence recorded in: <report section / sanitycheck addendum>.
+```
