@@ -1,0 +1,125 @@
+{
+  "recorded_utc": "2026-10-23T18:50:29Z",
+  "local_date": "2026-10-24",
+  "timezone": "Asia/Kolkata",
+  "status": "local_release_candidate_verified; owner_publication_approval_pending",
+  "publication_approved": false,
+  "published": false,
+  "source": {
+    "branch": "arena/01a0e714-embeded",
+    "base_head": "13264f112e5f257bbc1bf786dbcda56cd5f56981",
+    "dirty": true,
+    "colab_git_commit": null,
+    "identified_by_content_hashes": true,
+    "source_files_crosschecked": 62,
+    "source_mismatches": 0
+  },
+  "input": {
+    "repo": "Kusshal/Embed",
+    "revision": "e3144bea7732c20ab2803782282282be4fede7b4",
+    "mode": "analysis-only; not a complete model backup",
+    "verified_files": 524,
+    "total_bytes": 1474661955,
+    "omitted_files": 2204,
+    "sha256_mismatches": 0,
+    "omissions": "weights, embedding arrays and redundant archives; full path list in snapshot manifest"
+  },
+  "verification": {
+    "runtime": "Colab CPU embeded-phase5",
+    "notebook_verification_code_cells": 6,
+    "notebook_review_export_code_cells": 2,
+    "latex_cell_execution": "not executed in Colab; external local compiler path used as permitted by notebook",
+    "tests_initial_final_source": {
+      "passed": 183,
+      "seconds": 20.84
+    },
+    "tests_release_gate": {
+      "passed": 183,
+      "seconds": 21.01
+    },
+    "benchmark_f1_replays": 37,
+    "mismatches_at_tolerance_5e_4": 0,
+    "verified_audits": [
+      "C4",
+      "C5",
+      "C6"
+    ],
+    "new_judgments": 150,
+    "canonical_code_fragments_verified": 300,
+    "all_seven_generated_files_identical_local_vs_colab": true,
+    "all_107_release_payload_hashes_verified_locally": true,
+    "bash_syntax_check_passed": true,
+    "git_diff_check_passed": true,
+    "credential_pattern_scan_matches": 0
+  },
+  "review": {
+    "reviewer": "Codex AI assistant; editorial/technical review, not independent human validation",
+    "compiled_with": "local pdflatex (TeX Live 2026), successful repeated compilation",
+    "pdf_pages": 6,
+    "all_pages_visually_reviewed": true,
+    "compiler_warning_or_overfull_lines": 0,
+    "content_bound_deliverables": 31,
+    "claims_reviewed": 6,
+    "limitations": "All audit labels are agent/AI review; no causal dose/similarity isolation, independent human review or statistical superiority/equality claim.",
+    "historical_input_caveat": "Pinned historical inputs retain old wording; current notice, generated tables and corrected draft/audit_completion.md supersede it."
+  },
+  "package": {
+    "path": "/home/kushal/Desktop/EmbededV2/EmbedEd/artifacts/phase4_exports/2026-10-23/phase5_release/phase5_release_20261023T184908649932Z.zip",
+    "sha256": "d2e349ea8d09510ae14fedb28ec1987cbd02ce1dbe8def5b413856cd11048af5",
+    "size": 636923,
+    "verified_payload_files": 107,
+    "scope": "local only; excludes credentials, checkpoints, raw datasets, caches and .git"
+  },
+  "evidence": {
+    "snapshot_manifest": {
+      "path": "/home/kushal/Desktop/EmbededV2/EmbedEd/artifacts/phase4_exports/2026-10-23/hf_snapshot_e3144bea/snapshot_manifest.json",
+      "sha256": "d48ca7cb5e6f640d037668c089d0fe98a0fcba05846f7504ad0b1b6b3de105ca"
+    },
+    "source_manifest": {
+      "path": "/home/kushal/Desktop/EmbededV2/EmbedEd/artifacts/phase4_exports/2026-10-23/phase5_final_proof/source_manifest.json",
+      "sha256": "99b3d435facf02de7512d03a15dff668846a4dbfa3c07a7c01f26bdaa5039b01"
+    },
+    "input_manifest": {
+      "path": "/home/kushal/Desktop/EmbededV2/EmbedEd/artifacts/phase4_exports/2026-10-23/phase5_final_proof/input_manifest.json",
+      "sha256": "f8165a7bb9b729f6ad3093a7add4e7fcdd16a82175bc9e1bcea0abd9d9bf406a"
+    },
+    "executed_verification": {
+      "path": "/home/kushal/Desktop/EmbededV2/EmbedEd/artifacts/phase4_exports/2026-10-23/Phase5_final_verification_executed.ipynb",
+      "sha256": "d0e6b36e5cbf6cf7c72c55585d734b85ea2d4e4fbdbd2ea098f6815be0c47232"
+    },
+    "executed_review_export": {
+      "path": "/home/kushal/Desktop/EmbededV2/EmbedEd/artifacts/phase4_exports/2026-10-23/Phase5_review_export_executed.ipynb",
+      "sha256": "a64ef297df2c5771dca2490f5b05fa5e516102f46ceb8194cb812b2516c1153f"
+    },
+    "paper_source": {
+      "path": "/home/kushal/Desktop/EmbededV2/EmbedEd/paper/paper.tex",
+      "sha256": "e650b4b549b60bc74c94551d8cf928b30b3c2225e44b517cf71abe90b008a985"
+    },
+    "paper_pdf": {
+      "path": "/home/kushal/Desktop/EmbededV2/EmbedEd/output/pdf/paper.pdf",
+      "sha256": "e3306372aafcc9830e6f588be4adb1d86a017bd2bd412ca77861f9f873645f30"
+    },
+    "compiler_log": {
+      "path": "/home/kushal/Desktop/EmbededV2/EmbedEd/output/pdf/paper.log",
+      "sha256": "f7e570f8317a7641e0f3b91f78bfb4d47fa8a2d71c65b54ec27f68812d4ea2ec"
+    },
+    "canonical_measurements": {
+      "path": "/home/kushal/Desktop/EmbededV2/EmbedEd/report/measurements.md",
+      "sha256": "d844f008bb5a4dcbe1133dee979971b61262669f00a9d61d4772c73dea823ad5"
+    }
+  },
+  "runtime_cleanup": {
+    "session": "embeded-phase5",
+    "stopped": true,
+    "tool_confirmed_runtime_was_active": true,
+    "exported_and_verified_before_stop": true
+  },
+  "future_demo": {
+    "document": "FUTURE_PROSPECTS.md",
+    "status": "parked; not implemented",
+    "scope": "two example Java pairs evaluated by C0–C6 hosted on Colab, scores/thresholds/decisions displayed",
+    "new_compute_allocated": false,
+    "checkpoint_downloads_for_demo": false
+  },
+  "remaining_required_action": "Owner review and explicit publication approval, then guarded publication/hash verification if authorized. No training/mining/relabeling remains in local closure."
+}

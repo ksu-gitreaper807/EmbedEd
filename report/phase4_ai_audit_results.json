@@ -1,0 +1,36 @@
+{
+  "amendment_id": "P4-AI-AUDIT-2026-10-23",
+  "status": "150_judgments_frozen_and_scored; audit_gates_verified",
+  "reviewer_type": "ai",
+  "independent_human_validation": false,
+  "fully_blind": false,
+  "freeze": "report/phase4_ai_audit_freeze.json",
+  "source_artifact_commit": "a77f8d2d1f26b5168a88822a7d1138f027eee4af",
+  "C4": {
+    "n": 50, "clone": 6, "not_clone": 42, "unsure": 2,
+    "fn_rate": 0.12, "fn_rate_ci95": [0.056, 0.238],
+    "fn_rate_upper_incl_unsure": 0.16, "fn_rate_upper_ci95": [0.083, 0.285]
+  },
+  "C5": {
+    "n": 50, "clone": 0, "not_clone": 50, "unsure": 0,
+    "fn_rate": 0.0, "fn_rate_ci95": [0.0, 0.071],
+    "fn_rate_upper_incl_unsure": 0.0, "fn_rate_upper_ci95": [0.0, 0.071]
+  },
+  "C6": {
+    "n": 50, "clone": 11, "not_clone": 38, "unsure": 1,
+    "fn_rate": 0.22, "fn_rate_ci95": [0.128, 0.352],
+    "fn_rate_upper_incl_unsure": 0.24, "fn_rate_upper_ci95": [0.143, 0.374]
+  },
+  "claim_boundary": "Descriptive AI-review evidence only; C6 point estimate outside predicted band with overlapping interval does not isolate similarity from false-negative dose.",
+  "verification": {
+    "fixed_ids_match": true,
+    "seed13_sample_reproduced": true,
+    "key_pairs_in_current_triples": 150,
+    "canonical_code_fragments_match": 300,
+    "current_hf_main_triples_match_source_commit": true,
+    "score_bound_outcomes": "sanitycheck.md section 9.9",
+    "focused_tests_passed": 23,
+    "test_scope": "audit_sample, AI provenance and closure tests; 3 unrelated evaluation/checkpoint tests deselected locally",
+    "prior_colab_full_suite": "165 passed before these audit changes; not a new full-suite run"
+  }
+}

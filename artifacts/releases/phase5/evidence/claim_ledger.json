@@ -1,0 +1,44 @@
+[
+  {
+    "id": "primary_benchmark",
+    "statement": "Primary benchmark uses C1-C6 seeds 13-15 and C0 once; C1 mean F1 is 0.7533. Six-seed results are separate.",
+    "evidence": ["report/final/results.json", "report/final/benchmark.tex", "report/final/extension.tex"],
+    "reviewed": true
+  },
+  {
+    "id": "audit_attribution",
+    "statement": "C4/C5/C6 rates are 12/0/22 percent under the amended AI-review protocol, not independent human validation. Historical C2/C3 are agent review; C1 is an estimate.",
+    "evidence": ["report/phase4_ai_audit_results.json", "report/phase4_ai_audit_protocol.json", "report/final/audits.tex"],
+    "reviewed": true
+  },
+  {
+    "id": "mechanism",
+    "statement": "The comparisons do not independently isolate contamination dose from similarity or establish a causal mechanism.",
+    "evidence": ["paper/paper.tex", "PROJECT_REPORT.md", "report/phase4_audit_completion.md"],
+    "reviewed": true
+  },
+  {
+    "id": "generalisation",
+    "statement": "C3 unseen F1 0.7057 exceeds C0 0.6934 numerically; descriptive means do not establish statistical significance or equality. Seen evaluation uses the threshold-selection validation slice.",
+    "evidence": ["report/final/generalisation.tex", "PROJECT_REPORT.md", "paper/paper.tex"],
+    "reviewed": true
+  },
+  {
+    "id": "baseline",
+    "statement": "All-negative F1 is zero; all-positive F1 is 2*pi/(1+pi)=0.2406424, not a ceiling for useful classifiers.",
+    "evidence": ["report/final/results.json", "paper/paper.tex"],
+    "reviewed": true
+  },
+  {
+    "id": "published_gap",
+    "statement": "Protocol/model differences are limitations and possible contributors, not proof explaining the full gap to published performance.",
+    "evidence": ["paper/paper.tex", "PROJECT_REPORT.md"],
+    "reviewed": true
+  },
+  {
+    "id": "count_precision",
+    "statement": "F1 agreement at 5e-4 does not certify precision/recall or exact count equality. Six legacy count discrepancies remain disclosed; plots use frozen NPZ arrays and thresholds.",
+    "evidence": ["report/figures/confusion_matrices/confusion_matrices.json", "report/confusion_matrices_export.json", "paper/paper.tex"],
+    "reviewed": true
+  }
+]

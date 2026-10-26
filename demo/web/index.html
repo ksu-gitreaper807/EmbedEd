@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EmbedEd - Seven perspectives on code</title><link rel="stylesheet" href="style.css"><script src="app.js" defer></script></head>
+<body>
+<main>
+  <nav><a href="./" class="brand">Embed<span>Ed</span><span class="brand-dot">●</span></a><span class="eyebrow">RESEARCH DEMO / PHASE 06</span><span id="runtime" role="status" class="runtime">Checking runtime</span></nav>
+  <header><div><p class="eyebrow orange">ONE TASK. SEVEN TRAINING CONDITIONS.</p><h1>Same code.<br><em>Different perspectives.</em></h1><p class="intro">Give two Java code pairs to C0–C6. Compare how negative-sampling choices change each model’s clone prediction.</p></div><aside><span class="big-number">07</span><p>model conditions<br><span>one shared encoder recipe</span></p><div class="mini-tags"><span>GraphCodeBERT</span><span>Seed 13</span><span>512 tokens</span></div></aside></header>
+  <section aria-labelledby="inputs-title">
+    <div class="section-heading"><div><p class="eyebrow">01 / THE INPUT</p><h2 id="inputs-title">Two pairs. Your starting point.</h2></div><button id="reset" class="secondary" type="button">Restore examples ↺</button></div>
+    <p class="section-note">Editable, illustrative examples—not benchmark evidence or verified ground truth. Java is treated as text and never executed.</p>
+    <div class="pairs">
+      <article class="pair"><div class="pair-title"><span class="pair-no">01</span><h3>Pair one</h3><span class="quiet">Rename &amp; compare</span></div><label for="p1a">SNIPPET A</label><textarea id="p1a" maxlength="20000" spellcheck="false" aria-label="Pair one snippet A"></textarea><label for="p1b">SNIPPET B</label><textarea id="p1b" maxlength="20000" spellcheck="false" aria-label="Pair one snippet B"></textarea></article>
+      <article class="pair"><div class="pair-title"><span class="pair-no">02</span><h3>Pair two</h3><span class="quiet">Change the operation</span></div><label for="p2a">SNIPPET A</label><textarea id="p2a" maxlength="20000" spellcheck="false" aria-label="Pair two snippet A"></textarea><label for="p2b">SNIPPET B</label><textarea id="p2b" maxlength="20000" spellcheck="false" aria-label="Pair two snippet B"></textarea></article>
+    </div>
+    <div class="action-bar"><p>Four snippets. Seven conditions. <strong>14 predictions.</strong><br><span>One model loaded at a time. The first comparison may take longer.</span></p><button id="compare" type="button">Compare all seven <span aria-hidden="true">↗</span></button></div>
+    <p id="notice" role="status" aria-live="polite"></p>
+  </section>
+  <section aria-labelledby="results-title" class="results-section">
+    <div class="section-heading"><div><p class="eyebrow">02 / THE COMPARISON</p><h2 id="results-title">What changes across the models?</h2></div><span id="performance" class="quiet">Awaiting a comparison</span></div>
+    <div class="table-scroll"><table><thead><tr><th scope="col">CONDITION <span>fixed seed 13</span></th><th scope="col">PAIR 01 <span>cosine / decision</span></th><th scope="col">PAIR 02 <span>cosine / decision</span></th></tr></thead><tbody id="results"></tbody></table></div>
+    <p class="legend"><span class="threshold-mark"></span> The vertical mark is that condition’s frozen validation threshold. A score at or above it predicts “clone.” Scores are not probabilities.</p>
+  </section>
+  <section class="method" aria-labelledby="method-title"><div><p class="eyebrow">03 / READ RESPONSIBLY</p><h2 id="method-title">A demo, not a verdict.</h2></div><div><h3>One controlled comparison</h3><p>Token-only GraphCodeBERT. Masked mean pooling, normalized embeddings and the same 512-token cap. C0 is untuned; C1–C6 use their recorded seed-13 weights. No ensembles or threshold tuning.</p><h3>Visible limits</h3><p>Truncation and near-one score/threshold warnings appear after inference. A few examples cannot establish model quality, semantic equivalence or a causal mechanism. Audits in the study are AI review, not independent human validation.</p><h3>Private, temporary compute</h3><p>Snippets are sent to this page’s inference runtime, held in memory, and not logged or saved by the app. Do not paste proprietary code. Colab sessions expire; restart the Phase 6 notebook to reconnect. No public tunnel is enabled.</p></div></section>
+  <footer><span>EmbedEd / Java clone study</span><details><summary>Model and threshold provenance</summary><pre id="provenance">Connect the Phase 6 runtime to inspect provenance.</pre></details><span>Exploration, with the evidence intact.</span></footer>
+</main>
+</body></html>

@@ -1,0 +1,50 @@
+{
+  "amendment_id": "P4-AI-AUDIT-2026-10-23",
+  "recorded_utc": "2026-10-23T10:26:15Z",
+  "authorization": "Project owner explicitly selected the disclosed AI-reviewed protocol amendment in this chat.",
+  "status": "authorized_before_new_labels; judgments_and_scores_pending",
+  "conditions": ["C4", "C5", "C6"],
+  "reviewer_type": "ai",
+  "reviewer": "Codex AI assistant",
+  "model_id": null,
+  "model_id_note": "Exact serving model identifier is not independently recorded; do not invent one.",
+  "independent_human_validation": false,
+  "blinding": "Not independent or fully blind: the assistant has prior study context, condition identities and benchmark results.",
+  "timing": "Post-results methodological amendment, recorded before filling the 150 new audit labels; not original preregistration.",
+  "n_per_condition": 50,
+  "sampling_seed": 13,
+  "rubric": {
+    "clone": "Both fragments implement the same functionality, regardless of syntax.",
+    "not_clone": "Different functionality, or one implements only a small part of the other.",
+    "unsure": "Insufficient context or unresolved functional-equivalence ambiguity; do not force a binary label."
+  },
+  "review_requirements": [
+    "Keep the existing pairs and IDs; no outcome-driven resampling.",
+    "Read both fragments and record a pair-specific functional rationale for every judgment.",
+    "Record reviewer_type=ai and this amendment ID with each completed sheet and scored result.",
+    "Freeze labels before scoring and before joining the audit key.",
+    "Preserve the original blank pack and quarantined invalid evidence.",
+    "Retain key-to-triples, complete-label and score-bound outcome checks."
+  ],
+  "scoring": {
+    "point_rate": "clone / 50; unsure contributes zero to the point rate, unchanged from the original instrument",
+    "upper_sensitivity_rate": "(clone + unsure) / 50",
+    "interval": "Wilson 95% interval; sampling uncertainty only, not AI-label accuracy or reviewer bias",
+    "decision_bands": "Retain the recorded C4/C5/C6 numerical bands; report consistency or inconsistency with them, not independent human confirmation."
+  },
+  "reporting_requirements": [
+    "Every C4/C5/C6 audit rate in the table, report and paper must say AI-reviewed, not independently human-validated.",
+    "Do not describe the completed AI judgments as human, independent, fully blind, or originally preregistered.",
+    "Use the rates as descriptive evidence; do not certify a mechanism or confirmed control solely from the AI audit.",
+    "Disclose shared reviewer errors, prior outcome knowledge, missing inter-rater agreement and absent human validation."
+  ],
+  "input_artifact_commit": "a77f8d2d1f26b5168a88822a7d1138f027eee4af",
+  "input_pack": "artifacts/phase4_exports/2026-10-23/phase4_audit_label_pack.zip",
+  "input_pack_sha256": "371fed22a631f151b53cb6d102fe43d1cb593e18f490acb5972c91666bd40b02",
+  "input_state_at_amendment": {"label_rows": 150, "filled_labels": 0},
+  "sheet_sha256": {
+    "audit_c4/audit_pairs.md": "f50d252c366cbb787be5c1a127f45abf71e81cb89cfa8cae682c05f88eaa2bd8",
+    "audit_c5/audit_pairs.md": "92faa9dd43e0daaff97cf23fb6c81b3d4725deb83e3c2d625a8470334d326dfa",
+    "audit_c6/audit_pairs.md": "54686d09a186975af086aa239eb633ec9dcf5a98e8dcd45419b1c51491365a2b"
+  }
+}

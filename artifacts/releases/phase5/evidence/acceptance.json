@@ -1,0 +1,30 @@
+{
+  "snapshot_files": 524,
+  "benchmark_f1_replays": 37,
+  "f1_mismatches_at_5e_4": 0,
+  "audit_conditions": [
+    "C4",
+    "C5",
+    "C6"
+  ],
+  "frozen_judgments": 150,
+  "canonical_fragments": 300,
+  "independent_confusion_count_replays": 37,
+  "model_means": 14,
+  "figure_hashes": 54,
+  "legacy_count_discrepancies_disclosed": [
+    "C0_13",
+    "C2_15",
+    "C3_17",
+    "C4_15",
+    "C6_14",
+    "C6_15"
+  ],
+  "generated_result_files_identical": 7,
+  "snapshot_revision": "e3144bea7732c20ab2803782282282be4fede7b4",
+  "bash_syntax": true,
+  "git_diff_check": true,
+  "inputs_unchanged": true,
+  "no_benchmark_training": true,
+  "no_relabeling": true
+}

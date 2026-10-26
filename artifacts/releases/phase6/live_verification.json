@@ -1,0 +1,272 @@
+{
+  "status": "passed",
+  "device": "cuda",
+  "cuda_name": "Tesla T4",
+  "source_sha256": {
+    "demo/verify_compare.py": "f3de6da72ee7451fa172d374f04a506ee42de39cbf9c95d5018208c589280661",
+    "demo/compare.py": "252aed3d0818b2651b772e36e8d3a39883d9e66558a7068c964d00d23e053e6d",
+    "demo/prepare_compare.py": "780f5451a4c526793804a8421bb14273dfd5029cc449005470502066cabcd22e"
+  },
+  "live_result": {
+    "results": [
+      {
+        "condition": "C0",
+        "name": "Untuned reference",
+        "seed": 13,
+        "threshold": 0.9778940081596375,
+        "threshold_sha256": "5ed148d7a85dfd07d6006931474cf9c06452109e85c776b1387c41402420cf5f",
+        "checkpoint_sha256": null,
+        "fingerprint": null,
+        "scores": [
+          0.9817386269569397,
+          0.9583077430725098
+        ],
+        "decisions": [
+          true,
+          false
+        ],
+        "elapsed_ms": 1695.7,
+        "saturated": false
+      },
+      {
+        "condition": "C1",
+        "name": "Random negatives",
+        "seed": 13,
+        "threshold": 0.43580499291419983,
+        "threshold_sha256": "8081a668a7cbe4dd665d73e27c1a30884ab9e0820fb33b67b7bc39e80f204ce6",
+        "checkpoint_sha256": "d3654dbc9bacdb5f7095bfba59d9d2b193c232cf40f5865ddabe400da2bdb413",
+        "fingerprint": "867efb41561358b7",
+        "scores": [
+          0.7785999178886414,
+          0.5707031488418579
+        ],
+        "decisions": [
+          true,
+          true
+        ],
+        "elapsed_ms": 492.7,
+        "saturated": false
+      },
+      {
+        "condition": "C2",
+        "name": "BM25 negatives",
+        "seed": 13,
+        "threshold": 0.9999998807907104,
+        "threshold_sha256": "a5eb4821c561bd7abcdff1642ed76b605cca0b0d1e27c0ec7eef7dc783b27829",
+        "checkpoint_sha256": "ad777fef79acc508265ba52de81a6e7c95c59b1e496d233631147d14931c4587",
+        "fingerprint": "ac4eec21709f614e",
+        "scores": [
+          0.9999998807907104,
+          1.0
+        ],
+        "decisions": [
+          true,
+          true
+        ],
+        "elapsed_ms": 397.7,
+        "saturated": true
+      },
+      {
+        "condition": "C3",
+        "name": "Semantic negatives",
+        "seed": 13,
+        "threshold": 0.9999935030937195,
+        "threshold_sha256": "d42198e63a43042a5856929280d74fd81c469bbda74f8ba490efb9f6d1c6416a",
+        "checkpoint_sha256": "98ed0ad769b9a53ce98ddd41c74f132a543c370099f77cf072f85ad0be7137e4",
+        "fingerprint": "5228a728adfce53b",
+        "scores": [
+          0.9999945759773254,
+          0.9999803900718689
+        ],
+        "decisions": [
+          true,
+          false
+        ],
+        "elapsed_ms": 419.2,
+        "saturated": true
+      },
+      {
+        "condition": "C4",
+        "name": "BM25 + bouncer",
+        "seed": 13,
+        "threshold": 0.4965279996395111,
+        "threshold_sha256": "14a1ef8b3517bf04958231ef209a10af3740bdaa057937556cc33c0018f563e2",
+        "checkpoint_sha256": "2320bc7b1becc21ba162fe0ab2e5223ee76652464fd1b5bb5b524fd83bc3176e",
+        "fingerprint": "b22d3db9aee0f5db",
+        "scores": [
+          0.9887079000473022,
+          0.9704959392547607
+        ],
+        "decisions": [
+          true,
+          true
+        ],
+        "elapsed_ms": 391.9,
+        "saturated": false
+      },
+      {
+        "condition": "C5",
+        "name": "Random + bouncer",
+        "seed": 13,
+        "threshold": 0.3944779932498932,
+        "threshold_sha256": "c56e87ac6d9b8c3438a7d50e53771b47a1279939784198c4c542dc476f79bfe2",
+        "checkpoint_sha256": "0b1fadb12d4af4dc3ba1fa42feba66f5cecfd9a64c6c3d3c3da7a0dea81df337",
+        "fingerprint": "2407194f03cb452a",
+        "scores": [
+          0.8082402944564819,
+          0.5639775991439819
+        ],
+        "decisions": [
+          true,
+          true
+        ],
+        "elapsed_ms": 405.7,
+        "saturated": false
+      },
+      {
+        "condition": "C6",
+        "name": "Semantic + bouncer",
+        "seed": 13,
+        "threshold": 0.8251670002937317,
+        "threshold_sha256": "3c90962b1c325ad6edd88bf347896d679eab577abe317f02e5dc4a39cc669d38",
+        "checkpoint_sha256": "b6e2b551670ecfe9f3f5f708ee54cbd635cc8ae198710321bdb15e25df1faeb0",
+        "fingerprint": "24fb3e2aca38783a",
+        "scores": [
+          0.9995748996734619,
+          0.9989224672317505
+        ],
+        "decisions": [
+          true,
+          true
+        ],
+        "elapsed_ms": 406.4,
+        "saturated": true
+      }
+    ],
+    "token_counts": [
+      43,
+      44,
+      53,
+      49
+    ],
+    "truncated": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "latency_ms": 18086.5,
+    "device": "cuda",
+    "peak_cuda_mb": 673.5,
+    "revision": "e3144bea7732c20ab2803782282282be4fede7b4",
+    "base_revision": "2b0488a7bb0eefc7041f1bb2cad1ab26b0da269d",
+    "precision": "float16 autocast",
+    "max_tokens": 512
+  },
+  "offline_parity": [
+    {
+      "condition": "C0",
+      "scores": [
+        0.9817386269569397,
+        0.9583077430725098
+      ],
+      "decisions": [
+        true,
+        false
+      ],
+      "max_abs_error": 0.0
+    },
+    {
+      "condition": "C1",
+      "scores": [
+        0.7785999178886414,
+        0.5707031488418579
+      ],
+      "decisions": [
+        true,
+        true
+      ],
+      "max_abs_error": 0.0
+    },
+    {
+      "condition": "C2",
+      "scores": [
+        0.9999998807907104,
+        1.0
+      ],
+      "decisions": [
+        true,
+        true
+      ],
+      "max_abs_error": 0.0
+    },
+    {
+      "condition": "C3",
+      "scores": [
+        0.9999945759773254,
+        0.9999803900718689
+      ],
+      "decisions": [
+        true,
+        false
+      ],
+      "max_abs_error": 0.0
+    },
+    {
+      "condition": "C4",
+      "scores": [
+        0.9887079000473022,
+        0.9704959392547607
+      ],
+      "decisions": [
+        true,
+        true
+      ],
+      "max_abs_error": 0.0
+    },
+    {
+      "condition": "C5",
+      "scores": [
+        0.8082402944564819,
+        0.5639775991439819
+      ],
+      "decisions": [
+        true,
+        true
+      ],
+      "max_abs_error": 0.0
+    },
+    {
+      "condition": "C6",
+      "scores": [
+        0.9995748996734619,
+        0.9989224672317505
+      ],
+      "decisions": [
+        true,
+        true
+      ],
+      "max_abs_error": 0.0
+    }
+  ],
+  "parity_scores_checked": 14,
+  "max_abs_error": 0.0,
+  "safety_http_checks": {
+    "csrf_header": 403,
+    "wrong_pair_count": 400,
+    "empty_snippet": 400,
+    "oversized_snippet": 400,
+    "concurrent_request": 429
+  },
+  "long_input_truncation_confirmed": true,
+  "token_counts_long_input": [
+    2503,
+    44,
+    53,
+    49
+  ],
+  "examples": "demo.compare.EXAMPLES; illustrative/unlabeled, not benchmark evidence",
+  "privacy": "No user-entered code was used or stored",
+  "data_revision": "e3144bea7732c20ab2803782282282be4fede7b4",
+  "base_revision": "2b0488a7bb0eefc7041f1bb2cad1ab26b0da269d"
+}

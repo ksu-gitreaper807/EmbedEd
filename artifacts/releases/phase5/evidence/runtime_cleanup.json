@@ -1,0 +1,9 @@
+{
+  "session": "embeded-phase5-final-20261024",
+  "accelerator": "NONE",
+  "stopped": true,
+  "tool_confirmed_runtime_was_active": true,
+  "test_outputs_downloaded_and_hash_verified_before_stop": true,
+  "unrelated_sessions_untouched": true,
+  "redundant_local_dependency_download_cancelled": true
+}

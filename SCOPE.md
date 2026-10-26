@@ -207,3 +207,52 @@ and ship the "does fine-tuning help, and does it generalise?" comparison. It is 
 project — it has no independent variable — but it is complete, and a complete weak project beats
 an incomplete strong one. Note that in this case you are essentially reproducing a small part of
 Kitsios et al., and should say so.
+
+---
+
+## Part 9 — Audit-reviewer amendment (2026-10-23; P4-AI-AUDIT-2026-10-23)
+
+The project owner explicitly authorized replacing the outstanding **C4/C5/C6
+human-review requirement with an AI-reviewed audit**, disclosed as such. This is
+a post-results methodological amendment, recorded before the 150 new judgments;
+it is not part of the original preregistration. The original requirements above
+and the voided historical scores remain in the record, not silently rewritten.
+
+The existing 50 pairs per condition, sampling seed 13, functional-equivalence
+rubric, `unsure` handling, Wilson calculation, numerical decision bands, and
+artifact-integrity gates are unchanged. No resampling or training is authorized
+by this amendment. A pair-specific rationale and AI-review provenance are
+required for every judgment; labels must be frozen before scoring/key joining.
+
+All resulting rates must be marked **AI-reviewed; not independently
+human-validated** in the combined table and write-up. The assistant already has
+study context, condition identities and benchmark results: no independent or
+fully blind review is claimed. Wilson intervals describe sampling uncertainty,
+not AI judgment accuracy or bias. Agreement with an old decision band is
+descriptive consistency, not independent confirmation of a control or mechanism.
+Missing human validation and inter-rater agreement remain explicit limitations.
+
+The immutable input commitment and full operating rules are recorded in
+`report/phase4_ai_audit_protocol.json` and `sanitycheck.md` §9.8. This changes
+reviewer eligibility only: all 150 valid labels, current-triples verification,
+score-bound outcome records, and zero metric mismatches are still required
+before the combined table and amended write-up can be certified. Authorization
+alone does not complete or score an audit.
+
+## Phase 5 reconciliation note — 24 October 2026
+
+The amended 150 AI judgments are complete and the existing results are being
+verified/reported, not extended experimentally. Historical C2/C3 judgments were
+also agent review; no independent human validation is claimed. Exact primary
+seeds 13–15, C0 once, must remain separate from the six-seed extension.
+All-negative F1 is zero; .2406424 is the all-positive reference, not a ceiling.
+Threshold saturation does not imply constant-negative predictions. The current
+descriptive/causal boundaries and corrections are in sanitycheck.md §9.10 and
+PROJECT_REPORT.md. No equal-dose C3=C4 conclusion is restored.
+
+The owner separately requested a webpage comparing two example Java pairs
+across C0–C6 on Colab, explicitly parked as future prospects. It is documented
+in FUTURE_PROSPECTS.md, not implemented or part of the closure stop condition.
+It does not authorize checkpoint downloads, extra runtime allocation, new
+experiments or public hosting during Phase 5. Publication remains a separate
+owner-approved action after review.

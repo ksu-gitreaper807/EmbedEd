@@ -7,7 +7,24 @@ junk/
 
 # experiment artifacts (regenerable, large)
 embeded/artifacts/
+artifacts/phase4_exports/
 # python
 .venv/
 __pycache__/
 *.pyc
+
+# Local Colab credentials; never commit or sync with the workspace.
+.embeded-colab-secrets.json
+
+# PDF rendering/build scratch and task-local TeX dependencies.
+tmp/pdfs/
+
+# Task-local scripts/previews and unreviewed executed notebook output.
+/tmp/
+/notebooks/Phase4_Colab_output.ipynb
+
+# Regenerable LaTeX intermediates; retain paper.log as verification evidence.
+*.aux
+*.out
+*.synctex.gz
+missfont.log

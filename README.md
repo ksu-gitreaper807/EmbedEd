@@ -1,5 +1,39 @@
 # Java code clone detection — BigCloneBench / GraphCodeBERT
 
+**Local Phase 5 release candidate (24 October 2026):** see the current
+[completion receipt](artifacts/releases/phase5/closure.json), [release directory](artifacts/releases/phase5/README.md), reconciled
+[project report](PROJECT_REPORT.md), [generated results](report/final/tables.md),
+[Phase 5 workflow](PHASE5_PLAN.md) and [current handoff](HANDOFF.md).
+Primary results use seeds 13–15; the six-seed extension is separate. Audits are
+agent/AI review, not independent human validation. The seven-model Colab webpage
+is now implemented as [Phase 6](PHASE6_PLAN.md), authorized 25 October 2026;
+see its [launch guide](demo/PHASE6_README.md). It is a private temporary demo,
+not public hosting or new experimental evidence.
+The owner authorized publishing this checkout to GitHub `main` on 26 October
+2026. This does not authorize an HF upload, public demo hosting or paper
+submission. Six paper author slots remain blank intentionally; the earlier
+closure receipts and release ZIPs remain historical records.
+
+## Deliverables
+
+Generated outputs are organized beside their owning sources or under versioned
+release directories. The old `output/` paths are compatibility symlinks so
+historical hash-bound receipts, notebook instructions and build commands still
+work without modifying the original artifacts.
+
+| Deliverable | Location |
+|---|---|
+| Five-page IEEE paper | [paper/compiled/paper.pdf](paper/compiled/paper.pdf) |
+| Portable LaTeX source | [paper/latex/EmbedEd_IEEE_conference_source.zip](paper/latex/EmbedEd_IEEE_conference_source.zip) |
+| Matplotlib figures and image ZIP | [report/figures/](report/figures/) |
+| Phase 5 release and verification evidence | [artifacts/releases/phase5/](artifacts/releases/phase5/) |
+| Phase 6 source/release ZIPs and demo evidence | [artifacts/releases/phase6/](artifacts/releases/phase6/) |
+| Final numerical tables | [report/final/tables.md](report/final/tables.md) |
+
+See [the output index](output/README.md) and
+[the relocation manifest](report/output_relocation.json) for the byte-preserving
+mapping. Verify it with `python -m scripts.verify_output_layout`.
+
 **The project in this repository.** Domain-specific contrastive embeddings for code similarity:
 compare negative-sampling strategies on Java clone pairs from BigCloneBench, fine-tuning
 GraphCodeBERT as the encoder. Everything this repository used to hold around it is archived under

@@ -1,0 +1,15 @@
+{
+  "repo_id": "Kusshal/Embed",
+  "repo_type": "dataset",
+  "commit": "e3144bea7732c20ab2803782282282be4fede7b4",
+  "commit_url": "https://huggingface.co/datasets/Kusshal/Embed/commit/e3144bea7732c20ab2803782282282be4fede7b4",
+  "verified_uploaded_files": 15,
+  "verification": "Downloaded all 15 files at immutable commit and matched SHA-256 against uploaded bytes",
+  "scope": "C4/C5/C6 completed labels and scores, protocol/freeze/results, rationale ledgers, completion report, outcome log, and audit sections merged into current remote measurements report; no model artifacts modified",
+  "local_evidence_archive": "artifacts/phase4_exports/2026-10-23/phase4_completed_ai_audits.zip",
+  "local_evidence_archive_sha256": "16c65f6ef6351bf1a15867d537f45908bf1721cb3652386560009bed5e398470",
+  "archive_uploaded": false,
+  "amendment_id": "P4-AI-AUDIT-2026-10-23",
+  "reviewer_type": "ai",
+  "independent_human_validation": false
+}

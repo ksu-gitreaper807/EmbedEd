@@ -1,0 +1,88 @@
+{
+  "recorded_utc": "2026-10-24T04:33:57Z",
+  "local_date": "2026-10-24",
+  "scope": "CodeXGLUE benchmark only; s-prime/transfer/smoke excluded",
+  "input_revision": "e3144bea7732c20ab2803782282282be4fede7b4",
+  "individual_matrices": 37,
+  "model_means_primary": 7,
+  "model_means_all_seeds": 7,
+  "comparison_boards": 3,
+  "total_pngs": 54,
+  "c0": "one untuned reference, seed 13; not replicated",
+  "averaging": "Elementwise mean of counts using each run's frozen NPZ threshold; not a pooled total or ensemble. Primary 13\u201315 and all-seed 13\u201318 remain separate.",
+  "matrix_order": [
+    [
+      "TP",
+      "FN"
+    ],
+    [
+      "FP",
+      "TN"
+    ]
+  ],
+  "normalization": "Actual-label row share, identical 0-100% normalization for each condition-specific palette. Mean boards use thousands (k); individual images and the 37-run overview retain full counts.",
+  "legacy_count_differences": [
+    "C0_13",
+    "C2_15",
+    "C3_17",
+    "C4_15",
+    "C6_14",
+    "C6_15"
+  ],
+  "important_discrepancy": "C3_17 NPZ replay: TP 29009, FP 129298, FN 27811. Legacy JSON TP 27229, FP 117853, FN 29591 is reproduced by comparing float64-promoted scores to decimal JSON threshold .999999. NPZ threshold is .9999989867210388; rounding/float32 tie handling changes counts although F1 still rounds to .2697. Original arrays/thresholds/metrics unchanged.",
+  "checks": {
+    "independent_bincount_replays": 37,
+    "mean_count_checks": 14,
+    "pinned_input_sha256_checks": 74,
+    "png_hash_checks": 54,
+    "png_decode_checks": 54,
+    "focused_tests_passed": 35,
+    "paper_pages_visually_reviewed": 5,
+    "compiler_warnings": 0,
+    "source_bundle_compiles": true,
+    "source_bundle_pdf_text_matches": true,
+    "figure_archive_crc_verified": true,
+    "source_archive_manifest_verified": true,
+    "original_seven_result_files_unchanged": true,
+    "no_new_runtime_or_gpu": true,
+    "no_training": true,
+    "no_threshold_selection": true,
+    "visual_review_this_revision": [
+      4,
+      5
+    ]
+  },
+  "sha256": {
+    "paper/paper.tex": "c1b60bafd016ff7eb58dc9a53e5f9fd17094738a1da2311a10d13789bc5c20dc",
+    "paper/IEEEtran.cls": "c972aca108fda004c3514d63658e02816da2e54d9a1451e870b9bd970e003f55",
+    "output/pdf/paper.pdf": "f6fa6a609f9062b49e4a39f12d118371f2a1d032cf6c21c578d56d87ba195b31",
+    "output/latex/EmbedEd_IEEE_conference_source.zip": "0b8ff1194a3e663c2c1905a8595f71ff9b6cd54fab2bfce33238d0500eb17aa9",
+    "output/figures/EmbedEd_confusion_matrices.zip": "882e65011ce7707282d3485762784905341ef2237ca1c62861ab7d5ad7d7fdfb",
+    "output/pdf/paper.log": "0af245c2dccc88235943a0727941b9320aa3f5b21c50754ef16d640dba92ce98",
+    "report/figures/confusion_matrices/confusion_matrices.json": "bf8086a6db0c9c2bf8f173169d300e6a08bbb5def5e6b0c7c9a1933cf454f736",
+    "scripts/export_confusion_matrices.py": "ac90e8e29b29300a55fc10def3311cba9f2535acaf04e0f7500047d243bb2132",
+    "Image_Graphs/phase2_confusion_matrices(1).png": "b11bdc2c720985cca06672b7c435717634f05b82e423ba799522c1d4bdb93b70"
+  },
+  "published": false,
+  "cell_text_formatting": {
+    "renderer": "Matplotlib",
+    "reference": "Image_Graphs/phase2_confusion_matrices(1).png",
+    "condition_palette": "C0 slate, C1 teal, C2 orange, C3 purple, C4 green, C5 red, C6 magenta",
+    "reference_font_pt": {
+      "percentage": 15,
+      "tag": 8,
+      "count": 8
+    },
+    "font_pt": {
+      "percentage": 7.5,
+      "tag": 4,
+      "count": 4
+    },
+    "scale": 0.5,
+    "percentage_weight": "bold",
+    "axes_font_sizes_and_numerical_data_unchanged": true,
+    "umap_and_original_reference_files_unchanged": true,
+    "overview_dpi": 150,
+    "other_figures_dpi": 300
+  }
+}

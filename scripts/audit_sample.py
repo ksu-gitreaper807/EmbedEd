@@ -170,7 +170,9 @@ def score_rows(labels: dict[str, str], key: list[dict]) -> dict:
 
 def write_section(res: dict) -> None:
     conds_tag = "/".join(c for c in res if not c.startswith("_"))
-    heading = f"## False-negative audit — {conds_tag} (blind; SCOPE P2-9)"
+    ai = res.get('_provenance', {}).get('reviewer_type') == 'ai'
+    method = 'AI-reviewed; not independently human-validated' if ai else 'blind; SCOPE P2-9'
+    heading = f"## False-negative audit — {conds_tag} ({method})"
     # the heading carries the sheet's conditions so a later C4 score APPENDS its
     # own section instead of overwriting the scored C2/C3 one (regex is tag-anchored)
     lines = [heading, "",
@@ -179,6 +181,11 @@ def write_section(res: dict) -> None:
              "`unsure` as not_clone; the upper bound counts it as clone.",
              "", "| condition | n | clone | not_clone | unsure | FN rate [95% CI] | upper bound incl. unsure |",
              "|---|---|---|---|---|---|---|"]
+    if ai:
+        lines[3:3] = [
+            f"Amendment `{res['_provenance']['amendment_id']}`. Reviewer knew the study and "
+            "benchmark outcomes; not independent or fully blind. Wilson intervals reflect "
+            "sampling uncertainty only, not AI-review accuracy/bias. No inter-rater agreement measured.", ""]
     for cond in (c for c in res if not c.startswith("_")):
         m = res[cond]
         lines.append(f"| {cond} | {m['n']} | {m['clone']} | {m['not_clone']} | {m['unsure']} | "
@@ -194,9 +201,9 @@ def write_section(res: dict) -> None:
             old = pat.sub(lambda _m: block + "\n", old)
         else:
             old = old.rstrip("\n") + "\n\n" + block + "\n"
-        S.REPORT_MD.write_text(old)
+        S.REPORT_MD.write_text(old.rstrip('\n') + '\n')
     else:
-        S.REPORT_MD.write_text("# Measurements\n\n" + block + "\n")
+        S.REPORT_MD.write_text(("# Measurements\n\n" + block).rstrip('\n') + '\n')
     print(f"wrote {S.REPORT_MD}")
 
 
@@ -217,6 +224,37 @@ def check_key_matches_triples(key: list[dict]) -> dict:
         out[cond] = {"n": len(want), "not_in_current_triples": len(missing),
                      "examples": [list(p) for p in missing[:3]]}
     return out
+
+
+def review_provenance(d: Path, rows: list[dict], conds: set[str]) -> dict:
+    """Keep legacy audits unchanged; amended AI sheets require frozen provenance."""
+    if not any(r.get('reviewer_type') or r.get('amendment_id') for r in rows):
+        return {}
+    amendment = 'P4-AI-AUDIT-2026-10-23'
+    if (len(conds) != 1 or not conds <= {'C4', 'C5', 'C6'} or len(rows) != 50
+            or len({r.get('id') for r in rows}) != 50
+            or any(r.get('reviewer_type') != 'ai' or r.get('amendment_id') != amendment
+                   or not (r.get('note') or '').strip() for r in rows)):
+        raise SystemExit('AI review requires 50 unique labels, a rationale each and amendment attribution')
+    root = Path(__file__).resolve().parents[1] / 'report'
+    protocol_path = Path(os.environ.get('EMBEDED_AUDIT_PROTOCOL', root / 'phase4_ai_audit_protocol.json'))
+    freeze_path = Path(os.environ.get('EMBEDED_AUDIT_FREEZE', root / 'phase4_ai_audit_freeze.json'))
+    protocol = json.loads(protocol_path.read_text())
+    freeze = json.loads(freeze_path.read_text())
+    cond = next(iter(conds))
+    sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+    labels_sha = sha(d / 'audit_labels.csv')
+    if (protocol.get('amendment_id') != amendment or freeze.get('amendment_id') != amendment
+            or freeze.get('label_sha256', {}).get(cond) != labels_sha):
+        raise SystemExit('AI review differs from frozen labels or amendment')
+    sheet_sha = sha(d / 'audit_pairs.md')
+    if protocol.get('sheet_sha256', {}).get(f'audit_{cond.lower()}/audit_pairs.md') != sheet_sha:
+        raise SystemExit('AI review code sheet differs from frozen input')
+    return dict(reviewer_type='ai', amendment_id=amendment,
+                independent_human_validation=False, fully_blind=False,
+                frozen_utc=freeze['frozen_utc'], label_sha256=labels_sha,
+                sheet_sha256=sheet_sha, freeze_sha256=sha(freeze_path),
+                protocol_sha256=sha(protocol_path))
 
 
 def score() -> dict:
@@ -243,7 +281,11 @@ def score() -> dict:
     print("audit key matches the current triples: "
           + ", ".join(f"{c} {drift[c]['n']}/{drift[c]['n']}" for c in drift))
     with open(d / "audit_labels.csv", encoding="utf-8") as fh:
-        labels = {r["id"]: r["label"] for r in csv.DictReader(fh)}
+        rows = list(csv.DictReader(fh))
+        labels = {r["id"]: r["label"] for r in rows}
+    if len(labels) != len(rows):
+        raise SystemExit('Duplicate audit label IDs')
+    review = review_provenance(d, rows, {r['condition'] for r in key})
     foreign = sorted(set(labels) - {r["id"] for r in key})
     if foreign:
         raise SystemExit(
@@ -254,7 +296,7 @@ def score() -> dict:
             "and label this sheet's own ids (they head the pairs in audit_pairs.md).")
     res = score_rows(labels, key)
     res["_provenance"] = {"key_matches_triples": drift, "version": S.VERSION,
-                          "n_labelled": len([v for v in labels.values() if v.strip()])}
+                          "n_labelled": len([v for v in labels.values() if v.strip()]), **review}
     (d / "audit_result.json").write_text(json.dumps(res, indent=2))
     print(json.dumps(res, indent=2))
     write_section(res)

@@ -1,0 +1,17 @@
+{
+  "amendment_id": "P4-AI-AUDIT-2026-10-23",
+  "frozen_utc": "2026-10-23T11:38:33Z",
+  "reviewer_type": "ai",
+  "independent_human_validation": false,
+  "state_at_freeze": "150 judgments with pair-specific rationales completed; keys not joined and rates not calculated",
+  "input_pack_sha256": "371fed22a631f151b53cb6d102fe43d1cb593e18f490acb5972c91666bd40b02",
+  "n_per_condition": 50,
+  "label_sha256": {
+    "C4": "088090b253bcc34c8112d8b9ba03f897795766276cc2a9be63f5fae9b07fa5c2",
+    "C5": "0a0e5d1439b6137a8694d4eaa3fb4931fb33e4c1ff6a00d56e75d7a8ea6fd7c2",
+    "C6": "f32648df6541de46ae3729c42acef8422f06fd25ebcda50412dc4203a2060646"
+  },
+  "anchor_reading": "All A fragments were read in the C6 review. Before reusing that reading, byte-identical A fragments across C4/C5/C6 were verified for all 50 positions. Every B fragment was read individually; judgments were not transferred between different pairs.",
+  "blinding": "Not fully blind or independent; reviewer knew the study context and benchmark results. No audit_key.csv was opened during labeling.",
+  "interval_interpretation": "Wilson intervals quantify sampling uncertainty only; not AI-review accuracy or bias."
+}

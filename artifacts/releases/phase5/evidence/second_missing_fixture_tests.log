@@ -1,0 +1,46 @@
+......................................................................F. [ 35%]
+........................................................................ [ 70%]
+............................................................             [100%]
+=================================== FAILURES ===================================
+_____________________ test_recorded_run_file_is_replayable _____________________
+
+    def test_recorded_run_file_is_replayable():
+        """The shipped record must contain exactly what hardcheck --recorded needs,
+        and its numbers must match the report they were copied from."""
+        rec = load_recorded(RECORDED)
+        per = rec["per_condition"]
+        assert set(per) == {"C1", "C2", "C3"}
+        for c in per:
+            assert per[c]["mean_cos"] == pytest.approx(PHASE1[c])
+            assert per[c]["std"] == pytest.approx(PHASE1_SD[c])
+            assert per[c]["n_samples"] == 20_000
+>       text = (ROOT / "report" / "measurements.md").read_text()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+embeded/tests/test_gate_rule.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.13/pathlib/_local.py:546: in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.13/pathlib/_abc.py:632: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/content/EmbedEd/report/measurements.md'), mode = 'r'
+buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/content/EmbedEd/report/measurements.md'
+
+/usr/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+1 failed, 203 passed in 21.42s

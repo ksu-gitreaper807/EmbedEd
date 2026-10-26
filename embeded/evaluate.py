@@ -57,7 +57,9 @@ def precision_recall_f1(scores: np.ndarray, labels: np.ndarray, thr: float) -> d
     prec = tp / (tp + fp) if (tp + fp) else 0.0
     rec = tp / (tp + fn) if (tp + fn) else 0.0
     f1 = 2 * prec * rec / (prec + rec) if (prec + rec) else 0.0
-    return {"threshold": round(float(thr), 6), "precision": round(prec, 4),
+    # This value is persisted and replayed, not just displayed. Rounding near
+    # saturation (e.g. 0.99999988 -> 1.0) changes the predicted labels.
+    return {"threshold": float(thr), "precision": round(prec, 4),
             "recall": round(rec, 4), "f1": round(f1, 4), "tp": tp, "fp": fp,
             "fn": fn, "n": int(len(labels)), "n_predicted_positive": int(np.sum(pred))}
 

@@ -1,0 +1,17 @@
+{
+  "surface": "in-app browser; local loopback preview without model weights",
+  "preview_http_status": 200,
+  "four_code_inputs_and_seven_condition_rows_present": true,
+  "unavailable_weights_error_shown_without_scores": true,
+  "empty_input_validation_shown": true,
+  "restore_examples_verified": true,
+  "fourteen_result_rendering_verified": true,
+  "rendering_response_source": "Recorded real T4 verification response; clearly labelled browser QA fixture, not live inference",
+  "editing_inputs_clears_all_stale_results": true,
+  "desktop_layout_visually_reviewed": true,
+  "screenshot": "output/phase6/ui-preview.png",
+  "verified_result_screenshot": "output/phase6/ui-verified-results.png",
+  "live_inference_tested_separately": "output/phase6/live_verification.json",
+  "mobile_viewport_visually_tested": false,
+  "colab_iframe_api_signature_verified": "(port, path='/', width='100%', height='400', cache_in_notebook=False)"
+}

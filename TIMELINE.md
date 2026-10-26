@@ -1,5 +1,20 @@
 # TIMELINE.md — the whole project, Phase 0 to today
 
+> **24 October 2026 — current correction.** The entries below retain historical
+> interpretations, not all current findings. Copied C4–C6 audit scores were
+> voided; replacement AI-review rates are 12%/0%/22%, not human validation.
+> All-negative F1 is 0; 0.2406424 is all-positive F1, not a ceiling. Saturation
+> does not mean all-negative predictions. C3 unseen mean 0.7057 exceeds C0
+> 0.6934 numerically, so the old universal untuned-floor claim is withdrawn.
+> See PROJECT_REPORT.md and report/final/tables.md for current results.
+>
+> Phase 5 now has working CPU Colab verification, a verified 524-file pinned HF
+> analysis snapshot and generated three-seed primary/six-seed extension tables.
+> The current IEEE local release candidate and source-bound checks are recorded
+> in output/phase5/closure.json; the pre-IEEE receipt is historical. No publication
+> is implied. Six legacy confusion-count discrepancies are retained/disclosed.
+> The requested two-pair, seven-model Colab webpage is parked in FUTURE_PROSPECTS.md.
+
 Reconstructed from the repo's dated records (`PROGRESS.md`, `PHASE2_PLAN.md` §9,
 `PHASE3_PLAN.md` §9, `sanitycheck.md` §5–§9, `report/measurements.md`) and the
 commit history on `arena/01a0e714-embeded` (plus its predecessor PRs #6/#11).

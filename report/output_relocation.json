@@ -1,0 +1,178 @@
+{
+  "recorded_date": "2026-10-26",
+  "purpose": "Byte-preserving organization of generated deliverables before owner-authorized GitHub main publication. Historical receipts and ZIP payloads remain unchanged.",
+  "compatibility_links": {
+    "output/pdf": "../paper/compiled",
+    "output/latex": "../paper/latex",
+    "output/figures": "../report/figures",
+    "output/phase5": "../artifacts/releases/phase5",
+    "output/phase6": "../artifacts/releases/phase6"
+  },
+  "files": [
+    {
+      "from": "output/pdf/paper.log",
+      "to": "paper/compiled/paper.log",
+      "sha256": "0af245c2dccc88235943a0727941b9320aa3f5b21c50754ef16d640dba92ce98"
+    },
+    {
+      "from": "output/pdf/paper.aux",
+      "to": "paper/compiled/paper.aux",
+      "sha256": "595fedbfd4571df35294a4df2e48fcc5f4fd1a195775ae84c6829064c6a28a10"
+    },
+    {
+      "from": "output/pdf/paper.out",
+      "to": "paper/compiled/paper.out",
+      "sha256": "fc6ee4bfcfcaf0fd62350a9015255f3239e85e6e5e41175d278614796276059d"
+    },
+    {
+      "from": "output/pdf/missfont.log",
+      "to": "paper/compiled/missfont.log",
+      "sha256": "df86ee5bea1015fd805e154490f6673516aa2b1ff319fb3fbefb99de9cc3b413"
+    },
+    {
+      "from": "output/pdf/paper.pdf",
+      "to": "paper/compiled/paper.pdf",
+      "sha256": "f6fa6a609f9062b49e4a39f12d118371f2a1d032cf6c21c578d56d87ba195b31"
+    },
+    {
+      "from": "output/latex/EmbedEd_IEEE_conference_source.zip",
+      "to": "paper/latex/EmbedEd_IEEE_conference_source.zip",
+      "sha256": "0b8ff1194a3e663c2c1905a8595f71ff9b6cd54fab2bfce33238d0500eb17aa9"
+    },
+    {
+      "from": "output/figures/EmbedEd_confusion_matrices.zip",
+      "to": "report/figures/EmbedEd_confusion_matrices.zip",
+      "sha256": "882e65011ce7707282d3485762784905341ef2237ca1c62861ab7d5ad7d7fdfb"
+    },
+    {
+      "from": "output/phase5/evidence/acceptance.json",
+      "to": "artifacts/releases/phase5/evidence/acceptance.json",
+      "sha256": "325cf565168c1f2a3c1e11680f07b3139844272f63f25b2e9feed8ba46439ce3"
+    },
+    {
+      "from": "output/phase5/evidence/claim_ledger.json",
+      "to": "artifacts/releases/phase5/evidence/claim_ledger.json",
+      "sha256": "958421c0eff854ede8d55cffbbdeb6b9d043d411c1e871de1dec4713fc1f58b1"
+    },
+    {
+      "from": "output/phase5/evidence/reference_checks.md",
+      "to": "artifacts/releases/phase5/evidence/reference_checks.md",
+      "sha256": "dc17fbb24a37995980f69c81bf4923fbbee204e9ca01de605a64dff857f4e4f8"
+    },
+    {
+      "from": "output/phase5/evidence/initial_missing_fixture_tests.log",
+      "to": "artifacts/releases/phase5/evidence/initial_missing_fixture_tests.log",
+      "sha256": "141db0eacff2d812800937339a3be3de2c5cf244dc9d273517fc36675fcb869b"
+    },
+    {
+      "from": "output/phase5/evidence/offline_tests.log",
+      "to": "artifacts/releases/phase5/evidence/offline_tests.log",
+      "sha256": "5089909616c33d8e0482ceb9dd5da7ceb1f5c6cbdea5d36b2fd81e3957710e62"
+    },
+    {
+      "from": "output/phase5/evidence/second_missing_fixture_tests.log",
+      "to": "artifacts/releases/phase5/evidence/second_missing_fixture_tests.log",
+      "sha256": "f5eb585b38d96b05768551da424d62cf31bc5edd68754aedb03c05100ceb7aef"
+    },
+    {
+      "from": "output/phase5/evidence/test_proof.json",
+      "to": "artifacts/releases/phase5/evidence/test_proof.json",
+      "sha256": "8641ee0d6cb06d9b4f5ce2093effdf1b5c80bd06bba16a1550a47d342240ea3e"
+    },
+    {
+      "from": "output/phase5/evidence/runtime_cleanup.json",
+      "to": "artifacts/releases/phase5/evidence/runtime_cleanup.json",
+      "sha256": "698300641bd4c5604f1d3d53705a9738f865e718373b1cf21e1c00da0349e103"
+    },
+    {
+      "from": "output/phase5/evidence/source_manifest.json",
+      "to": "artifacts/releases/phase5/evidence/source_manifest.json",
+      "sha256": "aa4f29917fa3d6423c279628d12ec4ecf6d9bee8de7e72c6b54ffb5e79f9a8ce"
+    },
+    {
+      "from": "output/phase5/evidence/credential_scan.json",
+      "to": "artifacts/releases/phase5/evidence/credential_scan.json",
+      "sha256": "7d85cf6e21dee4d0c2586ae0692f8092dea5c9f5dbeb8d27f3c5b0c4916f20c0"
+    },
+    {
+      "from": "output/phase5/README.md",
+      "to": "artifacts/releases/phase5/README.md",
+      "sha256": "bbcd989a2c5be3c50ae727291d11067ed0bc39e9bf49b966091629e8d163808b"
+    },
+    {
+      "from": "output/phase5/review.json",
+      "to": "artifacts/releases/phase5/review.json",
+      "sha256": "b3df1551ee94106bb771f88a0f69df77b4e37c27b95e4b9821db2227c416a7cc"
+    },
+    {
+      "from": "output/phase5/EmbedEd_Phase5_IEEE_release_candidate_2026-10-24.zip",
+      "to": "artifacts/releases/phase5/EmbedEd_Phase5_IEEE_release_candidate_2026-10-24.zip",
+      "sha256": "f1cca2763ee5e62fbe7f75177b8608dbcab5bdbacea3d562cdbc2b8b45d28112"
+    },
+    {
+      "from": "output/phase5/closure.json",
+      "to": "artifacts/releases/phase5/closure.json",
+      "sha256": "43732a4a9476efc11185dd2d7ed51b8f3fc04b6c3c3c789d529e72055d24e0bb"
+    },
+    {
+      "from": "output/phase6/inference_manifest.json",
+      "to": "artifacts/releases/phase6/inference_manifest.json",
+      "sha256": "e435f5aeced5f00c2e52c5211177af7cf4bf6ab020d6f568994722bc845826bb"
+    },
+    {
+      "from": "output/phase6/live_verification.json",
+      "to": "artifacts/releases/phase6/live_verification.json",
+      "sha256": "18de5cc98eaf9361892e34a13a64d5d34f76fa16b7919a2fc249302bfb0fc9af"
+    },
+    {
+      "from": "output/phase6/ui-preview.png",
+      "to": "artifacts/releases/phase6/ui-preview.png",
+      "sha256": "871de697498ebdfa7a96d27d2c1f94c793cdd9da972d7756ab97bdfb168c785c"
+    },
+    {
+      "from": "output/phase6/full_tests.json",
+      "to": "artifacts/releases/phase6/full_tests.json",
+      "sha256": "1212d76f652db1f9accfea660213cc026048ccf116b65e6db840145de5e63da9"
+    },
+    {
+      "from": "output/phase6/full_tests.log",
+      "to": "artifacts/releases/phase6/full_tests.log",
+      "sha256": "59fff444239f085b534b2606ac6a0a03af7c745cb8325495e9edffba2f979a0a"
+    },
+    {
+      "from": "output/phase6/runtime_cleanup.json",
+      "to": "artifacts/releases/phase6/runtime_cleanup.json",
+      "sha256": "cc13919e514cd9085490b3ca2e654d44d07241c6970b6d9e7ed9cc5c981058d5"
+    },
+    {
+      "from": "output/phase6/browser_checks.json",
+      "to": "artifacts/releases/phase6/browser_checks.json",
+      "sha256": "bf640ea7a915ff4433e4c4dda7b7099af6a826aeceb918d1766fcbdc7a114d41"
+    },
+    {
+      "from": "output/phase6/ui-verified-results.png",
+      "to": "artifacts/releases/phase6/ui-verified-results.png",
+      "sha256": "50dc4c424b5a76051cde147f04ef2fe4d824d345f8465c542413dea580a4235a"
+    },
+    {
+      "from": "output/phase6/README.md",
+      "to": "artifacts/releases/phase6/README.md",
+      "sha256": "4001f0677fc7349a1ee682b3893ce4715bfcc800a1f1d330b1b601395d87bb39"
+    },
+    {
+      "from": "output/phase6/EmbedEd_Phase6_source.zip",
+      "to": "artifacts/releases/phase6/EmbedEd_Phase6_source.zip",
+      "sha256": "6c2914ad7adf17b4bdb38bed70c51851296d879bf2f11e1b48754ffc5174a776"
+    },
+    {
+      "from": "output/phase6/EmbedEd_Phase6_release.zip",
+      "to": "artifacts/releases/phase6/EmbedEd_Phase6_release.zip",
+      "sha256": "abc6fa8120dc87bf2762b5f94849933642bb6c3ac24c66a1f8f0b8e2eeac25fa"
+    },
+    {
+      "from": "output/phase6/closure.json",
+      "to": "artifacts/releases/phase6/closure.json",
+      "sha256": "76a1535598e946cb32c777d7c5f0ea9165823b04b020b9ecaa80ece4bfc5685a"
+    }
+  ]
+}

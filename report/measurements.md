@@ -1,3 +1,5 @@
+> Phase 5 current-results notice: Current generated tables supersede older narrative summaries. All-negative F1=0; all-positive F1=.2406424, not a ceiling. Near-one thresholds do not imply constant-negative predictions. Primary C2 predicts 48.1–87.3% positive; C3 33.6–42.7%. Historical audit labels are agent review, not human validation. s′ seen F1 uses the threshold-selection validation slice, not an independent test.
+
 # Measurements
 
 ## Phase 0 — measured numbers
@@ -640,8 +642,8 @@ Generated from `artifacts/runs/<condition>_<seed>/eval_metrics.json` by `python 
 - C0 is the untuned baseline (one evaluation, not a trained condition) at mean F1 0.2572.
 - Among the trained conditions the highest mean F1 is C1 (0.7464); per-seed values above, not the best seed.
 - Sanity reference: published CodeXGLUE fine-tuned-CodeBERT F1 ~ 0.95 under a different model/protocol. Observed F1 range 0.2408–0.7623. A large discrepancy is a harness/protocol check (metric implementation, pair order, labels, threshold handling), not a reason to tune against the test split.
-- 3 smoke-run result(s) are excluded from this table (harness checks, not measurements).
-- 2 result file(s) with conditions outside ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6'] (Phase 3 sprime runs) are excluded from this table.
+- 4 smoke-run result(s) are excluded from this table (harness checks, not measurements).
+- 37 result file(s) with conditions outside ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6'] (Phase 3 sprime runs) are excluded from this table.
 
 ## Phase 3 — decisions (recorded before the runs)
 
@@ -764,3 +766,116 @@ Phase 2 checkpoints (C0 = base model) scored on the same s′ partition without 
 | C6 | 13 | 0.6690 | 0.6338 | +0.0352 | 0.7480 | 600 |
 | C6 | 14 | 0.6701 | 0.6659 | +0.0042 | 0.6374 | 600 |
 | C6 | 15 | 0.6760 | 0.6592 | +0.0168 | 0.6970 | 600 |
+
+## False-negative audit — C2/C3 (blind; SCOPE P2-9)
+
+`python -m scripts.audit_sample score` — version `phase01-v8`, conditions C2/C3. Share of mined negatives judged to be clones (functional equivalence). Headline counts `unsure` as not_clone; the upper bound counts it as clone.
+
+| condition | n | clone | not_clone | unsure | FN rate [95% CI] | upper bound incl. unsure |
+|---|---|---|---|---|---|---|
+| C2 | 50 | 21 | 29 | 0 | **42%** [29%, 56%] | 42% [29%, 56%] |
+| C3 | 50 | 15 | 34 | 1 | **30%** [19%, 44%] | 32% [21%, 46%] |
+
+
+## Phase 4 — the one table
+
+### Panel A — benchmark
+
+Primary benchmark: seeds 13–15; C0 once. Mean ± sample SD. Pinned = threshold ≥0.999.
+
+| condition | F1 | MAP@R | thresholds | pinned | predicted-positive range |
+|---|---|---|---|---|---|
+| C0 | 0.2572 (single reference) | 0.1024 | 0.977894 | 0/1 | 22.3%–22.3% |
+| C1 | 0.7533 ± 0.0073 | 0.6779 | 0.435805, 0.435738, 0.449245 | 0/3 | 14.2%–14.5% |
+| C2 | 0.2542 ± 0.0108 | 0.0539 | 0.9999999, 0.9999982, 0.835525 | 2/3 | 48.1%–87.3% |
+| C3 | 0.2728 ± 0.0136 | 0.0770 | 0.9999935, 0.9999979, 0.9999989 | 3/3 | 33.6%–42.7% |
+| C4 | 0.4208 ± 0.0284 | 0.2632 | 0.496528, 0.541418, 0.497701 | 0/3 | 19.3%–23.4% |
+| C5 | 0.7288 ± 0.0029 | 0.6433 | 0.394478, 0.404841, 0.431438 | 0/3 | 14.5%–14.8% |
+| C6 | 0.4688 ± 0.0278 | 0.1627 | 0.825167, 0.795524, 0.834423 | 0/3 | 28.0%–34.9% |
+
+### Panel B — generalisation (different pair regime; do not compare absolute F1 across corpora)
+
+| condition | F1 seen | F1 unseen | Δ ± sample SD | pinned |
+|---|---|---|---|---|
+| C1 | 0.7570 | 0.7031 | +0.0539 ± 0.0222 | 0/3 |
+| C2 | 0.6781 | 0.6674 | +0.0107 ± 0.0056 | 0/3 |
+| C3 | 0.7004 | 0.7057 | -0.0053 ± 0.0218 | 3/3 |
+| C4 | 0.6731 | 0.6687 | +0.0044 ± 0.0055 | 0/3 |
+| C5 | 0.7606 | 0.7244 | +0.0362 ± 0.0219 | 0/3 |
+| C6 | 0.7169 | 0.6865 | +0.0304 ± 0.0143 | 0/3 |
+| C0 | 0.7118 | 0.6934 | — | — |
+
+### Panel C — audit evidence (agent/AI-reviewed, not independently human-validated)
+
+| condition | clone / n | point rate [Wilson 95%] | including unsure | method |
+|---|---|---|---|---|
+| C1 | — | ≈0–2% | — | historical estimate, not a new sample |
+| C2 | 21/50 | 42% [29.4%, 55.8%] | 42% | historical agent review |
+| C3 | 15/50 | 30% [19.1%, 43.8%] | 32% | historical agent review |
+| C4 | 6/50 | 12% [5.6%, 23.8%] | 16% | P4-AI-AUDIT-2026-10-23 |
+| C5 | 0/50 | 0% [0.0%, 7.1%] | 0% | P4-AI-AUDIT-2026-10-23 |
+| C6 | 11/50 | 22% [12.8%, 35.2%] | 24% | P4-AI-AUDIT-2026-10-23 |
+
+### Benchmark extension — six seeds 13–18 (not the primary table)
+
+| condition | F1 ± sample SD | MAP@R | pinned |
+|---|---|---|---|
+| C1 | 0.7464 ± 0.0176 | 0.6674 | 0/6 |
+| C2 | 0.2555 ± 0.0123 | 0.0474 | 4/6 |
+| C3 | 0.2733 ± 0.0091 | 0.0772 | 6/6 |
+| C4 | 0.4349 ± 0.0246 | 0.2760 | 0/6 |
+| C5 | 0.7399 ± 0.0140 | 0.6629 | 0/6 |
+| C6 | 0.4722 ± 0.0282 | 0.1826 | 0/6 |
+
+## False-negative audit — C5 (AI-reviewed; not independently human-validated)
+
+`python -m scripts.audit_sample score` — version `phase01-v8`, conditions C5. Share of mined negatives judged to be clones (functional equivalence). Headline counts `unsure` as not_clone; the upper bound counts it as clone.
+Amendment `P4-AI-AUDIT-2026-10-23`. Reviewer knew the study and benchmark outcomes; not independent or fully blind. Wilson intervals reflect sampling uncertainty only, not AI-review accuracy/bias. No inter-rater agreement measured.
+
+
+| condition | n | clone | not_clone | unsure | FN rate [95% CI] | upper bound incl. unsure |
+|---|---|---|---|---|---|---|
+| C5 | 50 | 0 | 50 | 0 | **0%** [0%, 7%] | 0% [0%, 7%] |
+
+
+## False-negative audit — C6 (AI-reviewed; not independently human-validated)
+
+`python -m scripts.audit_sample score` — version `phase01-v8`, conditions C6. Share of mined negatives judged to be clones (functional equivalence). Headline counts `unsure` as not_clone; the upper bound counts it as clone.
+Amendment `P4-AI-AUDIT-2026-10-23`. Reviewer knew the study and benchmark outcomes; not independent or fully blind. Wilson intervals reflect sampling uncertainty only, not AI-review accuracy/bias. No inter-rater agreement measured.
+
+
+| condition | n | clone | not_clone | unsure | FN rate [95% CI] | upper bound incl. unsure |
+|---|---|---|---|---|---|---|
+| C6 | 50 | 11 | 38 | 1 | **22%** [13%, 35%] | 24% [14%, 37%] |
+
+
+## False-negative audit — C4 (AI-reviewed; not independently human-validated)
+
+`python -m scripts.audit_sample score` — version `phase01-v8`, conditions C4. Share of mined negatives judged to be clones (functional equivalence). Headline counts `unsure` as not_clone; the upper bound counts it as clone.
+Amendment `P4-AI-AUDIT-2026-10-23`. Reviewer knew the study and benchmark outcomes; not independent or fully blind. Wilson intervals reflect sampling uncertainty only, not AI-review accuracy/bias. No inter-rater agreement measured.
+
+
+| condition | n | clone | not_clone | unsure | FN rate [95% CI] | upper bound incl. unsure |
+|---|---|---|---|---|---|---|
+| C4 | 50 | 6 | 42 | 2 | **12%** [6%, 24%] | 16% [8%, 28%] |
+
+## Phase 5 — interpretation and reviewer provenance
+
+All C4/C5/C6 rates are AI-reviewed; not independently human-validated
+(P4-AI-AUDIT-2026-10-23). Historical C2/C3 labels were also agent-reviewed,
+with different review-pass/granularity conventions; C1 is a historical estimate.
+These are descriptive comparisons, not a reviewer-controlled causal test.
+Wilson intervals cover sampling uncertainty only, not AI accuracy or bias.
+
+C4: 6/50, 12% [5.6%, 23.8%], unsure-inclusive 16%.
+C5: 0/50, 0% [0%, 7.1%], unsure-inclusive 0%.
+C6: 11/50, 22% [12.8%, 35.2%], unsure-inclusive 24%.
+C6's point estimate is below its 25–35% prediction band but its interval overlaps
+that band. Preserve scorer-state-first endpoint ordering; neither mechanism
+explanation is independently established. Retain C1 as headline.
+
+The 0.27% and 13.6% supply figures count candidates rejected by the lexical cut,
+not contamination remaining. The Jaccard comparison is with the anchor.
+C3's unseen mean can exceed the untuned C0 mean; no significance or equality
+claim follows merely from nearby means. The published ~0.95 gap is not fully
+explained by identifying protocol/model differences.

@@ -1,5 +1,12 @@
 # Phase 4 — Closure: the audits, the one table, and the write-up
 
+> **24 October 2026 update:** threshold repair and the 150 amended AI judgments
+> are complete; the one table has been rebuilt during Phase 5. All judgments,
+> including historical C2/C3, are agent review rather than independent human
+> validation. Earlier status/predictions below are historical. Current results:
+> PROJECT_REPORT.md and report/final/tables.md. Final review/publication status
+> is tracked in PHASE5_PLAN.md; no extra experiment is implied.
+
 **Status:** planned; the consolidation it builds on is **done** (`report/measurements.md` as
 shipped with the Phase 3 campaign, repo commit `ede587a`). No Phase 4 experiment has run.
 **Purpose:** SCOPE Part 7's stop condition is now satisfied — C0–C3 (and the bouncer extension
@@ -205,3 +212,39 @@ extension (§8, D4-4) — and only for one that survived the SCOPE amendment.
 | date | what | files | deviations / notes |
 |---|---|---|---|
 | 2026-10-05 | Plan written (this file), after the Phase-3 consolidation shipped (`ede587a`) and the sequencer green-ran end to end. No Phase-4 experiment has run; entry criteria §2 verified. | `PHASE4_PLAN.md` | Written ahead of any Phase-4 work, in the same plan-as-record shape as PHASE2/PHASE3. The stop condition (Part 7) is acknowledged as met: §3–§6 are closure, not new experiments. |
+| 2026-10-23 | Browser-controlled Colab T4 execution: fixed six-decimal threshold serialization, re-evaluated all nine registered C2/C3 checkpoints, synced repaired artifacts, and passed zero-mismatch acceptance across 37 benchmark runs; 165 offline tests passed. | `embeded/evaluate.py`, `scripts/phase4_closure.py`, `embeded/tests/test_phase4_closure.py`, `notebooks/Phase4_Colab.ipynb`, `sanitycheck.md` §9.7; HF evidence commit `a77f8d2d1f26b5168a88822a7d1138f027eee4af` | Re-evaluation alone reproduced the defect; full threshold precision had to be preserved first. Stored test F1 did not change in the nine repaired runs. No training or new experiment. C4/C5/C6 remain 0/50 human labels each; outcome branches, the combined table, and final write-up/sync remain gated. |
+| 2026-10-23 | Project owner authorized AI review of the outstanding 150 pairs before any new labels were filled. | SCOPE Part 9; `report/phase4_ai_audit_protocol.json`; sanitycheck §9.8 | Amendment `P4-AI-AUDIT-2026-10-23`: retain the fixed sample, rubric and scoring; disclose AI reviewer and prior outcome knowledge. No independent human/blind audit or new rate is claimed by this amendment. |
+
+## 11. Active audit protocol amendment — P4-AI-AUDIT-2026-10-23
+
+This append-only amendment supersedes §4's human-review requirement for the
+outstanding C4/C5/C6 sheets only. Review may be completed by the Codex AI
+assistant under the rules in `report/phase4_ai_audit_protocol.json`. All 150
+labels and per-pair functional rationales are still required before scoring;
+the key/triples, completeness, provenance, recorded-outcome and metric-integrity
+gates remain in force. The original blank input pack is hash-committed there.
+
+This reviewer has prior condition and outcome knowledge. The resulting rates
+are **AI-reviewed, not independently human-validated**; neither full blinding nor
+independent confirmation can be claimed. Apply the existing numerical bands
+without changing them, but describe a result as consistent/inconsistent with a
+prediction, not as human-confirmed control status or a certified mechanism.
+Wilson intervals omit systematic reviewer error. Put this limitation in Panels
+A/C, methods, limitations and any claim that uses these audit rates. Historical
+human/blind wording in the earlier plan is retained as history, not the active
+description of the amended review. Labeling, scoring and final reconciliation
+remain pending until actually performed and verified.
+
+### Audit completion — 2026-10-23
+
+All 150 AI judgments are now complete, frozen and scored under
+`P4-AI-AUDIT-2026-10-23`; see `report/phase4_audit_completion.md` and
+sanitycheck §9.9 for score-bound branches. **AI-reviewed; not independently
+human-validated:** C4 12% [5.6%, 23.8%], C5 0% [0%, 7.1%], C6 22%
+[12.8%, 35.2%]; sensitivity including unsure is 16%, 0%, 24%. These replace
+voided rates, not historical evidence. C5 is descriptively in band; C6's point
+estimate is outside its band but the interval overlaps it. No independent
+mechanism confirmation follows. Keep C1 as headline; remove the C3=C4
+same-rate argument and dose-versus-similarity causal certainty. The audit gates
+can close after provenance/outcome checks; the full three-panel table and paper
+reconciliation remain distinct finalization tasks.

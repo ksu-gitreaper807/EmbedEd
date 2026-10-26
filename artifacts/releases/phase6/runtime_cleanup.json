@@ -1,0 +1,9 @@
+{
+  "session": "embeded-phase6-20261025",
+  "accelerator": "T4",
+  "stopped": true,
+  "tool_confirmed_runtime_was_active": true,
+  "live_results_and_full_test_evidence_downloaded_and_hash_verified_before_stop": true,
+  "unrelated_sessions_untouched": true,
+  "public_tunnel_created": false
+}

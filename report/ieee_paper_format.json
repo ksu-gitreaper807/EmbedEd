@@ -1,0 +1,83 @@
+{
+  "updated_utc": "2026-10-24T04:33:57Z",
+  "local_date": "2026-10-24",
+  "timezone": "Asia/Calcutta",
+  "scope": "IEEE conference manuscript with regenerated benchmark confusion-matrix figures; no training or publication",
+  "template": "User-supplied IEEE-conference-template-062824; template text dated 27 June 2024",
+  "document_class": "IEEEtran conference mode, unmodified supplied class V1.8b",
+  "layout": {
+    "paper": "US letter",
+    "body_font_pt": 10,
+    "columns": 2,
+    "pages": 5,
+    "blank_author_name_blocks": 6,
+    "blank_author_affiliation_blocks": 6,
+    "standard_class_margins_unchanged": true,
+    "table_captions_above_tables": true,
+    "ieee_keywords": true,
+    "numbered_citations": true,
+    "last_page_balanced": true,
+    "confusion_matrix_boards": 2
+  },
+  "checks": {
+    "compile_success": true,
+    "portable_source_bundle_compiled": true,
+    "source_bundle_pdf_text_matches_repository_pdf": true,
+    "latex_warnings_overfull_underfull": 0,
+    "font_count": 17,
+    "all_fonts_embedded_type1": true,
+    "seven_numerical_result_files_identical_to_prior_release": true,
+    "focused_notebook_tests_passed": 7,
+    "notebook_copies_and_packages_class": true,
+    "git_diff_check_passed": true,
+    "all_five_pages_visually_reviewed": true,
+    "focused_export_report_notebook_tests_passed": 35,
+    "individual_benchmark_matrices_verified": 37,
+    "per_model_means_verified": 14,
+    "legacy_json_count_discrepancies_disclosed": 6,
+    "visual_review_this_revision": [
+      4,
+      5
+    ],
+    "all_54_png_hashes_verified": true
+  },
+  "sha256": {
+    "paper/paper.tex": "c1b60bafd016ff7eb58dc9a53e5f9fd17094738a1da2311a10d13789bc5c20dc",
+    "paper/IEEEtran.cls": "c972aca108fda004c3514d63658e02816da2e54d9a1451e870b9bd970e003f55",
+    "output/pdf/paper.pdf": "f6fa6a609f9062b49e4a39f12d118371f2a1d032cf6c21c578d56d87ba195b31",
+    "output/latex/EmbedEd_IEEE_conference_source.zip": "0b8ff1194a3e663c2c1905a8595f71ff9b6cd54fab2bfce33238d0500eb17aa9",
+    "output/figures/EmbedEd_confusion_matrices.zip": "882e65011ce7707282d3485762784905341ef2237ca1c62861ab7d5ad7d7fdfb",
+    "output/pdf/paper.log": "0af245c2dccc88235943a0727941b9320aa3f5b21c50754ef16d640dba92ce98",
+    "report/figures/confusion_matrices/confusion_matrices.json": "bf8086a6db0c9c2bf8f173169d300e6a08bbb5def5e6b0c7c9a1933cf454f736",
+    "scripts/export_confusion_matrices.py": "ac90e8e29b29300a55fc10def3311cba9f2535acaf04e0f7500047d243bb2132",
+    "Image_Graphs/phase2_confusion_matrices(1).png": "b11bdc2c720985cca06672b7c435717634f05b82e423ba799522c1d4bdb93b70"
+  },
+  "dependencies": {
+    "system_tex_modified": false,
+    "task_local_fonts": "tmp/pdfs/ieee/texmf (TeX Live times and courier packages)",
+    "class": "paper/IEEEtran.cls (exact byte copy of supplied class)"
+  },
+  "release_status": "Not published. This record supersedes the earlier formatting revision. Previous Phase 5 ZIP/receipt remains a historical pre-IEEE record; no new full-suite or Colab run is claimed.",
+  "remaining_intentional_blanks": "Six authors' names, departments, institutions, city/country and email/ORCID. Venue-specific page limit/copyright requirements were not supplied.",
+  "cell_text_formatting": {
+    "renderer": "Matplotlib",
+    "reference": "Image_Graphs/phase2_confusion_matrices(1).png",
+    "condition_palette": "C0 slate, C1 teal, C2 orange, C3 purple, C4 green, C5 red, C6 magenta",
+    "reference_font_pt": {
+      "percentage": 15,
+      "tag": 8,
+      "count": 8
+    },
+    "font_pt": {
+      "percentage": 7.5,
+      "tag": 4,
+      "count": 4
+    },
+    "scale": 0.5,
+    "percentage_weight": "bold",
+    "axes_font_sizes_and_numerical_data_unchanged": true,
+    "umap_and_original_reference_files_unchanged": true,
+    "overview_dpi": 150,
+    "other_figures_dpi": 300
+  }
+}

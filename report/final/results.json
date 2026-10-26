@@ -1,0 +1,710 @@
+{
+  "input_revision": "e3144bea7732c20ab2803782282282be4fede7b4",
+  "primary_benchmark": {
+    "C0": {
+      "seeds": [
+        13
+      ],
+      "n_runs": 1,
+      "f1": {
+        "mean": 0.2572,
+        "sd": 0.0
+      },
+      "map_at_r": {
+        "mean": 0.1024,
+        "sd": 0.0
+      },
+      "thresholds": [
+        0.977894
+      ],
+      "pinned_ge_0999": 0,
+      "predicted_positive_fraction": [
+        0.22295722841681592
+      ]
+    },
+    "C1": {
+      "seeds": [
+        13,
+        14,
+        15
+      ],
+      "n_runs": 3,
+      "f1": {
+        "mean": 0.7533,
+        "sd": 0.007336893075410094
+      },
+      "map_at_r": {
+        "mean": 0.6778666666666667,
+        "sd": 0.009712534856222319
+      },
+      "thresholds": [
+        0.435805,
+        0.435738,
+        0.449245
+      ],
+      "pinned_ge_0999": 0,
+      "predicted_positive_fraction": [
+        0.14219481194754174,
+        0.14222129142835133,
+        0.1445635218672367
+      ]
+    },
+    "C2": {
+      "seeds": [
+        13,
+        14,
+        15
+      ],
+      "n_runs": 3,
+      "f1": {
+        "mean": 0.25416666666666665,
+        "sd": 0.010770484359272484
+      },
+      "map_at_r": {
+        "mean": 0.05386666666666667,
+        "sd": 0.028989883292854655
+      },
+      "thresholds": [
+        0.9999998807907104,
+        0.999998152256012,
+        0.835525
+      ],
+      "pinned_ge_0999": 2,
+      "predicted_positive_fraction": [
+        0.8728671981820633,
+        0.5660518612667783,
+        0.4806820151366341
+      ]
+    },
+    "C3": {
+      "seeds": [
+        13,
+        14,
+        15
+      ],
+      "n_runs": 3,
+      "f1": {
+        "mean": 0.2728333333333333,
+        "sd": 0.013551506681300524
+      },
+      "map_at_r": {
+        "mean": 0.07696666666666667,
+        "sd": 0.0067722472882591435
+      },
+      "thresholds": [
+        0.9999935030937195,
+        0.9999979138374329,
+        0.9999988675117493
+      ],
+      "pinned_ge_0999": 3,
+      "predicted_positive_fraction": [
+        0.42724401563733705,
+        0.3361088643672848,
+        0.4194446049261463
+      ]
+    },
+    "C4": {
+      "seeds": [
+        13,
+        14,
+        15
+      ],
+      "n_runs": 3,
+      "f1": {
+        "mean": 0.42083333333333334,
+        "sd": 0.02841132403344368
+      },
+      "map_at_r": {
+        "mean": 0.26316666666666666,
+        "sd": 0.030555086865092264
+      },
+      "thresholds": [
+        0.496528,
+        0.541418,
+        0.497701
+      ],
+      "pinned_ge_0999": 0,
+      "predicted_positive_fraction": [
+        0.23377770716582896,
+        0.1925010110347218,
+        0.20779652204055693
+      ]
+    },
+    "C5": {
+      "seeds": [
+        13,
+        14,
+        15
+      ],
+      "n_runs": 3,
+      "f1": {
+        "mean": 0.7287666666666667,
+        "sd": 0.002893671255228095
+      },
+      "map_at_r": {
+        "mean": 0.6433,
+        "sd": 0.005901694671871768
+      },
+      "thresholds": [
+        0.394478,
+        0.404841,
+        0.431438
+      ],
+      "pinned_ge_0999": 0,
+      "predicted_positive_fraction": [
+        0.1445153773566738,
+        0.14770976563252258,
+        0.1459356404182795
+      ]
+    },
+    "C6": {
+      "seeds": [
+        13,
+        14,
+        15
+      ],
+      "n_runs": 3,
+      "f1": {
+        "mean": 0.46876666666666666,
+        "sd": 0.027765866335004462
+      },
+      "map_at_r": {
+        "mean": 0.16266666666666665,
+        "sd": 0.0354852551538429
+      },
+      "thresholds": [
+        0.825167,
+        0.795524,
+        0.834423
+      ],
+      "pinned_ge_0999": 0,
+      "predicted_positive_fraction": [
+        0.34887197411751114,
+        0.2801866081229418,
+        0.29357559651048587
+      ]
+    }
+  },
+  "six_seed_benchmark_extension": {
+    "C1": {
+      "seeds": [
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "n_runs": 6,
+      "f1": {
+        "mean": 0.7464,
+        "sd": 0.017589201232574497
+      },
+      "map_at_r": {
+        "mean": 0.6673666666666667,
+        "sd": 0.03272489368457392
+      },
+      "thresholds": [
+        0.435805,
+        0.435738,
+        0.449245,
+        0.439565,
+        0.462226,
+        0.458142
+      ],
+      "pinned_ge_0999": 0,
+      "predicted_positive_fraction": [
+        0.14219481194754174,
+        0.14222129142835133,
+        0.1445635218672367,
+        0.1385936025574364,
+        0.1514265218479789,
+        0.1289285920619331
+      ]
+    },
+    "C2": {
+      "seeds": [
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "n_runs": 6,
+      "f1": {
+        "mean": 0.25555,
+        "sd": 0.012293046815171573
+      },
+      "map_at_r": {
+        "mean": 0.04745,
+        "sd": 0.023794600227782774
+      },
+      "thresholds": [
+        0.9999998807907104,
+        0.999998152256012,
+        0.835525,
+        0.9999978542327881,
+        0.9999998211860657,
+        0.97932
+      ],
+      "pinned_ge_0999": 4,
+      "predicted_positive_fraction": [
+        0.8728671981820633,
+        0.5660518612667783,
+        0.4806820151366341,
+        0.5893826910855624,
+        0.9888256590983496,
+        0.6705519286690932
+      ]
+    },
+    "C3": {
+      "seeds": [
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "n_runs": 6,
+      "f1": {
+        "mean": 0.2733,
+        "sd": 0.009084272122740475
+      },
+      "map_at_r": {
+        "mean": 0.07723333333333333,
+        "sd": 0.005233227175144096
+      },
+      "thresholds": [
+        0.9999935030937195,
+        0.9999979138374329,
+        0.9999988675117493,
+        0.9999966621398926,
+        0.999999,
+        0.9999982118606567
+      ],
+      "pinned_ge_0999": 6,
+      "predicted_positive_fraction": [
+        0.42724401563733705,
+        0.3361088643672848,
+        0.4194446049261463,
+        0.36425414524235944,
+        0.381080651684095,
+        0.4294851426040403
+      ]
+    },
+    "C4": {
+      "seeds": [
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "n_runs": 6,
+      "f1": {
+        "mean": 0.43493333333333334,
+        "sd": 0.02458403275841185
+      },
+      "map_at_r": {
+        "mean": 0.27603333333333335,
+        "sd": 0.026455598021338823
+      },
+      "thresholds": [
+        0.496528,
+        0.541418,
+        0.497701,
+        0.508343,
+        0.517955,
+        0.570674
+      ],
+      "pinned_ge_0999": 0,
+      "predicted_positive_fraction": [
+        0.23377770716582896,
+        0.1925010110347218,
+        0.20779652204055693,
+        0.2460930729678202,
+        0.22423546517226106,
+        0.1700006740231479
+      ]
+    },
+    "C5": {
+      "seeds": [
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "n_runs": 6,
+      "f1": {
+        "mean": 0.7399333333333333,
+        "sd": 0.01398265592320239
+      },
+      "map_at_r": {
+        "mean": 0.6629,
+        "sd": 0.02339598256111506
+      },
+      "thresholds": [
+        0.394478,
+        0.404841,
+        0.431438,
+        0.401087,
+        0.431749,
+        0.411516
+      ],
+      "pinned_ge_0999": 0,
+      "predicted_positive_fraction": [
+        0.1445153773566738,
+        0.14770976563252258,
+        0.1459356404182795,
+        0.14383413253220867,
+        0.14174466077377856,
+        0.14929372003004218
+      ]
+    },
+    "C6": {
+      "seeds": [
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "n_runs": 6,
+      "f1": {
+        "mean": 0.47223333333333334,
+        "sd": 0.028172516157891663
+      },
+      "map_at_r": {
+        "mean": 0.18261666666666668,
+        "sd": 0.06319551935593748
+      },
+      "thresholds": [
+        0.825167,
+        0.795524,
+        0.834423,
+        0.625334,
+        0.822873,
+        0.683052
+      ],
+      "pinned_ge_0999": 0,
+      "predicted_positive_fraction": [
+        0.34887197411751114,
+        0.2801866081229418,
+        0.29357559651048587,
+        0.18782377183353555,
+        0.24985075201725498,
+        0.2993914533864849
+      ]
+    }
+  },
+  "generalisation": {
+    "C1": {
+      "seeds": [
+        13,
+        14,
+        15
+      ],
+      "seen": {
+        "mean": 0.7570333333333333,
+        "sd": 0.00777838886488282
+      },
+      "unseen": {
+        "mean": 0.7031333333333334,
+        "sd": 0.029815655842750335
+      },
+      "delta": {
+        "mean": 0.05389999999999998,
+        "sd": 0.022176338742001568
+      },
+      "pinned_ge_0999": 0
+    },
+    "C2": {
+      "seeds": [
+        13,
+        14,
+        15
+      ],
+      "seen": {
+        "mean": 0.6781333333333334,
+        "sd": 0.00480138868800825
+      },
+      "unseen": {
+        "mean": 0.6674,
+        "sd": 0.0019467922333931524
+      },
+      "delta": {
+        "mean": 0.010733333333333372,
+        "sd": 0.005578829028867351
+      },
+      "pinned_ge_0999": 0
+    },
+    "C3": {
+      "seeds": [
+        13,
+        14,
+        15
+      ],
+      "seen": {
+        "mean": 0.7004,
+        "sd": 0.024866242176895186
+      },
+      "unseen": {
+        "mean": 0.7057,
+        "sd": 0.04647106626708708
+      },
+      "delta": {
+        "mean": -0.005300000000000009,
+        "sd": 0.02176487996750726
+      },
+      "pinned_ge_0999": 3
+    },
+    "C4": {
+      "seeds": [
+        13,
+        14,
+        15
+      ],
+      "seen": {
+        "mean": 0.6730999999999999,
+        "sd": 0.0060555759428810845
+      },
+      "unseen": {
+        "mean": 0.6687,
+        "sd": 0.0019078784028339082
+      },
+      "delta": {
+        "mean": 0.0043999999999999595,
+        "sd": 0.005543464620614046
+      },
+      "pinned_ge_0999": 0
+    },
+    "C5": {
+      "seeds": [
+        13,
+        14,
+        15
+      ],
+      "seen": {
+        "mean": 0.7606333333333333,
+        "sd": 0.008958422480176613
+      },
+      "unseen": {
+        "mean": 0.7243999999999999,
+        "sd": 0.019497948610046122
+      },
+      "delta": {
+        "mean": 0.03623333333333334,
+        "sd": 0.02193771486124595
+      },
+      "pinned_ge_0999": 0
+    },
+    "C6": {
+      "seeds": [
+        13,
+        14,
+        15
+      ],
+      "seen": {
+        "mean": 0.7169,
+        "sd": 0.006341135544995071
+      },
+      "unseen": {
+        "mean": 0.6864666666666667,
+        "sd": 0.020630155921207507
+      },
+      "delta": {
+        "mean": 0.03043333333333335,
+        "sd": 0.014327014110879258
+      },
+      "pinned_ge_0999": 0
+    },
+    "C0": {
+      "n_runs": 1,
+      "seen": {
+        "mean": 0.7118,
+        "sd": null
+      },
+      "unseen": {
+        "mean": 0.6934,
+        "sd": null
+      }
+    }
+  },
+  "ai_audits_not_human_validated": {
+    "C4": {
+      "n": 50,
+      "clone": 6,
+      "not_clone": 42,
+      "unsure": 2,
+      "fn_rate": 0.12,
+      "fn_rate_ci95": [
+        0.056,
+        0.238
+      ],
+      "fn_rate_upper_incl_unsure": 0.16,
+      "fn_rate_upper_ci95": [
+        0.083,
+        0.285
+      ]
+    },
+    "C5": {
+      "n": 50,
+      "clone": 0,
+      "not_clone": 50,
+      "unsure": 0,
+      "fn_rate": 0.0,
+      "fn_rate_ci95": [
+        0.0,
+        0.071
+      ],
+      "fn_rate_upper_incl_unsure": 0.0,
+      "fn_rate_upper_ci95": [
+        0.0,
+        0.071
+      ]
+    },
+    "C6": {
+      "n": 50,
+      "clone": 11,
+      "not_clone": 38,
+      "unsure": 1,
+      "fn_rate": 0.22,
+      "fn_rate_ci95": [
+        0.128,
+        0.352
+      ],
+      "fn_rate_upper_incl_unsure": 0.24,
+      "fn_rate_upper_ci95": [
+        0.143,
+        0.374
+      ]
+    }
+  },
+  "baseline": {
+    "n_test": 415416,
+    "n_positive": 56820,
+    "prevalence": 0.13677855450921486,
+    "all_negative_f1": 0.0,
+    "all_positive_f1": 0.24064239066907225
+  },
+  "pinned_definition": "validation threshold >= 0.999; not equivalent to all-negative predictions",
+  "input_sha256": {
+    "artifacts/audit_c4/audit_key.csv": "337e77897d8ddca430f9ca5b0db6ea8446ec846f69098e6a1d4a34f1c151c0f8",
+    "artifacts/audit_c4/audit_labels.csv": "088090b253bcc34c8112d8b9ba03f897795766276cc2a9be63f5fae9b07fa5c2",
+    "artifacts/audit_c4/audit_pairs.md": "f50d252c366cbb787be5c1a127f45abf71e81cb89cfa8cae682c05f88eaa2bd8",
+    "artifacts/audit_c4/audit_result.json": "c014830680f36bfd3d92e51fa943895b1b3dd3bf294f5c3fdd1fcb7fbd273b9a",
+    "artifacts/audit_c5/audit_key.csv": "fae909233e5e7e0be424b18efdee0f091bbf9e1728805e87e4f1d5b58afcb512",
+    "artifacts/audit_c5/audit_labels.csv": "0a0e5d1439b6137a8694d4eaa3fb4931fb33e4c1ff6a00d56e75d7a8ea6fd7c2",
+    "artifacts/audit_c5/audit_pairs.md": "92faa9dd43e0daaff97cf23fb6c81b3d4725deb83e3c2d625a8470334d326dfa",
+    "artifacts/audit_c5/audit_result.json": "b3bfc54d9b67582aa8908becc7f0aa6c369a2c566f9ec3117a39f800b9cc41a3",
+    "artifacts/audit_c6/audit_key.csv": "b9b5c1b205ed599830b0a17e207be566897b5058e287cd750a063c675b874e1d",
+    "artifacts/audit_c6/audit_labels.csv": "f32648df6541de46ae3729c42acef8422f06fd25ebcda50412dc4203a2060646",
+    "artifacts/audit_c6/audit_pairs.md": "54686d09a186975af086aa239eb633ec9dcf5a98e8dcd45419b1c51491365a2b",
+    "artifacts/audit_c6/audit_result.json": "979db11a85284e4fb422aeacb36cf2f99199d448b69558cdeb154caf51f7479f",
+    "artifacts/runs/C0_13/eval_metrics.json": "f9505822526fc514126d19ee62c3ed1838b6d09bc5aaa91d245bf2ea240d128a",
+    "artifacts/runs/C0_13/predictions.npz": "5ed148d7a85dfd07d6006931474cf9c06452109e85c776b1387c41402420cf5f",
+    "artifacts/runs/C1_13/eval_metrics.json": "10a09b005c8a4299d0ee7f387b36ecf47a7d0a7b756af4109b929151b0a0af37",
+    "artifacts/runs/C1_13/predictions.npz": "8081a668a7cbe4dd665d73e27c1a30884ab9e0820fb33b67b7bc39e80f204ce6",
+    "artifacts/runs/C1_14/eval_metrics.json": "0b1fcf44bb262fd604a0ba7b4055c46eb64b1f8accb6dc71fafcd2ab813f12d2",
+    "artifacts/runs/C1_14/predictions.npz": "4626112f7c0a0a441abd6f07f7cead0b9422795c55f2fc7268ea8a6037390581",
+    "artifacts/runs/C1_15/eval_metrics.json": "9140315e1b793f555b6a4eff358650b7f3c55bfaf1e3e7b953a9db5e7ac1a960",
+    "artifacts/runs/C1_15/predictions.npz": "e2ee29813722db65db6a45377dbf738c04ccc954532e853eaf166ebc2db49347",
+    "artifacts/runs/C1_16/eval_metrics.json": "ed3246da15bcbe517d4a1b806d4e28d7e775545f1f8ccf0d8dbcd212b5d3389a",
+    "artifacts/runs/C1_16/predictions.npz": "25f924a8e02f89e521e41ee263c65e07521f7909c13ad463f17d81f239b3a40d",
+    "artifacts/runs/C1_17/eval_metrics.json": "efefb9a1acfe36737b71158b8518f956715d85685bf6ce9633ab244e9f7b9ce5",
+    "artifacts/runs/C1_17/predictions.npz": "5d17c4084027b5791f1389a6342408f6d06f709170df1dd365eed00690335dda",
+    "artifacts/runs/C1_18/eval_metrics.json": "75e0c2dcbe0508d16b0d2bea93117b959ceed0457d6977adcf8a0c1fb306c88f",
+    "artifacts/runs/C1_18/predictions.npz": "4d81e76c936b57bad52e758adf93c726f4002e8ad6f7f81830821a6070db3306",
+    "artifacts/runs/C2_13/eval_metrics.json": "a2c1f4ce90952782c124344a7a99b4154ae22b23b95d398065e050f65f5417dd",
+    "artifacts/runs/C2_13/predictions.npz": "a5eb4821c561bd7abcdff1642ed76b605cca0b0d1e27c0ec7eef7dc783b27829",
+    "artifacts/runs/C2_14/eval_metrics.json": "5c79b00cabad2971ca45d085b3d0867915119de0266c7b43b9975ac2229a227d",
+    "artifacts/runs/C2_14/predictions.npz": "0fdd43478f9fdfece099fed4972272801947e60ffea2b77a4719db50aa3847f2",
+    "artifacts/runs/C2_15/eval_metrics.json": "d4116c57cfefc1ae53150db1246d16b0088ee02e2839fc24f8321f872c5f7500",
+    "artifacts/runs/C2_15/predictions.npz": "c07e88ebe187989d64643d67bf989b322603060c5a3ae885ee0900c4ed47c871",
+    "artifacts/runs/C2_16/eval_metrics.json": "835b3d6b27c67294c3519389b5dacf25bbf4a3506d10a509a05f9323875c85e6",
+    "artifacts/runs/C2_16/predictions.npz": "24d73183f9929e51505dfead4ce8d9b12474e760570fd6063090664c84306819",
+    "artifacts/runs/C2_17/eval_metrics.json": "58da4fe4944429a7cd81f43da4d2ea4935818fd6b9aa6730950cbeb2615cd689",
+    "artifacts/runs/C2_17/predictions.npz": "3c58724de72052bf2f96b0f795cbb4f86e89e2e021c5926b64133cb3a5b42844",
+    "artifacts/runs/C2_18/eval_metrics.json": "26553057e21903c0de37fc06da8a41d05fe16d447acecf69ac474153d864e4e1",
+    "artifacts/runs/C2_18/predictions.npz": "b5273765eca0e3f16567b210effa24266d66d14e1104384ca453fd9a8880b06c",
+    "artifacts/runs/C3_13/eval_metrics.json": "4b00f883d6ff8d496c1930728efbcf924a7b9e466e7b08c063b384fed1c80572",
+    "artifacts/runs/C3_13/predictions.npz": "d42198e63a43042a5856929280d74fd81c469bbda74f8ba490efb9f6d1c6416a",
+    "artifacts/runs/C3_14/eval_metrics.json": "53489d2bac660fb0fdee1953338f51076981720f90f1eea56204d9cecc0957cc",
+    "artifacts/runs/C3_14/predictions.npz": "c3372bd983bfc28455087b8d4a9cceacbeab5789b4c8d28bacb453f142e1b2ae",
+    "artifacts/runs/C3_15/eval_metrics.json": "ad530d280fff754ce3a9e584a6683f33e92f20f81ff8e8b8771a0e93e8e09940",
+    "artifacts/runs/C3_15/predictions.npz": "c37702a1d5f33cb7ccaf3a3ea565b533158fd32eeea3a8feaf351e75a1e4d6af",
+    "artifacts/runs/C3_16/eval_metrics.json": "32f05e39139293ec6bef0efd1b9619d21cd0bdc3aaca4a571777731f47cb17bd",
+    "artifacts/runs/C3_16/predictions.npz": "4a9e594e5652b6e6897c6a3ac6fe88075f8b530ce55d637967818293c72394f3",
+    "artifacts/runs/C3_17/eval_metrics.json": "eeb151297f80ee93e6a06777bc8ab891709dc2665b4ed133b53866002ce699e0",
+    "artifacts/runs/C3_17/predictions.npz": "230d650f27b40019065ba81d0d233201b9180574e010af07c1b577bc22522a12",
+    "artifacts/runs/C3_18/eval_metrics.json": "ce79f5c48a2044aa50132ab6c26ed914308b280c8a632c27d4f92406a5bd63dd",
+    "artifacts/runs/C3_18/predictions.npz": "6d7eebf7011115c19d0ceb6819e12ccaf23323a37939e25310ce818cb29fe53f",
+    "artifacts/runs/C4_13/eval_metrics.json": "14c96994dbb6355ea9733933e9cd5fee51fd6940e5af4e272a7478df2fc15e0f",
+    "artifacts/runs/C4_13/predictions.npz": "14a1ef8b3517bf04958231ef209a10af3740bdaa057937556cc33c0018f563e2",
+    "artifacts/runs/C4_14/eval_metrics.json": "7a09737926c4cb8a20a57314b30f51797848b5bd499b0946045d9ae951bebd04",
+    "artifacts/runs/C4_14/predictions.npz": "3d0f7761e8765d4ceb2b255ad610fbbaa9a033934c01f4e4126b6adefcb10008",
+    "artifacts/runs/C4_15/eval_metrics.json": "b1b74b93ae2dff017a90ebeaf66ff1a10fe1c36f99143f6d52ea3276f4b44c5f",
+    "artifacts/runs/C4_15/predictions.npz": "8d11a5d14c77303dfe337f100562d05edd48f09ba2098caf1fa9940191705244",
+    "artifacts/runs/C4_16/eval_metrics.json": "33786c8fd6b1a5fb44ca146001dbed511bfb44ee08f9b90a86c7667f4ba7c999",
+    "artifacts/runs/C4_16/predictions.npz": "03f642585de56b470df9bd31b3e6e6227d9e0a3afb8079080b8fa773924740f1",
+    "artifacts/runs/C4_17/eval_metrics.json": "1cfb202f6d1bd5ff521204acc28f5c4daa5d0688f9fbeddad82b1d2411b76e24",
+    "artifacts/runs/C4_17/predictions.npz": "867236df72df62cdd782fbb7861bdd2853560301ceb454aca17900604de9bca1",
+    "artifacts/runs/C4_18/eval_metrics.json": "a845bd95cc7ecc7538c36b61ad3d5a0303ad44e79684921f23f10c9935a500b7",
+    "artifacts/runs/C4_18/predictions.npz": "9f3a0ac5f6484136f38f61dab5d84c2649fecc1c158c8406b97d76848da7d194",
+    "artifacts/runs/C5_13/eval_metrics.json": "f10c33d0845f80ac864d8eb19a43fd9860f324740a2db6e4868445728b671eaa",
+    "artifacts/runs/C5_13/predictions.npz": "c56e87ac6d9b8c3438a7d50e53771b47a1279939784198c4c542dc476f79bfe2",
+    "artifacts/runs/C5_14/eval_metrics.json": "7d6ce81fb5d307b6c51b1a8208f868d318540f6ed81665cf21c3941901196099",
+    "artifacts/runs/C5_14/predictions.npz": "e32945f7744d811b9a60cf94e4060cb922b9e4f90d31b4c443fdb4ac543b4a53",
+    "artifacts/runs/C5_15/eval_metrics.json": "df74498fa7770651f55fe0d15b65d13127c8110711e312caf14cf329850f80e9",
+    "artifacts/runs/C5_15/predictions.npz": "b31acd572ea832be7ef23116903066aca5f3873c91a70a64d1ee9c7abf703f6b",
+    "artifacts/runs/C5_16/eval_metrics.json": "d67bdc03146720bbe71edf4954c7878444e2f087e1bcff9c1ca1a61ae3f3543a",
+    "artifacts/runs/C5_16/predictions.npz": "b3cf5e7eadb671029adc64e80ec3386e7b06e6dee1f9beb8120e36aac481ae32",
+    "artifacts/runs/C5_17/eval_metrics.json": "b9f86c641e8f256aefdc933328cdb1c414620bc896e6ebcb09a3aa9b5170ba93",
+    "artifacts/runs/C5_17/predictions.npz": "9de891fea337bd1621b22d6f54aefb3361fc8ffc054bcfbbf0f052f1ce6778ea",
+    "artifacts/runs/C5_18/eval_metrics.json": "d34e2e020ef8b6a508b56bd799deb3ad84151a48bb35ea7f07b19dc274ea689f",
+    "artifacts/runs/C5_18/predictions.npz": "64940fdb8112a45a2647858d4a8148f7ef760279b489de667e1f886e94788cb8",
+    "artifacts/runs/C6_13/eval_metrics.json": "150304403b04a3650901f612feddabbded0a34f30d62126ade536e9346e1fcb1",
+    "artifacts/runs/C6_13/predictions.npz": "3c90962b1c325ad6edd88bf347896d679eab577abe317f02e5dc4a39cc669d38",
+    "artifacts/runs/C6_14/eval_metrics.json": "96f755b5606bfb2e16f39cdd8abec52b14b24a7970359f238295993601a04d6a",
+    "artifacts/runs/C6_14/predictions.npz": "3bd2b939a7baf3981d75aa10acd3625c6c1d9983bd051dac7fc6997efdf13aa3",
+    "artifacts/runs/C6_15/eval_metrics.json": "f289d566fae092b6e49bd68e8dffc34659e2d6da73db7eb9fec74bc4c5fae370",
+    "artifacts/runs/C6_15/predictions.npz": "edc5dfe8e3ce18bb383021e204990a94f22927eaa6832665d98863cba41d2188",
+    "artifacts/runs/C6_16/eval_metrics.json": "6a066e6d818e8311afdb68a553dca154f0bc50e44404a6970c444fdceaefa75d",
+    "artifacts/runs/C6_16/predictions.npz": "a8697ad20085a4a0a4883dd4619883f6a429626fc32ee5845159ff70d949b55d",
+    "artifacts/runs/C6_17/eval_metrics.json": "fa28002b53350682d0ddee0390b8c5d0bb8fe3b51e30dcb554cc024814285f14",
+    "artifacts/runs/C6_17/predictions.npz": "804779466d7eac6b4c726b7d32c4fb651e524447fc0ef8c3325b2e5b24bebfab",
+    "artifacts/runs/C6_18/eval_metrics.json": "51ccd6d41618e7dbc093b6f60d7ba4c68ce308c74573919d5cba0ba07e095c25",
+    "artifacts/runs/C6_18/predictions.npz": "ed417395457b856e37b24322c2398cc351bf4e2245c504100418e6ebbea8fb41",
+    "artifacts/runs/sprime_C1_13/eval_metrics.json": "2de8a66c3542bc8cc9d80f8d4fddeb9a157196555872a610a0a2c9169452d406",
+    "artifacts/runs/sprime_C1_14/eval_metrics.json": "4e33060cfee34e5441a154eec82558e53ff0463891a0fb72ed612a468d32118c",
+    "artifacts/runs/sprime_C1_15/eval_metrics.json": "422ab49122df61c796bab35e84e545042d8807d2cb3ec3c6fb8f7ebd4bf660d5",
+    "artifacts/runs/sprime_C2_13/eval_metrics.json": "da756e3d18df006404516d8fb8735b40b60cd88e687e9e5d3cef19ba3f6bd84b",
+    "artifacts/runs/sprime_C2_14/eval_metrics.json": "79e67d808ef8f4a4e4bea0733aaa9088609b4b2b1ef25a61e93fc65538784eab",
+    "artifacts/runs/sprime_C2_15/eval_metrics.json": "e80981ed16af0fea726d413719f17e8856116af75c5e3f03a648f04e995f66e8",
+    "artifacts/runs/sprime_C3_13/eval_metrics.json": "37f70293b71ff53f442c8fd05649ac076ca2fb83c38d3cf0074ba956b3439efa",
+    "artifacts/runs/sprime_C3_14/eval_metrics.json": "332fa3cb2274d0376415099c58d8a9dc451eee2446a335c5e9cc05de2b5e999a",
+    "artifacts/runs/sprime_C3_15/eval_metrics.json": "3a0d6881dd62250db249dfc88faa30581aca5e298fed2e4d7d90168ab89a3192",
+    "artifacts/runs/sprime_C4_13/eval_metrics.json": "0f9f990bf155b17092c15227d9bca3ca6dfd23c3e10bb09fb4f3ddcf3756ce7d",
+    "artifacts/runs/sprime_C4_14/eval_metrics.json": "86816922741ecbe02f33d4200aa3457a9199b09b59ba4bfdcaf0d523fed80bf7",
+    "artifacts/runs/sprime_C4_15/eval_metrics.json": "c8fbf48b9a074143c81197213aef6188711d0b5a4c71139a0e92c40edc74f8cd",
+    "artifacts/runs/sprime_C5_13/eval_metrics.json": "c399edb2d9e5f3a4c03e0a42db486dda9a36e9d8fd669e3c8710d98d704474d4",
+    "artifacts/runs/sprime_C5_14/eval_metrics.json": "3600285cae4fe79514a563ea12065688c0fc5173ae7c9f08f04691e2848a3b51",
+    "artifacts/runs/sprime_C5_15/eval_metrics.json": "103be18ce56753246a61fba2766789203d333ff7e6eefbc6c4a8a5454753d1fc",
+    "artifacts/runs/sprime_C6_13/eval_metrics.json": "93360a40e6d2a77cf7811bce73747f29a8db1acf39f5a0be20e7ea98ee7dddad",
+    "artifacts/runs/sprime_C6_14/eval_metrics.json": "7bc6eeaa6a8a3d344502bd5df11e96580b18df6c07c6b1334325f9c5abda6c59",
+    "artifacts/runs/sprime_C6_15/eval_metrics.json": "d77fe4b048460117c005b6e70ea9664a58e3941a1dbe68d4a7cbb41cf3c37bcb",
+    "artifacts/runs/sprime_transfer_C0_13/eval_metrics.json": "7038ee47a5aab773a152f4e8fe7c9ad945a3d2b320b025281a7d83aca92b911b",
+    "artifacts/triples_C4.jsonl": "408e5df05b46e73269dab4b011aeba92e45bfb9aca6cc002d9e9390056acf293",
+    "artifacts/triples_C5.jsonl": "a3f6357a07b1e6c9f943dec60ec5d381e763010b3005cc92a289e2d5a9c426f5",
+    "artifacts/triples_C6.jsonl": "b8ca6d122a261a4e0c65f3a1b4a9189e0a4ef89cb0d20bc2da08fc1fa9e4d5b1",
+    "report/phase4_ai_audit_freeze.json": "529b892838c7c5892e9928e9b4590d42fa35ce10323333ef2e1a3abcdb80b7ad",
+    "report/phase4_ai_audit_protocol.json": "5ecaf65c2c2664eee54256153ac76074b516b09c9f4f8197d42d5ee54d4d1eb5",
+    "report/phase4_audit_outcome_log.md": "cb7330968eac9e9f2a66d80e3eba9829f0e817cad3e48b6d6c032eeb1378a6d9"
+  }
+}

@@ -941,3 +941,188 @@ gate beside C5/C6 (notebook §3). New numbers replace the void ones wherever
 they had spread (notebook Panels A/C, PHASE4_PLAN §3/§4, PROJECT_REPORT F2,
 paper G2 + benchmark table + mechanism section), and the branches taken are
 recorded in §9.5 — appended, never edited.
+
+## §9.7 AMENDMENT (2026-10-23, append-only): nine replay mismatches were threshold serialization loss
+
+Executed Phase 4 on a browser-controlled Colab Tesla T4. Re-evaluating the nine
+registered C2/C3 checkpoints with the old evaluator reproduced every mismatch,
+despite successful command exits. Diagnosis compared the threshold selected from
+saved validation scores with the threshold persisted in JSON/NPZ. For C2_13 the
+selected threshold was `0.9999998807907104`, but six-decimal serialization saved
+`1.0`: F1 at the selected threshold was `0.2438`, while replay at the saved
+threshold gave `0.2165`. The same precision-loss mechanism explained all nine.
+
+`precision_recall_f1` now returns the full threshold instead of rounding it for
+storage. Threshold selection remains validation-only; training, checkpoints,
+splits, and the resume fingerprint gate are unchanged. Two saturated-score
+regression cases fail on the old evaluator and pass on the fix. The notebook
+checks evaluator precision before repairs and checks acceptance before syncing.
+
+Re-evaluated C2 seeds 13/14/16/17 and C3 seeds 13/14/15/16/18 with `--force` after
+the patch. Acceptance passed: **zero stored-F1 versus NPZ-replay mismatches across
+all 37 benchmark runs** at the registered `5e-4` tolerance. The full Colab offline
+suite passed **165 tests**. Original prediction/metric/checkpoint hashes remain
+in each run's `phase4_pre_repair.json`. Comparison of the nine before/after metric
+files found **no stored test-F1 changes**: the defect was persisted threshold
+precision, not a measured performance shift. The earlier deltas remain evidence
+of replay inconsistency, not nine newly measured model improvements.
+
+Corrected artifacts were synced to `Kusshal/Embed`; the evidence and blank-label
+handoff archives are pinned at HF commit
+`a77f8d2d1f26b5168a88822a7d1138f027eee4af`, under
+`artifacts/phase4_exports/2026-10-23/`. The evidence archive contains 37 metric
+files, nine pre-repair records, the tested code, before/after regression logs,
+and a SHA-256 manifest (46 artifact hashes verified after local download).
+
+The §9.6 audit invalidation is unaffected. Wrong-sheet labels/results were
+quarantined recoverably; C4/C5/C6 each still have **0/50 human labels**. The review
+pack contains 150 blank labels and no unblinding keys. No audit outcome branch,
+final combined table, or mechanism verdict is certified by this execution.
+
+## §9.8 AMENDMENT (2026-10-23, append-only): AI reviewer authorized for the 150 pending pairs
+
+**ID:** `P4-AI-AUDIT-2026-10-23`. **Recorded:** 2026-10-23 10:26:15 UTC.
+The project owner explicitly selected the disclosed AI-review amendment in this
+chat. This permits Codex AI judgments for C4/C5/C6, replacing the outstanding
+human-review eligibility requirement only. Benchmark outcomes were already
+known; the amendment is post-results, not original preregistration. No new
+audit judgments or rates had been produced at recording time.
+
+Input commitment: HF commit `a77f8d2d1f26b5168a88822a7d1138f027eee4af`,
+`artifacts/phase4_exports/2026-10-23/phase4_audit_label_pack.zip`, SHA-256
+`371fed22a631f151b53cb6d102fe43d1cb593e18f490acb5972c91666bd40b02`.
+The local pack was verified to have 150 label rows, all blank, and no unblinding
+keys. Per-sheet SHA-256 commitments and operating rules are in
+`report/phase4_ai_audit_protocol.json`. Preserve that pack and all quarantined
+invalid labels/results. Do not regenerate the sample after inspecting outcomes.
+
+Unchanged: C4/C5/C6, 50 pairs each, original sampling seed 13 and pair IDs,
+functional-equivalence rubric, clone/not_clone/unsure labels, point rate
+`clone/50`, sensitivity upper rate `(clone+unsure)/50`, Wilson calculation,
+numerical prediction bands, all key-to-current-triples checks, completeness,
+the §9.6 invalidation, §9.7 repair acceptance and score-bound outcome records.
+
+Review requirements: read both fragments, give every label a pair-specific
+functional rationale, retain `unsure` where context or equivalence is unresolved,
+record `reviewer_type=ai` and this amendment ID with the completed sheets and
+results, and freeze labels before scoring/key joining. Exact serving model ID
+is not independently recorded and must not be invented. Single-AI review is
+not independent human validation or measured inter-rater agreement. The
+assistant already knows study context, condition identities and benchmark
+results, so neither a fully blind audit nor an unbiased independent judge is
+claimed. Wilson intervals cover sample variation only, not AI accuracy/bias.
+
+Reporting rule: every new C4/C5/C6 rate in the table/report/paper must state
+**AI-reviewed; not independently human-validated** and cite this amendment.
+Numerical agreement with a prediction band is descriptive consistency; it
+cannot alone certify a mechanism or a human-confirmed control. Human replication
+remains a limitation/future validation task, not a prerequisite for reporting
+the transparently amended AI audit. The final table can proceed only after all
+amended judgments, scores, provenance and outcome branches actually exist.
+This authorization is not an audit result and does not close those gates.
+
+## §9.9 Audit completion — 2026-10-23 (AI-reviewed; not independently human-validated)
+
+Under amendment `P4-AI-AUDIT-2026-10-23`, all 150 fixed pairs were reviewed
+with individual functional rationales. Labels were frozen at 11:38:33 UTC in
+`report/phase4_ai_audit_freeze.json`, before key joining or score calculation.
+The three original blank sheets and invalid historical evidence are preserved.
+All 50 sampled IDs per condition exactly reproduce seed-13 sampling from the
+committed mining artifacts; every pair is present in current triples. Current
+HF main triples were independently checked against those committed inputs.
+
+| condition | clone / not_clone / unsure | AI-reviewed rate; not independently human-validated [Wilson 95%] | sensitivity incl. unsure |
+|---|---|---|---|
+| C4 | 6 / 42 / 2 | 12% [5.6%, 23.8%] | 16% |
+| C5 | 0 / 50 / 0 | 0% [0%, 7.1%] | 0% |
+| C6 | 11 / 38 / 1 | 22% [12.8%, 35.2%] | 24% |
+
+Intervals cover sampling uncertainty only, not systematic AI-review error or
+prior outcome knowledge. No human validation/inter-rater agreement is claimed.
+The original numeric bands are unchanged. These results replace, not reinstate,
+the voided C4/C5/C6 rates. The original human-reviewed C2/C3 comparisons have a
+different reviewer method and are descriptive, not reviewer-controlled tests.
+
+Phase 4 audit outcome C4 sha256=447d5887a8d0ff6bc9d3c180451528c3970e256e1e36e86068d1e3d2839d2b05
+branch taken: below the registered 42% ceiling; not the hoped-for zero contamination
+consequence: replace voided C4 rate; remove C3=C4 same-rate mechanism argument; comparisons across human/AI reviewers remain descriptive
+
+Phase 4 audit outcome C5 sha256=5dfc85cc270f1a48db0d8013db4343bd76a9b0c9d1249626206901c56d5095ad
+branch taken: point estimate inside the registered 0-2% band; AI-reviewed consistency only
+consequence: retain C1 as headline condition; C5 is a descriptively consistent control candidate, not human-confirmed clean; 0/50 does not establish a population rate at most 2%
+
+Phase 4 audit outcome C6 sha256=2c175c1791a165c823d8d0567ffba0dd7885f21dec32abc379eaf546b33a625a
+branch taken: point estimate 22% outside the 25-35% H1 prediction band; Wilson interval overlaps the band; audit does not resolve H1 versus H2
+consequence: remove claims that residual semantic FN mass is unchanged or that similarity-trigger causality is established; retain observed scorer/F1 rescue as descriptive evidence with dose/similarity confounded
+
+The primary scorer-state endpoint and secondary F1 endpoint remain the measured
+ones recorded above; this audit does not reverse endpoint ordering. The earlier
+assertion that H2 was refuted and H1 confirmed is not a certified mechanism
+conclusion. A narrower conclusion is required: the bouncer intervention changes
+performance and the reviewed contamination, so these data do not isolate
+similarity from false-negative dose. No extra experiments are authorized here.
+
+### 9.10 — Phase 5 reconciliation and local cross-verification (24 October 2026)
+
+The current input revision is HF `e3144bea7732c20ab2803782282282be4fede7b4`.
+A local analysis snapshot has 524 hash-verified files (1,474,661,955 bytes);
+weights, embeddings and redundant archives are omitted and listed in its
+manifest. CPU Colab executed the five verification code cells: 176 tests passed,
+37 benchmark F1 replays had zero mismatches, three current audit gates passed,
+and all 300 displayed fragments matched key-indexed canonical code. This is
+an observed earlier-source pass, not an assumed final-source test result.
+
+The primary table is seeds 13–15, C0 once; seeds 13–18 are a separate extension.
+Primary F1 C1=.7533, C2=.2542, C3=.2728, C4=.4208, C5=.7288, C6=.4688;
+primary C3 MAP@R=.0770. The historical .1826 is the extension's C6 MAP@R.
+
+Corrections that supersede earlier narrative in this append-only record:
+
+- All-negative F1=0. All-positive F1=2π/(1+π)=.2406424 at the test prevalence;
+  this is not a ceiling. Saturated thresholds do not establish all-negative
+  predictions: primary C2 predicts 48.1–87.3% positive; C3 33.6–42.7%.
+- Historical C2/C3 audit judgments were also agent-reviewed, as the original
+  judgment ledger states, not independent human validation. Reviewer passes
+  and some functional-granularity conventions differ. Wilson intervals do
+  not quantify reviewer error or prior-outcome bias.
+- C3 unseen mean .7057 exceeds the untuned .6934 numerically. The universal
+  claim that all search-mined conditions are at/below untuned is withdrawn;
+  neither significance nor equality is inferred from these means.
+- s′ seen F1 is measured on the threshold-selection validation slice, not an
+  independent seen test. Report this asymmetry alongside Δ and absolute F1.
+- Bouncer Jaccard compares candidates with anchors, not positives. C5/C6
+  rejection proportions .27%/13.6% are not residual contamination.
+- The ~.95 published-performance gap is not established to be fully resolved
+  by identifying model/pair-regime differences. No test-based rescue tuning.
+
+The equal-rate C3=C4 mechanism claim remains voided. No dose/similarity causal
+isolation, independent human replication, new training or new mining is claimed.
+The owner requested a two-pair, seven-model Colab webpage as parked future work;
+FUTURE_PROSPECTS.md records it without implementation or extra GPU allocation.
+
+### 9.11 — Confusion-matrix export: count replay is stricter than F1 replay (24 October 2026)
+
+The owner requested separate benchmark matrices per model/seed and per-model
+averages. The pinned input snapshot is unchanged. The exporter reuses the
+existing [[TP,FN],[FP,TN]] predicate (saved NPZ score >= saved NPZ threshold).
+It produced 37 per-run PNGs, seven primary (13–15) means, seven all-seed
+(13–18) means and two comparison boards; C0 remains one reference. Mean cells
+are elementwise mean pairs/run, not pooled totals, threshold averages or ensembles.
+
+All 37 F1 replays still meet the existing 5e-4 gate, but that gate did not prove
+count equality. Six runs differ from legacy JSON counts: C0_13, C2_15, C3_17,
+C4_15, C6_14, C6_15. Five discrepancies involve only one or two false positives.
+C3_17 is materially different: NPZ gives TP=29009, FP=129298, FN=27811;
+legacy JSON gives 27229, 117853, 29591. Promoting the saved scores to float64
+and comparing with decimal JSON threshold .999999 reproduces the legacy counts;
+the frozen float32 NPZ threshold is .9999989867210388. This tie/precision
+distinction leaves rounded F1 at .2697 while precision and recall differ.
+
+No arrays, metrics or thresholds were repaired or retuned for this export.
+Images explicitly represent frozen NPZ replay. Exact differences and both mean
+seed F1 / F1-of-mean-counts are recorded in the figure JSON. Count replay is
+independently checked with bincount for all 37 runs, with 14 mean checks and
+74 pinned input hashes. The focused exporter/report/notebook suite passed 26
+tests; this is not a new full Colab-suite result. Both boards are included in
+the five-page IEEE paper and updated standalone LaTeX ZIP. All five paper pages
+were visually reviewed and the final compiler log has no warnings.

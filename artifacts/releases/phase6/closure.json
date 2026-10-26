@@ -1,0 +1,90 @@
+{
+  "recorded_utc": "2026-10-25T04:21:55.220045+00:00",
+  "status": "phase6_private_colab_demo_complete",
+  "source_files_verified_against_tested_colab_tree": 79,
+  "full_tests": "235 passed in 19.93s",
+  "focused_tests": "31 passed",
+  "live_parity_scores": 14,
+  "max_abs_error": 0.0,
+  "cold_comparison_ms": 18086.5,
+  "peak_comparison_gpu_mb": 673.5,
+  "accelerator": "Tesla T4",
+  "conditions": [
+    "C0",
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C5",
+    "C6"
+  ],
+  "seed": 13,
+  "input_revision": "e3144bea7732c20ab2803782282282be4fede7b4",
+  "base_revision": "2b0488a7bb0eefc7041f1bb2cad1ab26b0da269d",
+  "safety_checks": {
+    "csrf_header": 403,
+    "wrong_pair_count": 400,
+    "empty_snippet": 400,
+    "oversized_snippet": 400,
+    "concurrent_request": 429
+  },
+  "truncation_verified": true,
+  "runtime_cleanup": {
+    "session": "embeded-phase6-20261025",
+    "accelerator": "T4",
+    "stopped": true,
+    "tool_confirmed_runtime_was_active": true,
+    "live_results_and_full_test_evidence_downloaded_and_hash_verified_before_stop": true,
+    "unrelated_sessions_untouched": true,
+    "public_tunnel_created": false
+  },
+  "phase5_release_zip_unchanged": true,
+  "public_deployment": false,
+  "credential_pattern_scan_nonfixture_matches": 0,
+  "reviewed_synthetic_test_literals": [
+    {
+      "path": "embeded/tests/test_colab_git.py",
+      "line": 67,
+      "sha256": "0a6d46147b5d4774731bab057bae21e7f38c3fb2aed9aa77500e933ce26efbe2"
+    },
+    {
+      "path": "embeded/tests/test_colab_git.py",
+      "line": 82,
+      "sha256": "9ca870ebe12acf3d7713ef4c4f4064366997e6cc1fbe3a3e2978383b0bee5778"
+    },
+    {
+      "path": "embeded/tests/test_colab_git.py",
+      "line": 83,
+      "sha256": "9ca870ebe12acf3d7713ef4c4f4064366997e6cc1fbe3a3e2978383b0bee5778"
+    }
+  ],
+  "artifacts": {
+    "output/phase6/EmbedEd_Phase6_source.zip": {
+      "sha256": "6c2914ad7adf17b4bdb38bed70c51851296d879bf2f11e1b48754ffc5174a776",
+      "bytes": 351122
+    },
+    "output/phase6/EmbedEd_Phase6_release.zip": {
+      "sha256": "abc6fa8120dc87bf2762b5f94849933642bb6c3ac24c66a1f8f0b8e2eeac25fa",
+      "bytes": 1035627
+    }
+  },
+  "evidence_sha256": {
+    "output/phase6/inference_manifest.json": "e435f5aeced5f00c2e52c5211177af7cf4bf6ab020d6f568994722bc845826bb",
+    "output/phase6/live_verification.json": "18de5cc98eaf9361892e34a13a64d5d34f76fa16b7919a2fc249302bfb0fc9af",
+    "output/phase6/ui-preview.png": "871de697498ebdfa7a96d27d2c1f94c793cdd9da972d7756ab97bdfb168c785c",
+    "output/phase6/full_tests.json": "1212d76f652db1f9accfea660213cc026048ccf116b65e6db840145de5e63da9",
+    "output/phase6/full_tests.log": "59fff444239f085b534b2606ac6a0a03af7c745cb8325495e9edffba2f979a0a",
+    "output/phase6/runtime_cleanup.json": "cc13919e514cd9085490b3ca2e654d44d07241c6970b6d9e7ed9cc5c981058d5",
+    "output/phase6/browser_checks.json": "bf640ea7a915ff4433e4c4dda7b7099af6a826aeceb918d1766fcbdc7a114d41",
+    "output/phase6/ui-verified-results.png": "50dc4c424b5a76051cde147f04ef2fe4d824d345f8465c542413dea580a4235a",
+    "output/phase6/README.md": "4001f0677fc7349a1ee682b3893ce4715bfcc800a1f1d330b1b601395d87bb39"
+  },
+  "runtime_instructions": "Open notebooks/Phase6_Colab.ipynb in Colab T4, upload EmbedEd_Phase6_source.zip, run prepare/verify/serve cells; stop after use.",
+  "verification_limits": [
+    "Mobile layout not visually tested",
+    "Interactive notebook upload and iframe embedding not automated; cell syntax and installed iframe signature checked",
+    "Browser positive-result rendering replayed the recorded real T4 response under a visible QA banner",
+    "No permanent hosted endpoint or public tunnel",
+    "Original training config did not pin a base-model revision; demo pin is explicit"
+  ]
+}

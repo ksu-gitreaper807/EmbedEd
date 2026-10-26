@@ -1,0 +1,51 @@
+id,label,note,reviewer_type,amendment_id
+85966eff-001,not_clone,"A generates a randomized MD5 GUID; B orchestrates distributed graph transformations and spanning-tree/edge-set joins to summarize components. Different functionality.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-002,not_clone,"A tests StraightStreamReader byte/character reading modes on generated data; B is a signed-PDF verification CLI with certificate/keystore selection and optional revision extraction.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-003,not_clone,"A reads an HDFS file twice to stdout using seek; B parses a remote question file into numbered Question objects and a hash lookup map.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-004,not_clone,"A retrieves URL text; B calculates a hexadecimal digest of supplied text. No shared functional output.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-005,not_clone,"A copies a source file to a destination using a mapped buffer; B downloads versioned SQL patches and applies them transactionally to SQLite.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-006,not_clone,"A creates a randomized FNV-1a/Base64 identifier; B tests Quickprop neural-network training on XOR data against a mean-squared-error target.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-007,not_clone,"A copies a file with length checking and optional timestamp preservation; B loads a 3D scene from a URL while managing its base URL.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-008,not_clone,"A runs tidy to transform input into XML; B transactionally inserts a lesson with its description/author relationships.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-009,not_clone,"A imports and token-indexes a selected document into a collection with collision handling; B downloads URL bytes into a destination file. Copying is only one component of A's indexing operation.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-010,not_clone,"A updates a client's MD5-derived password and returns its DTO; B parses remote HTML and traverses tags/text while printing timing information.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-011,not_clone,"A copies a source file unchanged; B stages image input and determines encoding levels before image compression. File copying is only preparation for B's transformation.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-012,not_clone,"A tests spectrum XML serialization by a read-write-read equality assertion; B builds audit-trail feed entries and optionally embeds their XML in a ZIP.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-013,not_clone,"A generates an MD5-based random GUID from host/time/randomness; B copies bytes between two files.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-014,not_clone,"A converts HTML to XHTML; B creates a database directory and executes bundled schema statements transactionally.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-015,not_clone,"A PNG-encodes a rendered image and uploads it to S3; B extracts a bundled ZIP into a freshly prepared target directory.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-016,not_clone,"A compresses a local file into BZip2 with locking/progress and source-retention options; B loads and parses a deployment SDL resource as a DOM document.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-017,not_clone,"A downloads a game image into a local file; B verifies an HTTP digest-auth response using credentials/method/URI/nonce.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-018,not_clone,"A executes SQL with transaction rollback when affected-row bounds fail; B reads a classpath text resource into a buffer and computes maximum line width.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-019,not_clone,"A installs a bundled weaving JAR if absent; B requests a URL and parses its first response line as an integer count.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-020,not_clone,"A copies an image into a collection and stores its metadata; B resolves missing database class-type references from qualified names.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-021,not_clone,"A copies a source file through channels; B computes a hexadecimal SHA-1 digest of a string.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-022,not_clone,"A copies a file and preserves its modification time; B encodes query parameters and parses a remote response list with header/DONE framing.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-023,not_clone,"A streams a selected database BLOB to an output; B tests BrokenMD4 against known digest vectors and clone-state behavior.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-024,not_clone,"A copies a file via a temporary file and rename; B issues a configured HTTP API request with headers/body/status checking and optional GZIP decoding.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-025,not_clone,"A retrieves HTTP text; B interactively chooses a game scenario/variation and loads its saved state from a resource stream.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-026,not_clone,"A extracts PDF pages 3 through 8 to a file; B retrieves and caches a player's English name parsed from a web page.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-027,not_clone,"A creates a JAR archive from local files and a manifest; B fetches comparison text from a URL into a returned string.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-028,not_clone,"A exchanges an auth code for a session key and caches a nickname; B transactionally deletes a user and their stock holdings.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-029,not_clone,"A exercises database rollback/commit on a test table; B retrieves and parses a remote LOCKSS daemon-status XML table with HTTP failure handling.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-030,not_clone,"A tests rejection of a file transfer after encoder completion; B executes HTTP requests and changes excessively long GET requests to POST.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-031,not_clone,"A loads remote server definitions into Host objects/UI choices; B recursively copies directory contents and computes net quota usage.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-032,not_clone,"A serves requested media via an HTTP servlet; B downloads a compressed anime-title catalog and constructs/cache-merges localized search results.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-033,not_clone,"A prints an MD5 password digest; B concatenates face-image bytes with custom IMAGE headers into a collected archive file.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-034,not_clone,"A verifies a quoted-printable encode/decode round trip; B connects and logs in to FTP/FTPS with passive-mode/timeout/directory options.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-035,not_clone,"A saves an information form with SMS/attachment handling; B selects and parses analysis-command configuration from a file/string/bundled default.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-036,not_clone,"A sends file bytes through an HTTP response; B constructs a server context with session ID/database handler/timer/server and system metadata.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-037,not_clone,"A copies file-stream bytes into a destination path; B parses and validates a HashCash token and evaluates its SHA-1 leading-zero value.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-038,not_clone,"A copies a local file via a temporary file with progress/timestamp handling; B executes CGI and parses its response headers before serving output. Stream copying alone is only a small part of B.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-039,not_clone,"A copies a source file with size verification; B aggregates parsed content-extension contributions from enabled remote help centers.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-040,not_clone,"A constructs a package-file object and records stream bytes as an update; B posts XML content to a URL and returns the HTTP response text.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-041,not_clone,"A extracts ZIP entries to disk; B retrieves an XML document from GeoNetwork with session-cookie handling and parses it into an Element.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-042,not_clone,"A returns a truncated 16-character MD5 representation; B copies a file with source/destination checks and overwrite confirmation.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-043,not_clone,"A registers a player in a chat-client map with a generated token; B delegates URL connection opening to an authorized protocol handler through reflection.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-044,not_clone,"A refreshes URL text and clears derived price/date fields; B initiates a JSTOR citation search and returns a designated citation cookie rather than page text.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-045,not_clone,"A computes a SHA-1 hexadecimal string digest; B stress-tests database auto-increment insertion in concurrent transaction loops.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-046,not_clone,"A copies a local file through channels; B sends a remote storage move_file RPC with session cookie and returns its JSON response. Moving remote entries is not copying local file contents.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-047,not_clone,"A extracts a multi-part TAR archive with destination validation/CRC/progress UI; B decompresses one GZIP stream into one fixed output file. Archive-entry extraction and single-stream decompression have different contracts.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-048,not_clone,"A computes a file checksum through a checked stream/discard sink; B loads and parses binary/text plotting data from stdin/URL/file.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-049,not_clone,"A copies a file to its basename in the current directory; B clears and initializes a tutorial database with objects/grammar/dictionary records in a transaction.",ai,P4-AI-AUDIT-2026-10-23
+85966eff-050,not_clone,"A copies bytes between local files; B executes a CachedRowSet command with parameters/paging/query configuration and populates row data.",ai,P4-AI-AUDIT-2026-10-23

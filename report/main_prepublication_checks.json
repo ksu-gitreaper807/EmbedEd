@@ -1,0 +1,59 @@
+{
+  "recorded_utc": "2026-10-26T06:19:07Z",
+  "scope": "Owner-authorized GitHub main publication of the completed project and byte-preserving output organization",
+  "target": "https://github.com/ksu-gitreaper807/EmbedEd/tree/main",
+  "remote_main_before_publication": "a218613c93f4fef59e0efa662a3658fc4b035957",
+  "tested_index_tree_excluding_this_receipt": "0f5122641a2b378f925fda902e8d1238a12b1fc8",
+  "historical_release_files_modified": false,
+  "output_checks": {
+    "original_files_sha256_verified": 33,
+    "committed_deliverable_files": 30,
+    "local_ignored_latex_intermediates": 3,
+    "compatibility_symlinks": 5,
+    "zip_crc_checks": 5,
+    "zip_manifest_payload_hashes_checked": 375,
+    "phase5_phase6_and_ieee_receipts_verified": true,
+    "clean_staged_tree_layout_verification_passed": true
+  },
+  "unit_tests": {
+    "before_relocation": "235 passed in 56.12s",
+    "after_relocation": "235 passed in 34.43s",
+    "clean_staged_tree": "235 passed in 34.80s",
+    "skipped": 0,
+    "host": "Local CPU; no Colab runtime or GPU allocated",
+    "command": "python -m pytest -q -rs embeded/tests"
+  },
+  "staged_scan_before_this_receipt": {
+    "files": 221,
+    "bytes": 33231300,
+    "nested_archive_members": 532,
+    "credential_pattern_nonfixture_matches": 0,
+    "known_synthetic_redaction_fixture_matches": 15,
+    "oversized_blobs": 0,
+    "forbidden_private_paths": 0,
+    "limitation": "Pattern scanning cannot prove the absence of all possible secrets. Synthetic matches are allowed only by the exact historical fixture digests and test-file path."
+  },
+  "whitespace_check": {
+    "project_changes_passed": true,
+    "preserved_exceptions": [
+      "Unmodified third-party paper/IEEEtran.cls retains original CRLF/whitespace",
+      "Immutable historical log files retain their captured whitespace"
+    ]
+  },
+  "excluded_and_preserved_locally": [
+    ".embeded-colab-secrets.json",
+    "artifacts/phase4_exports/ (large analysis snapshot and historical local exports)",
+    "tmp/ (build dependencies, scratch and verification previews)",
+    "notebooks/Phase4_Colab_output.ipynb (separate owner-provided executed notebook)",
+    "Untracked original IEEE template folders/archives (not modified by this task)"
+  ],
+  "publication_boundaries": {
+    "normal_fast_forward_only": true,
+    "force_push_authorized": false,
+    "hugging_face_upload_authorized": false,
+    "public_demo_hosting_authorized": false,
+    "paper_submission_authorized": false,
+    "new_scientific_experiments_performed": false
+  },
+  "note": "This is a prepublication check record, not a remote-upload receipt. Verify the final GitHub main commit separately. Historical release ZIPs and their status statements intentionally remain unchanged."
+}
